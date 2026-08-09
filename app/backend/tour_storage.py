@@ -7,23 +7,30 @@ Tours are stored as:
         │   └── route.gpx
         └── maps/         # Map images (optional)
 
+Deleted tours are moved to:
+    trips/.trash/{tour_type}/{slug}/
+
 SQLite is used as an index for fast listing and search.
 """
 
+import contextlib
 import logging
 import re
+import shutil
 import uuid
 import xml.etree.ElementTree as ET
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from db import Tour, create_tour, generate_slug, get_tour_by_slug
+from db import Tour, create_tour, delete_tour_by_slug, generate_slug, get_tour_by_slug
 
 logger = logging.getLogger(__name__)
 
 # Project root and trips directory
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 TRIPS_DIR = PROJECT_ROOT / "trips"
+TRASH_DIR = TRIPS_DIR / ".trash"
 
 
 def _extract_title_from_markdown(markdown: str) -> str:
@@ -237,7 +244,6 @@ def _combine_gpx_files(gpx_files: list[Path]) -> str:
             continue
 
     return ET.tostring(root, encoding="unicode", xml_declaration=True)
-    return ET.tostring(root, encoding="unicode", xml_declaration=True)
 
 
 def _order_gpx_by_markdown(gpx_files: list[Path], index_md: Path) -> list[Path]:
@@ -380,3 +386,177 @@ async def sync_filesystem_to_db() -> int:
             logger.info("Indexed existing tour: %s/%s", tour_type, slug)
 
     return added
+
+
+async def move_to_trash(tour_type: str, slug: str) -> bool:
+    """Move a tour to the trash folder.
+
+    Instead of deleting, moves the tour directory to trips/.trash/
+    for potential recovery.
+
+    Returns:
+        True if successfully moved, False if tour not found.
+    """
+    tour_dir = get_tour_path(tour_type, slug)
+    if not tour_dir.exists():
+        return False
+
+    # Create trash directory structure
+    trash_type_dir = TRASH_DIR / tour_type
+    trash_type_dir.mkdir(parents=True, exist_ok=True)
+
+    # Add timestamp to avoid conflicts with previously deleted tours
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    trash_dest = trash_type_dir / f"{slug}_{timestamp}"
+
+    # Move to trash
+    shutil.move(str(tour_dir), str(trash_dest))
+    logger.info("Moved tour to trash: %s -> %s", tour_dir, trash_dest)
+
+    # Remove from database
+    await delete_tour_by_slug(slug)
+
+    return True
+
+
+async def restore_from_trash(tour_type: str, trash_name: str) -> Tour | None:
+    """Restore a tour from the trash folder.
+
+    Args:
+        tour_type: "bike" or "road"
+        trash_name: The name in trash (e.g., "my-tour_20240809-143022")
+
+    Returns:
+        Restored Tour object or None if not found.
+    """
+    trash_path = TRASH_DIR / tour_type / trash_name
+    if not trash_path.exists():
+        return None
+
+    # Extract original slug (before timestamp)
+    original_slug = trash_name.rsplit("_", 1)[0]
+
+    # Check if slug is available, or generate new one
+    existing = await get_tour_by_slug(original_slug)
+    if existing:
+        # Slug taken, append number
+        base_slug = original_slug
+        counter = 2
+        while existing:
+            original_slug = f"{base_slug}-{counter}"
+            existing = await get_tour_by_slug(original_slug)
+            counter += 1
+
+    # Move back to trips directory
+    dest_dir = TRIPS_DIR / tour_type / original_slug
+    shutil.move(str(trash_path), str(dest_dir))
+    logger.info("Restored tour from trash: %s -> %s", trash_path, dest_dir)
+
+    # Re-index in database
+    index_path = dest_dir / "index.md"
+    if not index_path.exists():
+        return None
+
+    markdown = index_path.read_text(encoding="utf-8")
+    title = _extract_title_from_markdown(markdown)
+    summary = _extract_summary_from_markdown(markdown)
+
+    tour_id = str(uuid.uuid4())
+    tour = await create_tour(
+        tour_id=tour_id,
+        title=title,
+        tour_type=tour_type,
+        slug=original_slug,
+        summary=summary,
+    )
+
+    return tour
+
+
+def list_trash() -> list[dict[str, Any]]:
+    """List all tours in trash.
+
+    Returns:
+        List of dicts with tour_type, trash_name, original_slug, deleted_at, title.
+    """
+    result: list[dict[str, Any]] = []
+
+    if not TRASH_DIR.exists():
+        return result
+
+    for tour_type in ("bike", "road"):
+        type_dir = TRASH_DIR / tour_type
+        if not type_dir.exists():
+            continue
+
+        for item in type_dir.iterdir():
+            if not item.is_dir():
+                continue
+
+            # Parse name: slug_YYYYMMDD-HHMMSS
+            parts = item.name.rsplit("_", 1)
+            original_slug = parts[0]
+            deleted_at = None
+            if len(parts) == 2:
+                with contextlib.suppress(ValueError):
+                    deleted_at = datetime.strptime(parts[1], "%Y%m%d-%H%M%S")
+
+            # Try to get title from index.md
+            title = original_slug
+            index_path = item / "index.md"
+            if index_path.exists():
+                markdown = index_path.read_text(encoding="utf-8")
+                title = _extract_title_from_markdown(markdown)
+
+            result.append(
+                {
+                    "tour_type": tour_type,
+                    "trash_name": item.name,
+                    "original_slug": original_slug,
+                    "deleted_at": deleted_at.isoformat() if deleted_at else None,
+                    "title": title,
+                }
+            )
+
+    # Sort by deleted_at descending (most recent first)
+    result.sort(key=lambda x: x["deleted_at"] or "", reverse=True)
+    return result
+
+
+async def empty_trash() -> int:
+    """Permanently delete all tours in trash.
+
+    Returns:
+        Number of tours deleted.
+    """
+    if not TRASH_DIR.exists():
+        return 0
+
+    count = 0
+    for tour_type in ("bike", "road"):
+        type_dir = TRASH_DIR / tour_type
+        if not type_dir.exists():
+            continue
+
+        for item in type_dir.iterdir():
+            if item.is_dir():
+                shutil.rmtree(item)
+                count += 1
+                logger.info("Permanently deleted: %s", item)
+
+    return count
+
+
+async def delete_from_trash(tour_type: str, trash_name: str) -> bool:
+    """Permanently delete a single tour from trash.
+
+    Returns:
+        True if deleted, False if not found.
+    """
+    trash_path = TRASH_DIR / tour_type / trash_name
+    if not trash_path.exists():
+        return False
+
+    shutil.rmtree(trash_path)
+    logger.info("Permanently deleted from trash: %s", trash_path)
+    return True

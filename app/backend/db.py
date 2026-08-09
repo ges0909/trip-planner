@@ -3,10 +3,9 @@
 Uses raw aiosqlite for simplicity. Database is stored at data/app.db.
 """
 
-import json
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -141,7 +140,7 @@ async def create_session(
     tour_type: str | None = None,
 ) -> Session:
     """Create a new session."""
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
 
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute(
@@ -167,9 +166,7 @@ async def get_session(session_id: str) -> Session | None:
     """Get a session by ID."""
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
-        async with db.execute(
-            "SELECT * FROM sessions WHERE id = ?", (session_id,)
-        ) as cursor:
+        async with db.execute("SELECT * FROM sessions WHERE id = ?", (session_id,)) as cursor:
             row = await cursor.fetchone()
             if not row:
                 return None
@@ -189,7 +186,7 @@ async def update_session(
     tour_type: str | None = None,
 ) -> bool:
     """Update session metadata. Returns True if session existed."""
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
 
     updates = ["updated_at = ?"]
     params: list[Any] = [now]
@@ -252,7 +249,7 @@ async def add_message(
     content: str,
 ) -> Message:
     """Add a message to a session."""
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
 
     async with aiosqlite.connect(DB_PATH) as db:
         cursor = await db.execute(
@@ -315,7 +312,7 @@ async def create_tour(
     summary: str | None = None,
 ) -> Tour:
     """Create a new tour entry."""
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
 
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute(
@@ -385,7 +382,7 @@ async def update_tour(
     summary: str | None = None,
 ) -> bool:
     """Update tour metadata. Returns True if tour existed."""
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
 
     updates = ["updated_at = ?"]
     params: list[Any] = [now]
@@ -412,6 +409,14 @@ async def delete_tour(tour_id: str) -> bool:
     """Delete a tour. Returns True if tour existed."""
     async with aiosqlite.connect(DB_PATH) as db:
         cursor = await db.execute("DELETE FROM tours WHERE id = ?", (tour_id,))
+        await db.commit()
+        return cursor.rowcount > 0
+
+
+async def delete_tour_by_slug(slug: str) -> bool:
+    """Delete a tour by its slug. Returns True if tour existed."""
+    async with aiosqlite.connect(DB_PATH) as db:
+        cursor = await db.execute("DELETE FROM tours WHERE slug = ?", (slug,))
         await db.commit()
         return cursor.rowcount > 0
 

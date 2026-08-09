@@ -39,9 +39,8 @@ Transform the app into a **provider-agnostic architecture** with **LLM flexibili
 │  Uses MCPManager for tool execution                         │
 │  Uses steering.py for tour-type-specific prompts            │
 ├─────────────────────────────────────────────────────────────┤
-│                    Model Gateway                            │
-│         pydantic-ai infer_model() → provider:model          │
-│         google:gemini-2.5-flash │ openai:gpt-4o-mini │ ...  │
+│                    Model Gateway (OpenRouter)               │
+│         pydantic-ai infer_model() → openrouter/<model>      │
 ├─────────────────────────────────────────────────────────────┤
 │                    SQLite (data/app.db)                     │
 │         sessions │ messages │ tours                         │
@@ -65,47 +64,45 @@ Transform the app into a **provider-agnostic architecture** with **LLM flexibili
 
 ---
 
-## 3. LLM Provider Configuration
+## 3. LLM Configuration
+
+OpenRouter is the exclusive LLM provider, giving access to 100+ models via a single API key.
 
 ### 3.1 Environment Variables
 
 ```bash
-# .env configuration
-LLM_PROVIDER=google          # google, openai, anthropic
-LLM_MODEL=gemini-2.5-flash   # Model name (provider-specific)
+# Required
+OPENROUTER_API_KEY=sk-or-v1-...
 
-# API Keys (set the one matching your provider)
-GEMINI_API_KEY=...           # For google provider
-OPENAI_API_KEY=...           # For openai provider
-ANTHROPIC_API_KEY=...        # For anthropic provider
+# Optional (default: meta-llama/llama-3.3-70b-instruct)
+LLM_MODEL=anthropic/claude-sonnet-4
 ```
 
-### 3.2 Model Gateway
+### 3.2 Popular Models
+
+| Model                               | Strength                 | Cost |
+| ----------------------------------- | ------------------------ | ---- |
+| `meta-llama/llama-3.3-70b-instruct` | Good all-round (default) | $    |
+| `anthropic/claude-sonnet-4`         | Best reasoning           | $$$  |
+| `google/gemini-2.5-flash`           | Fast, cheap              | $    |
+| `mistralai/mistral-large-2411`      | Good for German          | $$   |
+| `deepseek/deepseek-chat`            | Very cheap               | $    |
+| `qwen/qwen-2.5-72b-instruct`        | Good multilingual        | $    |
+
+See https://openrouter.ai/models for the full list.
+
+### 3.3 How It Works
+
+The `model_gateway.py` configures pydantic-ai to use OpenRouter's OpenAI-compatible API:
 
 ```python
-# model_gateway.py
-from pydantic_ai import infer_model
+def get_model() -> Model:
+    os.environ["OPENAI_API_KEY"] = os.getenv("OPENROUTER_API_KEY")
+    os.environ["OPENAI_BASE_URL"] = "https://openrouter.ai/api/v1"
 
-PROVIDER_MODELS = {
-    "google": "gemini-2.5-flash",
-    "openai": "gpt-4o-mini",
-    "anthropic": "claude-haiku-4-5",
-}
-
-def get_model():
-    provider = os.getenv("LLM_PROVIDER", "google")
-    model = os.getenv("LLM_MODEL") or PROVIDER_MODELS.get(provider)
-    model_string = f"{provider}:{model}"
-    return infer_model(model_string)
+    model_id = os.getenv("LLM_MODEL", "meta-llama/llama-3.3-70b-instruct")
+    return infer_model(f"openai:openrouter/{model_id}")
 ```
-
-### 3.3 Supported Providers
-
-| Provider      | Model String Format    | Example                      |
-| ------------- | ---------------------- | ---------------------------- |
-| **Google**    | `google:model-name`    | `google:gemini-2.5-flash`    |
-| **OpenAI**    | `openai:model-name`    | `openai:gpt-4o-mini`         |
-| **Anthropic** | `anthropic:model-name` | `anthropic:claude-haiku-4-5` |
 
 ---
 
@@ -289,9 +286,20 @@ export function useChat(): ChatState {
 ### 6.3 TourLibrary Sidebar
 
 - Collapsible sidebar with filter tabs (All / Bike / Road)
+- Resizable via drag handle (200px – 500px)
 - Auto-loads tours from API on mount
 - Click to load tour into main view
-- Refresh button to reload tour list
+
+### 6.4 Key Frontend Dependencies
+
+| Package       | Purpose                                 |
+| ------------- | --------------------------------------- |
+| **marked**    | Markdown → HTML rendering               |
+| **DOMPurify** | HTML sanitization (XSS protection)      |
+| **Leaflet**   | Interactive maps                        |
+| **Vue 3**     | Reactive UI framework (Composition API) |
+| **Vite**      | Build tool and dev server               |
+| **Tailwind**  | Utility-first CSS                       |
 
 ---
 
@@ -303,13 +311,16 @@ export function useChat(): ChatState {
 # Backend
 cd app/backend
 uv sync  # Install dependencies
-uv run uvicorn main:app --reload --port 8000
+uv run python -m uvicorn main:app --reload --port 8000
 
 # Frontend (separate terminal)
 cd app/frontend
 npm install
 npm run dev  # Vite on :5173, proxies /api → :8000
 ```
+
+> **Note:** Use `python -m uvicorn` instead of `uvicorn` directly because the project
+> is not packaged (`tool.uv.package = false`), so entry points are not installed.
 
 ### 7.2 Environment Setup
 
@@ -412,11 +423,13 @@ The current single-agent approach works well for most use cases. For complex mul
 pydantic-ai supports many providers through `infer_model()`:
 
 ```python
-# Add to PROVIDER_MODELS in model_gateway.py
-"bedrock": "anthropic.claude-v2",
-"azure": "azure/gpt-4-turbo",
-"groq": "groq/llama-3-70b",
+# Add to DEFAULT_MODELS in model_gateway.py
+"bedrock": "bedrock:anthropic.claude-v2",
+"azure": "azure:gpt-4-turbo",
+"groq": "groq:llama-3-70b",
 ```
+
+OpenRouter already provides access to most open-weight models, so adding Groq or other providers is only needed for specific use cases (e.g., lower latency, specific model versions).
 
 ### 9.3 Multi-User Support
 

@@ -16,6 +16,7 @@ let routeLayers: L.Polyline[] = [];
 let markerLayer: L.LayerGroup | null = null;
 let poiLayer: L.LayerGroup | null = null;
 let resizeObserver: ResizeObserver | null = null;
+let currentBounds: L.LatLngBounds | null = null;
 
 function initMap() {
   if (!mapContainer.value || map) return;
@@ -28,11 +29,34 @@ function initMap() {
   markerLayer = L.layerGroup().addTo(map);
   poiLayer = L.layerGroup().addTo(map);
 
-  // Invalidate map size when container resizes (split-pane drag)
+  // Invalidate map size when container resizes
   resizeObserver = new ResizeObserver(() => {
     map?.invalidateSize();
   });
   resizeObserver.observe(mapContainer.value);
+}
+
+function fitBoundsWhenReady(attempts = 0) {
+  if (!map || !currentBounds || !mapContainer.value) return;
+
+  const container = mapContainer.value;
+  const width = container.clientWidth;
+  const height = container.clientHeight;
+
+  // Wait until container has reasonable dimensions
+  if ((width < 100 || height < 100) && attempts < 20) {
+    requestAnimationFrame(() => fitBoundsWhenReady(attempts + 1));
+    return;
+  }
+
+  map.invalidateSize();
+
+  // Minimal padding for tighter fit
+  map.fitBounds(currentBounds, {
+    paddingTopLeft: [10, 10],
+    paddingBottomRight: [10, 15],
+    maxZoom: 14,
+  });
 }
 
 function addLegend() {
@@ -191,9 +215,10 @@ function updateMap() {
     });
   }
 
-  // Fit bounds
+  // Fit bounds - wait for container to have proper dimensions
   if (bounds.length > 0) {
-    map.fitBounds(L.latLngBounds(bounds), { padding: [30, 30] });
+    currentBounds = L.latLngBounds(bounds);
+    fitBoundsWhenReady();
   }
 
   // Update legend based on current POI categories

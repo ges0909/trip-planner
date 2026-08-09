@@ -113,3 +113,85 @@ export async function fetchSessionDetail(
   }
   return response.json();
 }
+
+/**
+ * Delete a tour (move to trash).
+ */
+export async function deleteTour(
+  tourType: string,
+  slug: string,
+): Promise<void> {
+  const response = await fetch(`/api/tours/${tourType}/${slug}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to delete tour: ${response.status}`);
+  }
+}
+
+/**
+ * Trash item returned from the API.
+ */
+export interface TrashItem {
+  tour_type: "bike" | "road";
+  trash_name: string;
+  original_slug: string;
+  deleted_at: string | null;
+  title: string;
+}
+
+/**
+ * Fetch list of tours in trash.
+ */
+export async function fetchTrash(): Promise<TrashItem[]> {
+  const response = await fetch("/api/trash");
+  if (!response.ok) {
+    throw new Error(`Failed to fetch trash: ${response.status}`);
+  }
+  return response.json();
+}
+
+/**
+ * Restore a tour from trash.
+ */
+export async function restoreFromTrash(
+  tourType: string,
+  trashName: string,
+): Promise<Tour> {
+  const response = await fetch(`/api/trash/${tourType}/${trashName}/restore`, {
+    method: "POST",
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to restore tour: ${response.status}`);
+  }
+  return response.json();
+}
+
+/**
+ * Permanently delete a tour from trash.
+ */
+export async function deleteFromTrash(
+  tourType: string,
+  trashName: string,
+): Promise<void> {
+  const response = await fetch(`/api/trash/${tourType}/${trashName}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to delete from trash: ${response.status}`);
+  }
+}
+
+/**
+ * Empty the entire trash.
+ */
+export async function emptyTrash(): Promise<number> {
+  const response = await fetch("/api/trash", {
+    method: "DELETE",
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to empty trash: ${response.status}`);
+  }
+  const data = await response.json();
+  return data.deleted_count;
+}
