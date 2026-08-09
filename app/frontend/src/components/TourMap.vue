@@ -283,8 +283,10 @@ const elevationStats = computed(() => {
 </script>
 
 <template>
-  <div class="bg-white rounded-lg shadow overflow-hidden h-full flex flex-col">
-    <div ref="mapContainer" class="flex-1 min-h-0"></div>
+  <div
+    class="bg-white rounded-lg shadow overflow-hidden h-full flex flex-col min-h-[400px]"
+  >
+    <div ref="mapContainer" class="flex-1 min-h-[350px]"></div>
     <div
       v-if="elevation.length >= 2"
       class="shrink-0 border-t border-gray-200 px-3 pt-2 pb-3"

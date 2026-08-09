@@ -2,13 +2,18 @@
 
 import logging
 from pathlib import Path
+from typing import Literal
 
 logger = logging.getLogger(__name__)
 
-STEERING_DIR: Path = Path(__file__).parent.parent.parent / ".kiro" / "steering"
+# Base directory for travel steering files
+STEERING_DIR: Path = Path(__file__).parent.parent.parent / ".kiro" / "steering" / "travel"
+
+# Tour type literal for type safety
+TourType = Literal["bike", "road", "general"]
 
 
-def _detect_tour_type(message: str) -> str:
+def _detect_tour_type(message: str) -> TourType:
     """Detect tour type from user message. Returns 'bike', 'road', or 'general'."""
     msg = message.lower()
     bike_words = ("radtour", "fahrrad", "bike", "cycling", "radweg", "radfahren", "e-bike")
@@ -21,18 +26,43 @@ def _detect_tour_type(message: str) -> str:
     return "general"
 
 
-def _select_files(user_message: str) -> list[str]:
-    """Select steering files based on detected tour type."""
-    detected = _detect_tour_type(user_message) if user_message else "general"
-    files: list[str] = ["user-preferences.md"]
+def get_steering_for_tour_type(tour_type: TourType) -> list[Path]:
+    """Get list of steering file paths for a given tour type.
 
-    if detected == "bike":
-        files += ["bike-preferences.md", "bike-planner.md", "bike-output-template.md"]
-    elif detected == "road":
-        files += ["road-preferences.md", "road-planner.md", "road-output-template.md"]
+    Args:
+        tour_type: One of "bike", "road", or "general".
+
+    Returns:
+        List of Path objects to steering files that exist.
+    """
+    paths: list[Path] = []
+
+    # Always include user preferences
+    user_prefs = STEERING_DIR / "user-preferences.md"
+    if user_prefs.exists():
+        paths.append(user_prefs)
+
+    if tour_type == "bike":
+        bike_dir = STEERING_DIR / "bike"
+        for name in ("bike-preferences.md", "bike-planner.md", "bike-output-template.md"):
+            path = bike_dir / name
+            if path.exists():
+                paths.append(path)
+    elif tour_type == "road":
+        road_dir = STEERING_DIR / "road"
+        for name in ("road-preferences.md", "road-planner.md", "road-output-template.md"):
+            path = road_dir / name
+            if path.exists():
+                paths.append(path)
     # "general" → only user-preferences, keep prompt small
 
-    return files
+    return paths
+
+
+def _select_files(user_message: str) -> list[Path]:
+    """Select steering file paths based on detected tour type."""
+    detected = _detect_tour_type(user_message) if user_message else "general"
+    return get_steering_for_tour_type(detected)
 
 
 def build_system_prompt(
@@ -93,8 +123,7 @@ Follow the chosen template structure strictly.
     # Load steering files (no sanitization needed)
     parts: list[str] = [base_prompt]
     loaded_count = 0
-    for filename in _select_files(user_message):
-        path: Path = STEERING_DIR / filename
+    for path in _select_files(user_message):
         if path.exists():
             content: str = path.read_text(encoding="utf-8")
             # Strip YAML front matter
@@ -104,8 +133,9 @@ Follow the chosen template structure strictly.
                     content = content[end + 3 :].strip()
             parts.append(content)
             loaded_count += 1
+            logger.debug("Loaded steering file: %s", path.name)
         else:
-            logger.debug("Steering file not found: %s", filename)
+            logger.debug("Steering file not found: %s", path)
 
     prompt = "\n\n---\n\n".join(parts)
     logger.info("System prompt built: %d files loaded, %d chars total", loaded_count, len(prompt))

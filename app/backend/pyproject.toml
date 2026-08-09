@@ -1,15 +1,19 @@
 [project]
 name = "trip-planner-backend"
-version = "0.1.0"
+version = "0.2.0"
 description = "AI-powered tour planner backend"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.30.0",
-    "google-genai>=1.0.0",
     "sse-starlette>=2.1.0",
     "python-dotenv>=1.0.1",
     "httpx>=0.28.1",
+    # Agent framework (LLM-agnostic)
+    "pydantic-ai>=0.2.0",
+    "litellm>=1.75.0",
+    # Persistence
+    "aiosqlite>=0.20.0",
 ]
 
 [project.scripts]

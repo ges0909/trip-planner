@@ -25,6 +25,20 @@ const messages = {
     de: "Server-Fehler ({status}). Bitte prüfe das Backend-Log.",
     en: "Server error ({status}). Please check the backend log.",
   },
+  // Tour Library
+  tourLibrary: { de: "Tour-Bibliothek", en: "Tour Library" },
+  all: { de: "Alle", en: "All" },
+  bikeTours: { de: "Radtouren", en: "Bike Tours" },
+  roadTrips: { de: "Roadtrips", en: "Road Trips" },
+  noTours: {
+    de: "Noch keine Touren gespeichert.",
+    en: "No tours saved yet.",
+  },
+  refresh: { de: "Aktualisieren", en: "Refresh" },
+  saveTour: { de: "Tour speichern", en: "Save Tour" },
+  downloadGpx: { de: "GPX herunterladen", en: "Download GPX" },
+  showMap: { de: "Gesamtkarte anzeigen", en: "Show full map" },
+  hideMap: { de: "Gesamtkarte ausblenden", en: "Hide full map" },
 } as const;
 
 type MessageKey = keyof typeof messages;

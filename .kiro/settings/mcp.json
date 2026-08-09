@@ -2,13 +2,7 @@
   "mcpServers": {
     "brouter": {
       "command": "uv",
-      "args": [
-        "run",
-        "--directory",
-        "mcp/brouter",
-        "python",
-        "server.py"
-      ],
+      "args": ["run", "--directory", "mcp/brouter", "python", "server.py"],
       "disabled": false,
       "autoApprove": [
         "calculate_route",
@@ -19,58 +13,25 @@
     },
     "open-meteo": {
       "command": "uv",
-      "args": [
-        "run",
-        "--directory",
-        "mcp/open-meteo",
-        "python",
-        "server.py"
-      ],
+      "args": ["run", "--directory", "mcp/open-meteo", "python", "server.py"],
       "disabled": false,
-      "autoApprove": [
-        "weather_forecast",
-        "geocoding"
-      ]
+      "autoApprove": ["weather_forecast", "geocoding"]
     },
     "vbb": {
       "command": "uv",
-      "args": [
-        "run",
-        "--directory",
-        "mcp/vbb",
-        "python",
-        "server.py"
-      ],
+      "args": ["run", "--directory", "mcp/vbb", "python", "server.py"],
       "disabled": false,
-      "autoApprove": [
-        "search_stops",
-        "get_departures",
-        "get_journeys"
-      ]
+      "autoApprove": ["search_stops", "get_departures", "get_journeys"]
     },
     "overpass": {
       "command": "uv",
-      "args": [
-        "run",
-        "--directory",
-        "mcp/overpass",
-        "python",
-        "server.py"
-      ],
+      "args": ["run", "--directory", "mcp/overpass", "python", "server.py"],
       "disabled": false,
-      "autoApprove": [
-        "search_pois_along_route"
-      ]
+      "autoApprove": ["search_pois_along_route"]
     },
     "openrouteservice": {
       "command": "uv",
-      "args": [
-        "run",
-        "--directory",
-        "mcp/ors",
-        "python",
-        "server.py"
-      ],
+      "args": ["run", "--directory", "mcp/ors", "python", "server.py"],
       "disabled": false,
       "autoApprove": [
         "calculate_route",
@@ -82,13 +43,7 @@
     },
     "wikivoyage": {
       "command": "uv",
-      "args": [
-        "run",
-        "--directory",
-        "mcp/wikivoyage",
-        "python",
-        "server.py"
-      ],
+      "args": ["run", "--directory", "mcp/wikivoyage", "python", "server.py"],
       "disabled": false,
       "autoApprove": [
         "search_destinations",
@@ -117,18 +72,9 @@
     },
     "osrm": {
       "command": "uv",
-      "args": [
-        "run",
-        "--directory",
-        "mcp/osrm",
-        "python",
-        "server.py"
-      ],
+      "args": ["run", "--directory", "mcp/osrm", "python", "server.py"],
       "disabled": false,
-      "autoApprove": [
-        "calculate_car_route",
-        "route_to_gpx"
-      ]
+      "autoApprove": ["calculate_car_route", "route_to_gpx"]
     },
     "serpapi-flights": {
       "command": "uv",
@@ -140,25 +86,13 @@
         "server.py"
       ],
       "disabled": false,
-      "autoApprove": [
-        "search_flights",
-        "search_airport"
-      ]
+      "autoApprove": ["search_flights", "search_airport"]
     },
     "tavily": {
       "command": "uv",
-      "args": [
-        "run",
-        "--directory",
-        "mcp/tavily",
-        "python",
-        "server.py"
-      ],
+      "args": ["run", "--directory", "mcp/tavily", "python", "server.py"],
       "disabled": false,
-      "autoApprove": [
-        "web_search",
-        "web_extract"
-      ]
+      "autoApprove": ["web_search", "web_extract"]
     },
     "travel-content": {
       "command": "uv",
@@ -194,13 +128,7 @@
     },
     "podcasts": {
       "command": "uv",
-      "args": [
-        "run",
-        "--directory",
-        "mcp/podcasts",
-        "python",
-        "server.py"
-      ],
+      "args": ["run", "--directory", "mcp/podcasts", "python", "server.py"],
       "disabled": false,
       "autoApprove": [
         "search_podcasts",
@@ -208,6 +136,9 @@
         "get_podcast_episodes",
         "get_episode_transcript"
       ]
+    },
+    "context7": {
+      "url": "https://mcp.context7.com/mcp"
     }
   }
 }
