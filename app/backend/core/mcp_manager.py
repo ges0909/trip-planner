@@ -9,8 +9,8 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-# Project root (two levels up from app/backend/)
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+# Project root (four levels up from app/backend/core/)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
 
 @dataclass

@@ -6,8 +6,8 @@ from typing import Literal
 
 logger = logging.getLogger(__name__)
 
-# Base directory for travel steering files
-STEERING_DIR: Path = Path(__file__).parent.parent.parent / ".kiro" / "steering" / "travel"
+# Base directory for travel steering files (4 levels up from core/)
+STEERING_DIR: Path = Path(__file__).parent.parent.parent.parent / ".kiro" / "steering" / "travel"
 
 # Tour type literal for type safety
 TourType = Literal["bike", "road", "general"]

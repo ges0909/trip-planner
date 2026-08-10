@@ -22,6 +22,42 @@ uv sync
 cd app/frontend && npm install
 ```
 
+## Environment Variables
+
+API keys are loaded from **two locations** (in order):
+
+1. **`~/.env`** — Personal API keys (not in git, shared across projects)
+2. **`project/.env`** — Project-specific overrides (gitignored)
+
+Project `.env` values **override** home `~/.env` if both define the same key.
+
+### Required Variables
+
+| Variable             | Used by | Description        |
+| -------------------- | ------- | ------------------ |
+| `OPENROUTER_API_KEY` | Backend | OpenRouter API key |
+
+### Optional Variables
+
+| Variable          | Used by                 | Description                                             |
+| ----------------- | ----------------------- | ------------------------------------------------------- |
+| `LLM_MODEL`       | Backend                 | Model ID (default: `meta-llama/llama-3.3-70b-instruct`) |
+| `ORS_API_KEY`     | MCP (ors)               | OpenRouteService geocoding                              |
+| `TAVILY_API_KEY`  | MCP (tavily, travel-\*) | Web search                                              |
+| `SERPAPI_API_KEY` | MCP (serpapi-flights)   | Google Flights search                                   |
+
+### Setup
+
+```bash
+# Option 1: Personal keys in home directory (recommended)
+echo "OPENROUTER_API_KEY=sk-or-v1-..." >> ~/.env
+echo "TAVILY_API_KEY=tvly-..." >> ~/.env
+
+# Option 2: Project-specific overrides
+cp app/backend/.env.example .env
+# Edit .env with project-specific values
+```
+
 ## Development
 
 Run in separate terminals:
@@ -55,26 +91,29 @@ cd app/backend && uv run python -m uvicorn main:app --host 0.0.0.0 --port 8000
 
 ## Configuration
 
-Environment variables (see `.env.example`):
-
-| Variable             | Required | Description                                             |
-| -------------------- | -------- | ------------------------------------------------------- |
-| `OPENROUTER_API_KEY` | Yes      | OpenRouter API key                                      |
-| `LLM_MODEL`          | No       | Model ID (default: `meta-llama/llama-3.3-70b-instruct`) |
-| `ORS_API_KEY`        | No       | OpenRouteService key (for geocoding)                    |
-| `TAVILY_API_KEY`     | No       | Tavily key (for web search)                             |
+See **Environment Variables** section above for full details.
 
 ## Structure
 
 ```
 app/
 ├── backend/
-│   ├── main.py           # FastAPI app, SSE endpoint, tour API
-│   ├── agent.py          # pydantic-ai agent with tool calling
-│   ├── model_gateway.py  # OpenRouter LLM configuration
-│   ├── db.py             # SQLite schema and operations
-│   ├── tour_storage.py   # Filesystem + SQLite tour storage
-│   ├── steering.py       # Tour-type detection + prompts
+│   ├── main.py              # FastAPI app, lifespan, router includes
+│   ├── i18n.py              # UI translations
+│   ├── app/routes/          # API endpoints
+│   │   ├── chat.py          # POST /api/chat (SSE streaming)
+│   │   ├── sessions.py      # Session management
+│   │   ├── tours.py         # Tour CRUD + GPX
+│   │   ├── trash.py         # Soft delete / restore
+│   │   └── health.py        # Health check
+│   ├── core/                # Business logic
+│   │   ├── agent.py         # pydantic-ai agent with tool calling
+│   │   ├── mcp_manager.py   # MCP subprocess management
+│   │   ├── model_gateway.py # OpenRouter LLM configuration
+│   │   └── steering.py      # Tour-type detection + prompts
+│   ├── storage/             # Data layer
+│   │   ├── db.py            # SQLite schema and operations
+│   │   └── tour_storage.py  # Filesystem + trash
 │   └── pyproject.toml
 ├── frontend/
 │   ├── src/

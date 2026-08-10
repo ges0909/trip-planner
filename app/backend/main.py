@@ -1,48 +1,31 @@
-"""FastAPI backend for the Trip Planner web app."""
+"""FastAPI backend for the Trip Planner web app.
 
-import json
+Application entry point with lifespan management and router registration.
+"""
+
 import logging
-import os
-import uuid
-from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any
 
-from agent import run_agent
-from db import (
-    add_message,
-    create_session,
-    get_chat_history,
-    get_session,
-    init_db,
-    list_sessions,
-    list_tours,
-    update_session,
-)
+from app.routes import chat, health, sessions, tours, trash
+from core.mcp_manager import MCPManager, build_server_configs
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from i18n import msg
-from mcp_manager import MCPManager, build_server_configs
-from sse_starlette.sse import EventSourceResponse
-from steering import _detect_tour_type
-from tour_storage import (
-    get_tour_detail,
-    get_tour_gpx,
-    save_tour,
-    sync_filesystem_to_db,
-)
+from storage.db import init_db
+from storage.tour_storage import sync_filesystem_to_db
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Load environment variables
-load_dotenv(Path(__file__).parent.parent.parent / ".env")
+# Priority: Project .env > Home ~/.env (project overrides home)
+PROJECT_ROOT = Path(__file__).parent.parent.parent
+load_dotenv(Path.home() / ".env")  # Personal API keys (not in git)
+load_dotenv(PROJECT_ROOT / ".env", override=True)  # Project-specific overrides
 
-# Module-level MCP manager instance, accessible to endpoints
+# Module-level MCP manager instance
 _mcp_manager: MCPManager | None = None
 
 
@@ -84,381 +67,18 @@ async def lifespan(app: FastAPI):
     logger.info("MCP manager shut down")
 
 
+# Create FastAPI app
 app = FastAPI(title="Gerrit on Tour API", lifespan=lifespan)
 
-
-@app.post("/api/chat")
-async def chat(request: Request) -> EventSourceResponse:
-    """Handle chat messages and stream responses via SSE.
-
-    Request body:
-        - message: User message (required)
-        - session_id: Session ID (optional, auto-generated if not provided)
-        - language: Response language "de" or "en" (default: "de")
-
-    SSE Events:
-        - status: Progress updates (e.g., "Calculating route...")
-        - map: Map data (route, waypoints, pois)
-        - elevation: Elevation profile data
-        - gpx: GPX file content for download
-        - tour: Final tour markdown
-        - error: Error message
-        - done: Completion signal with iteration count
-    """
-    body: dict[str, Any] = await request.json()
-    message: str = body.get("message", "")
-    session_id: str | None = body.get("session_id")
-    language: str = body.get("language", "de")
-
-    if not message:
-        return JSONResponse({"error": "No message provided"}, status_code=400)
-
-    # Auto-generate session ID if not provided
-    if not session_id:
-        session_id = str(uuid.uuid4())
-        logger.info("Generated new session ID: %s", session_id)
-
-    logger.info(
-        "Chat request: session=%s, lang=%s, message=%s",
-        session_id,
-        language,
-        message[:80],
-    )
-
-    # Ensure session exists in database
-    session = await get_session(session_id)
-    if not session:
-        tour_type = _detect_tour_type(message)
-        await create_session(
-            session_id=session_id,
-            language=language,
-            tour_type=tour_type if tour_type != "general" else None,
-        )
-        logger.debug("Created new session: %s (tour_type: %s)", session_id, tour_type)
-
-    # Get chat history from database
-    chat_history = await get_chat_history(session_id)
-
-    async def event_generator() -> AsyncGenerator[dict[str, str], None]:
-        lang = language if language in ("de", "en") else "de"
-
-        # First, send session_id to client (for new sessions)
-        yield {
-            "event": "session",
-            "data": json.dumps({"session_id": session_id}, ensure_ascii=False),
-        }
-
-        assistant_response: str = ""
-        has_error: bool = False
-
-        try:
-            async for event in run_agent(
-                user_message=message,
-                chat_history=chat_history,
-                mcp=get_mcp_manager(),
-                language=lang,
-            ):
-                # Capture assistant response for history
-                if event["event"] == "tour" and "markdown" in event["data"]:
-                    assistant_response = event["data"]["markdown"]
-                if event["event"] == "error":
-                    has_error = True
-
-                yield {
-                    "event": event["event"],
-                    "data": json.dumps(event["data"], ensure_ascii=False),
-                }
-        except Exception as e:
-            logger.exception("Unhandled exception in event generator")
-            has_error = True
-            yield {
-                "event": "error",
-                "data": json.dumps(
-                    {"error": msg("internal_error", lang, detail=str(e))},
-                    ensure_ascii=False,
-                ),
-            }
-            return
-
-        # Save messages to database (only on success)
-        if not has_error:
-            await add_message(session_id, "user", message)
-            if assistant_response:
-                await add_message(session_id, "assistant", assistant_response)
-                logger.info(
-                    "Session %s: saved messages (history now %d)",
-                    session_id,
-                    len(chat_history) + 2,
-                )
-
-                # Update session title from first response heading
-                if not session or not session.title:
-                    import re
-
-                    heading_match = re.search(r"^#{1,3}\s+(.+)$", assistant_response, re.MULTILINE)
-                    if heading_match:
-                        title = heading_match.group(1).strip()[:100]
-                        await update_session(session_id, title=title)
-                        logger.debug("Updated session title: %s", title)
-
-    return EventSourceResponse(event_generator())
-
-
-@app.get("/api/sessions")
-async def get_sessions(limit: int = 50) -> list[dict[str, Any]]:
-    """List recent sessions."""
-    sessions = await list_sessions(limit=limit)
-    return [
-        {
-            "id": s.id,
-            "title": s.title,
-            "language": s.language,
-            "tour_type": s.tour_type,
-            "created_at": s.created_at.isoformat(),
-            "updated_at": s.updated_at.isoformat(),
-        }
-        for s in sessions
-    ]
-
-
-@app.get("/api/sessions/{session_id}")
-async def get_session_detail(session_id: str):
-    """Get session details including messages."""
-    session = await get_session(session_id)
-    if not session:
-        return JSONResponse({"error": "Session not found"}, status_code=404)
-
-    messages = await get_chat_history(session_id)
-    return {
-        "id": session.id,
-        "title": session.title,
-        "language": session.language,
-        "tour_type": session.tour_type,
-        "created_at": session.created_at.isoformat(),
-        "updated_at": session.updated_at.isoformat(),
-        "messages": messages,
-    }
-
-
-@app.get("/api/health")
-async def health() -> dict[str, Any]:
-    """Health check endpoint."""
-    # Check for API keys
-    has_gemini = bool(os.getenv("GEMINI_API_KEY"))
-    has_openai = bool(os.getenv("OPENAI_API_KEY"))
-    has_anthropic = bool(os.getenv("ANTHROPIC_API_KEY"))
-
-    return {
-        "status": "ok",
-        "providers": {
-            "google": has_gemini,
-            "openai": has_openai,
-            "anthropic": has_anthropic,
-        },
-    }
-
-
-# ============================================================================
-# Tour Library Endpoints
-# ============================================================================
-
-
-@app.get("/api/tours")
-async def get_tours(tour_type: str | None = None, limit: int = 100) -> list[dict[str, Any]]:
-    """List tours, optionally filtered by type.
-
-    Query params:
-        - tour_type: Filter by "bike" or "road" (optional)
-        - limit: Max number of results (default: 100)
-    """
-    tours = await list_tours(tour_type=tour_type, limit=limit)
-    return [
-        {
-            "id": t.id,
-            "title": t.title,
-            "tour_type": t.tour_type,
-            "slug": t.slug,
-            "summary": t.summary,
-            "created_at": t.created_at.isoformat(),
-            "updated_at": t.updated_at.isoformat(),
-        }
-        for t in tours
-    ]
-
-
-@app.get("/api/tours/{tour_type}/{slug}")
-async def get_tour(tour_type: str, slug: str):
-    """Get tour details including markdown content.
-
-    Path params:
-        - tour_type: "bike" or "road"
-        - slug: Tour slug (URL-safe name)
-    """
-    if tour_type not in ("bike", "road"):
-        return JSONResponse({"error": "Invalid tour_type"}, status_code=400)
-
-    detail = await get_tour_detail(tour_type, slug)
-    if not detail:
-        return JSONResponse({"error": "Tour not found"}, status_code=404)
-
-    return detail
-
-
-@app.get("/api/tours/{tour_type}/{slug}/gpx")
-async def get_tour_gpx_file(tour_type: str, slug: str):
-    """Download GPX file for a tour.
-
-    Returns the GPX file as plain text with appropriate content type.
-    """
-    if tour_type not in ("bike", "road"):
-        return JSONResponse({"error": "Invalid tour_type"}, status_code=400)
-
-    gpx = get_tour_gpx(tour_type, slug)
-    if not gpx:
-        return JSONResponse({"error": "GPX not found"}, status_code=404)
-
-    return PlainTextResponse(
-        content=gpx,
-        media_type="application/gpx+xml",
-        headers={"Content-Disposition": f'attachment; filename="{slug}.gpx"'},
-    )
-
-
-@app.get("/api/tours/{tour_type}/{slug}/maps/{filename}")
-async def get_tour_map_image(tour_type: str, slug: str, filename: str):
-    """Serve map images for a tour.
-
-    Returns PNG images from the tour's maps/ directory.
-    """
-    from fastapi.responses import FileResponse
-
-    if tour_type not in ("bike", "road"):
-        return JSONResponse({"error": "Invalid tour_type"}, status_code=400)
-
-    # Security: only allow .png files, no path traversal
-    if not filename.endswith(".png") or "/" in filename or "\\" in filename:
-        return JSONResponse({"error": "Invalid filename"}, status_code=400)
-
-    from tour_storage import get_tour_path
-
-    map_path = get_tour_path(tour_type, slug) / "maps" / filename
-    if not map_path.exists():
-        return JSONResponse({"error": "Image not found"}, status_code=404)
-
-    return FileResponse(map_path, media_type="image/png")
-
-
-@app.post("/api/tours")
-async def create_tour_endpoint(request: Request):
-    """Save a new tour.
-
-    Request body:
-        - markdown: Tour content (required)
-        - tour_type: "bike" or "road" (required)
-        - gpx: GPX content (optional)
-        - session_id: Link to chat session (optional)
-    """
-    body: dict[str, Any] = await request.json()
-    markdown = body.get("markdown")
-    tour_type = body.get("tour_type")
-    gpx = body.get("gpx")
-    session_id = body.get("session_id")
-
-    if not markdown:
-        return JSONResponse({"error": "markdown is required"}, status_code=400)
-    if tour_type not in ("bike", "road"):
-        return JSONResponse({"error": "tour_type must be 'bike' or 'road'"}, status_code=400)
-
-    try:
-        tour = await save_tour(
-            markdown=markdown,
-            tour_type=tour_type,
-            gpx_content=gpx,
-            session_id=session_id,
-        )
-        return {
-            "id": tour.id,
-            "title": tour.title,
-            "tour_type": tour.tour_type,
-            "slug": tour.slug,
-            "created_at": tour.created_at.isoformat(),
-        }
-    except Exception as e:
-        logger.exception("Failed to save tour")
-        return JSONResponse({"error": str(e)}, status_code=500)
-
-
-@app.delete("/api/tours/{tour_type}/{slug}")
-async def delete_tour_endpoint(tour_type: str, slug: str):
-    """Move a tour to trash.
-
-    Tours are not permanently deleted but moved to trips/.trash/
-    for potential recovery.
-    """
-    from tour_storage import move_to_trash
-
-    if tour_type not in ("bike", "road"):
-        return JSONResponse({"error": "Invalid tour_type"}, status_code=400)
-
-    success = await move_to_trash(tour_type, slug)
-    if not success:
-        return JSONResponse({"error": "Tour not found"}, status_code=404)
-
-    return {"status": "moved_to_trash", "tour_type": tour_type, "slug": slug}
-
-
-@app.get("/api/trash")
-async def list_trash_endpoint():
-    """List all tours in trash."""
-    from tour_storage import list_trash
-
-    return list_trash()
-
-
-@app.post("/api/trash/{tour_type}/{trash_name}/restore")
-async def restore_tour_endpoint(tour_type: str, trash_name: str):
-    """Restore a tour from trash."""
-    from tour_storage import restore_from_trash
-
-    if tour_type not in ("bike", "road"):
-        return JSONResponse({"error": "Invalid tour_type"}, status_code=400)
-
-    tour = await restore_from_trash(tour_type, trash_name)
-    if not tour:
-        return JSONResponse({"error": "Tour not found in trash"}, status_code=404)
-
-    return {
-        "status": "restored",
-        "id": tour.id,
-        "title": tour.title,
-        "tour_type": tour.tour_type,
-        "slug": tour.slug,
-    }
-
-
-@app.delete("/api/trash/{tour_type}/{trash_name}")
-async def delete_from_trash_endpoint(tour_type: str, trash_name: str):
-    """Permanently delete a tour from trash."""
-    from tour_storage import delete_from_trash
-
-    if tour_type not in ("bike", "road"):
-        return JSONResponse({"error": "Invalid tour_type"}, status_code=400)
-
-    success = await delete_from_trash(tour_type, trash_name)
-    if not success:
-        return JSONResponse({"error": "Tour not found in trash"}, status_code=404)
-
-    return {"status": "permanently_deleted"}
-
-
-@app.delete("/api/trash")
-async def empty_trash_endpoint():
-    """Permanently delete all tours in trash."""
-    from tour_storage import empty_trash
-
-    count = await empty_trash()
-    return {"status": "emptied", "deleted_count": count}
-
+# Wire up MCP manager getter for chat route
+chat.set_mcp_manager_getter(get_mcp_manager)
+
+# Register routers
+app.include_router(chat.router)
+app.include_router(sessions.router)
+app.include_router(tours.router)
+app.include_router(trash.router)
+app.include_router(health.router)
 
 # Serve frontend static files (production)
 FRONTEND_DIST: Path = Path(__file__).parent.parent / "frontend" / "dist"

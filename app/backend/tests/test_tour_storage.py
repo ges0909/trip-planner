@@ -32,7 +32,7 @@ def setup_test_dirs():
 @pytest.fixture
 def mock_paths(monkeypatch):
     """Patch TRIPS_DIR and TRASH_DIR to use test directories."""
-    import tour_storage
+    import storage.tour_storage as tour_storage
 
     monkeypatch.setattr(tour_storage, "TRIPS_DIR", TEST_TRIPS_DIR)
     monkeypatch.setattr(tour_storage, "TRASH_DIR", TEST_TRASH_DIR)
@@ -56,7 +56,7 @@ class TestMoveToTrash:
     async def test_move_existing_tour_to_trash(self, mock_paths):
         """Moving an existing tour should relocate it to .trash/ with timestamp."""
         trips_dir, trash_dir = mock_paths
-        import tour_storage
+        import storage.tour_storage as tour_storage
 
         # Create a tour
         create_test_tour(trips_dir, "bike", "test-tour")
@@ -81,7 +81,7 @@ class TestMoveToTrash:
     @pytest.mark.asyncio
     async def test_move_nonexistent_tour_returns_false(self, mock_paths):
         """Moving a tour that doesn't exist should return False."""
-        import tour_storage
+        import storage.tour_storage as tour_storage
 
         result = await tour_storage.move_to_trash("bike", "nonexistent")
         assert result is False
@@ -90,7 +90,7 @@ class TestMoveToTrash:
     async def test_trash_name_includes_timestamp(self, mock_paths):
         """Trash folder name should include YYYYMMDD-HHMMSS timestamp."""
         trips_dir, trash_dir = mock_paths
-        import tour_storage
+        import storage.tour_storage as tour_storage
 
         create_test_tour(trips_dir, "road", "my-trip")
 
@@ -110,7 +110,7 @@ class TestListTrash:
 
     def test_empty_trash_returns_empty_list(self, mock_paths):
         """When trash is empty, list_trash returns []."""
-        import tour_storage
+        import storage.tour_storage as tour_storage
 
         result = tour_storage.list_trash()
         assert result == []
@@ -118,7 +118,7 @@ class TestListTrash:
     def test_list_trash_with_items(self, mock_paths):
         """list_trash should return items with correct metadata."""
         trips_dir, trash_dir = mock_paths
-        import tour_storage
+        import storage.tour_storage as tour_storage
 
         # Create trash items manually
         (trash_dir / "bike" / "tour-a_20240809-120000").mkdir(parents=True)
@@ -149,7 +149,7 @@ class TestRestoreFromTrash:
     async def test_restore_tour_from_trash(self, mock_paths):
         """Restoring a tour should move it back and re-index in DB."""
         trips_dir, trash_dir = mock_paths
-        import tour_storage
+        import storage.tour_storage as tour_storage
 
         # Create a trash item
         trash_item = trash_dir / "bike" / "my-tour_20240809-120000"
@@ -186,7 +186,7 @@ class TestRestoreFromTrash:
     async def test_restore_with_slug_collision_gets_new_slug(self, mock_paths):
         """If original slug is taken, restored tour gets a numbered suffix."""
         trips_dir, trash_dir = mock_paths
-        import tour_storage
+        import storage.tour_storage as tour_storage
 
         # Create existing tour with same slug
         create_test_tour(trips_dir, "bike", "my-tour")
@@ -236,7 +236,7 @@ class TestRestoreFromTrash:
     @pytest.mark.asyncio
     async def test_restore_nonexistent_returns_none(self, mock_paths):
         """Restoring a non-existent trash item returns None."""
-        import tour_storage
+        import storage.tour_storage as tour_storage
 
         result = await tour_storage.restore_from_trash("bike", "nonexistent_20240809-120000")
         assert result is None
@@ -249,7 +249,7 @@ class TestDeleteFromTrash:
     async def test_delete_single_item_from_trash(self, mock_paths):
         """delete_from_trash should permanently remove a single item."""
         _, trash_dir = mock_paths
-        import tour_storage
+        import storage.tour_storage as tour_storage
 
         # Create trash item
         trash_item = trash_dir / "bike" / "to-delete_20240809-120000"
@@ -264,7 +264,7 @@ class TestDeleteFromTrash:
     @pytest.mark.asyncio
     async def test_delete_nonexistent_from_trash_returns_false(self, mock_paths):
         """Deleting non-existent item returns False."""
-        import tour_storage
+        import storage.tour_storage as tour_storage
 
         result = await tour_storage.delete_from_trash("bike", "nonexistent")
         assert result is False
@@ -273,7 +273,7 @@ class TestDeleteFromTrash:
     async def test_empty_trash_deletes_all(self, mock_paths):
         """empty_trash should permanently delete all items in trash."""
         _, trash_dir = mock_paths
-        import tour_storage
+        import storage.tour_storage as tour_storage
 
         # Create multiple trash items
         for i in range(3):
@@ -296,21 +296,21 @@ class TestExtractTitle:
 
     def test_extracts_h1_title(self):
         """Should extract title from # heading."""
-        from tour_storage import _extract_title_from_markdown
+        from storage.tour_storage import _extract_title_from_markdown
 
         result = _extract_title_from_markdown("# My Great Tour\n\nSome content.")
         assert result == "My Great Tour"
 
     def test_extracts_h2_title(self):
         """Should extract title from ## heading if no h1."""
-        from tour_storage import _extract_title_from_markdown
+        from storage.tour_storage import _extract_title_from_markdown
 
         result = _extract_title_from_markdown("## Another Tour\n\nContent.")
         assert result == "Another Tour"
 
     def test_returns_untitled_if_no_heading(self):
         """Returns 'Untitled Tour' if no heading found."""
-        from tour_storage import _extract_title_from_markdown
+        from storage.tour_storage import _extract_title_from_markdown
 
         result = _extract_title_from_markdown("Just some text without heading.")
         assert result == "Untitled Tour"
@@ -321,7 +321,7 @@ class TestExtractSummary:
 
     def test_extracts_first_paragraph(self):
         """Should extract first paragraph after title."""
-        from tour_storage import _extract_summary_from_markdown
+        from storage.tour_storage import _extract_summary_from_markdown
 
         md = "# Title\n\nThis is the summary paragraph.\n\n## Next section"
         result = _extract_summary_from_markdown(md)
@@ -329,7 +329,7 @@ class TestExtractSummary:
 
     def test_truncates_long_summary(self):
         """Summary should be truncated to 500 chars."""
-        from tour_storage import _extract_summary_from_markdown
+        from storage.tour_storage import _extract_summary_from_markdown
 
         long_text = "x" * 600
         md = f"# Title\n\n{long_text}\n\n## Next"
@@ -339,7 +339,7 @@ class TestExtractSummary:
 
     def test_returns_none_for_no_summary(self):
         """Returns None if no paragraph after title."""
-        from tour_storage import _extract_summary_from_markdown
+        from storage.tour_storage import _extract_summary_from_markdown
 
         result = _extract_summary_from_markdown("# Just a title")
         assert result is None

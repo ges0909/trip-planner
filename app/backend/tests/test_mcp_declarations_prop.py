@@ -11,9 +11,9 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from core.mcp_manager import MCPManager, ServerConfig, ServerInstance
 from hypothesis import given, settings
 from hypothesis import strategies as st
-from mcp_manager import MCPManager, ServerConfig, ServerInstance
 
 # --- Strategies ---
 
@@ -68,7 +68,7 @@ def multiple_servers_with_tools(
     )
 
     servers = []
-    for name, prefix in zip(names, prefixes):
+    for name, prefix in zip(names, prefixes, strict=True):
         num_tools = draw(st.integers(min_value=1, max_value=8))
         tool_names = draw(
             st.lists(_tool_names, min_size=num_tools, max_size=num_tools, unique=True)

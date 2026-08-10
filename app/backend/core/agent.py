@@ -18,8 +18,6 @@ from typing import Any
 
 from i18n import Lang
 from i18n import msg as i18n_msg
-from mcp_manager import MCPManager
-from model_gateway import get_model
 from pydantic_ai.messages import (
     ModelMessage,
     ModelRequest,
@@ -33,7 +31,10 @@ from pydantic_ai.messages import (
 from pydantic_ai.models import ModelRequestParameters
 from pydantic_ai.settings import ModelSettings
 from pydantic_ai.tools import ToolDefinition
-from steering import build_system_prompt
+
+from core.mcp_manager import MCPManager
+from core.model_gateway import get_model
+from core.steering import build_system_prompt
 
 logger = logging.getLogger(__name__)
 

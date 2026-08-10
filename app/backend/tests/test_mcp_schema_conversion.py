@@ -7,7 +7,7 @@ Validates: Requirements 2.2, 4.1, 4.2
 """
 
 import pytest
-from mcp_manager import MCPManager
+from core.mcp_manager import MCPManager
 
 
 @pytest.fixture

@@ -8,11 +8,15 @@ Configuration via environment variables:
 
 import logging
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 from pydantic_ai.models import Model, infer_model
 
-load_dotenv()
+# Load .env: Home first, then project (project overrides)
+PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
+load_dotenv(Path.home() / ".env")  # Personal API keys
+load_dotenv(PROJECT_ROOT / ".env", override=True)  # Project overrides
 
 logger = logging.getLogger(__name__)
 
@@ -55,8 +59,9 @@ def get_model() -> Model:
     _setup_openrouter()
 
     model_id = get_model_id()
-    # pydantic-ai format for OpenRouter: openai:openrouter/<model>
-    full_model_id = f"openai:openrouter/{model_id}"
+    # pydantic-ai format for OpenAI-compatible APIs: openai:<model>
+    # OpenRouter uses the model ID directly (e.g., meta-llama/llama-3.3-70b-instruct)
+    full_model_id = f"openai:{model_id}"
 
     logger.info("Initializing LLM: %s", full_model_id)
     return infer_model(full_model_id)

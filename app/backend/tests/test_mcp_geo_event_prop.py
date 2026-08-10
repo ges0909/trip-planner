@@ -12,7 +12,7 @@ emission decisions.
 """
 
 import pytest
-from agent import GEO_POINT_PATTERNS, GEO_ROUTE_PATTERNS, _is_geocode_tool, _is_route_tool
+from core.agent import GEO_POINT_PATTERNS, GEO_ROUTE_PATTERNS, _is_geocode_tool, _is_route_tool
 from hypothesis import given, settings
 from hypothesis import strategies as st
 

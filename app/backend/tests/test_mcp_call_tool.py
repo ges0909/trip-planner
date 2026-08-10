@@ -11,7 +11,7 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from mcp_manager import MCPManager, ServerConfig, ServerInstance
+from core.mcp_manager import MCPManager, ServerConfig, ServerInstance
 
 
 @pytest.fixture

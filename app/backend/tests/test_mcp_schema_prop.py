@@ -9,9 +9,9 @@ by underscores, (b) the original description preserved, and (c) parameters
 matching the inputSchema structure (type, properties, required).
 """
 
+from core.mcp_manager import MCPManager
 from hypothesis import given, settings
 from hypothesis import strategies as st
-from mcp_manager import MCPManager
 
 # --- Strategies ---
 

@@ -9,8 +9,9 @@ from pathlib import Path
 import httpx
 from dotenv import load_dotenv
 
-# Load .env from project root
-load_dotenv(Path(__file__).resolve().parent.parent.parent / ".env")
+# Load .env: Home first, then project (project overrides)
+load_dotenv(Path.home() / ".env")
+load_dotenv(Path(__file__).resolve().parent.parent.parent / ".env", override=True)
 
 SERPAPI_API_KEY = os.getenv("SERPAPI_API_KEY", "")
 SERPAPI_BASE_URL = "https://serpapi.com/search.json"

@@ -9,8 +9,9 @@ from pathlib import Path
 import httpx
 from dotenv import load_dotenv
 
-# Load .env from project root
-load_dotenv(Path(__file__).resolve().parent.parent.parent / ".env")
+# Load .env: Home first, then project (project overrides)
+load_dotenv(Path.home() / ".env")
+load_dotenv(Path(__file__).resolve().parent.parent.parent / ".env", override=True)
 
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 TAVILY_BASE_URL = "https://api.tavily.com"

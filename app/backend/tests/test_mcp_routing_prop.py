@@ -13,9 +13,9 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from core.mcp_manager import MCPManager, ServerConfig, ServerInstance
 from hypothesis import given, settings
 from hypothesis import strategies as st
-from mcp_manager import MCPManager, ServerConfig, ServerInstance
 
 # --- Strategies ---
 

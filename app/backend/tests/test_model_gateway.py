@@ -17,7 +17,7 @@ class TestGetModelId:
 
     def test_returns_default_model_when_not_set(self):
         """Should return default model when LLM_MODEL not set."""
-        from model_gateway import DEFAULT_MODEL, get_model_id
+        from core.model_gateway import DEFAULT_MODEL, get_model_id
 
         with patch.dict(os.environ, {}, clear=True):
             # Remove LLM_MODEL if present
@@ -29,7 +29,7 @@ class TestGetModelId:
 
     def test_returns_custom_model_when_set(self):
         """Should return custom model from environment."""
-        from model_gateway import get_model_id
+        from core.model_gateway import get_model_id
 
         with patch.dict(os.environ, {"LLM_MODEL": "anthropic/claude-sonnet-4"}):
             result = get_model_id()
@@ -42,7 +42,7 @@ class TestGetModelInfo:
 
     def test_returns_correct_structure(self):
         """Should return dict with model, provider, and api_key_configured."""
-        from model_gateway import get_model_info
+        from core.model_gateway import get_model_info
 
         with patch.dict(os.environ, {"OPENROUTER_API_KEY": "sk-test-key"}):
             result = get_model_info()
@@ -54,7 +54,7 @@ class TestGetModelInfo:
 
     def test_api_key_configured_true_when_set(self):
         """api_key_configured should be 'true' when key is set."""
-        from model_gateway import get_model_info
+        from core.model_gateway import get_model_info
 
         with patch.dict(os.environ, {"OPENROUTER_API_KEY": "sk-test-key"}):
             result = get_model_info()
@@ -63,7 +63,7 @@ class TestGetModelInfo:
 
     def test_api_key_configured_false_when_not_set(self):
         """api_key_configured should be 'false' when key is not set."""
-        from model_gateway import get_model_info
+        from core.model_gateway import get_model_info
 
         with patch.dict(os.environ, {}, clear=True):
             os.environ.pop("OPENROUTER_API_KEY", None)
@@ -77,7 +77,7 @@ class TestSetupOpenRouter:
 
     def test_sets_openai_env_vars(self):
         """Should set OPENAI_API_KEY and OPENAI_BASE_URL for pydantic-ai."""
-        from model_gateway import OPENROUTER_BASE_URL, _setup_openrouter
+        from core.model_gateway import OPENROUTER_BASE_URL, _setup_openrouter
 
         with patch.dict(os.environ, {"OPENROUTER_API_KEY": "sk-or-test-key"}):
             _setup_openrouter()
@@ -87,7 +87,7 @@ class TestSetupOpenRouter:
 
     def test_raises_error_when_api_key_missing(self):
         """Should raise RuntimeError when OPENROUTER_API_KEY not set."""
-        from model_gateway import _setup_openrouter
+        from core.model_gateway import _setup_openrouter
 
         with patch.dict(os.environ, {}, clear=True):
             os.environ.pop("OPENROUTER_API_KEY", None)
@@ -104,7 +104,7 @@ class TestGetModel:
 
     def test_raises_error_without_api_key(self):
         """get_model should raise RuntimeError when API key missing."""
-        from model_gateway import get_model
+        from core.model_gateway import get_model
 
         with patch.dict(os.environ, {}, clear=True):
             os.environ.pop("OPENROUTER_API_KEY", None)
@@ -114,7 +114,7 @@ class TestGetModel:
 
     def test_returns_model_with_valid_config(self):
         """get_model should return a Model instance when properly configured."""
-        from model_gateway import get_model
+        from core.model_gateway import get_model
         from pydantic_ai.models import Model
 
         with patch.dict(os.environ, {"OPENROUTER_API_KEY": "sk-or-test-key"}):
@@ -128,12 +128,12 @@ class TestOpenRouterConstants:
 
     def test_default_model_is_llama(self):
         """Default model should be Llama 3.3 70B."""
-        from model_gateway import DEFAULT_MODEL
+        from core.model_gateway import DEFAULT_MODEL
 
         assert DEFAULT_MODEL == "meta-llama/llama-3.3-70b-instruct"
 
     def test_base_url_is_openrouter(self):
         """Base URL should be OpenRouter's API."""
-        from model_gateway import OPENROUTER_BASE_URL
+        from core.model_gateway import OPENROUTER_BASE_URL
 
         assert OPENROUTER_BASE_URL == "https://openrouter.ai/api/v1"

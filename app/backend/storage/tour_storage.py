@@ -23,12 +23,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from db import Tour, create_tour, delete_tour_by_slug, generate_slug, get_tour_by_slug
+from storage.db import Tour, create_tour, delete_tour_by_slug, generate_slug, get_tour_by_slug
 
 logger = logging.getLogger(__name__)
 
-# Project root and trips directory
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+# Project root and trips directory (4 levels up from storage/)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 TRIPS_DIR = PROJECT_ROOT / "trips"
 TRASH_DIR = TRIPS_DIR / ".trash"
 
@@ -309,7 +309,7 @@ async def get_tour_detail(tour_type: str, slug: str) -> dict[str, Any] | None:
         - markdown (from filesystem, with rewritten image URLs)
         - has_gpx (boolean)
     """
-    from db import get_tour_by_slug
+    from storage.db import get_tour_by_slug
 
     tour = await get_tour_by_slug(slug)
     if not tour:

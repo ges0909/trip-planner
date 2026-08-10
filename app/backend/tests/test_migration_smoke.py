@@ -38,7 +38,7 @@ class TestNoSanitizeSteering:
 
     def test_steering_module_has_no_sanitize_function(self) -> None:
         """Import steering module and verify _sanitize_steering is not an attribute."""
-        import steering
+        from core import steering
 
         assert not hasattr(steering, "_sanitize_steering"), (
             "steering module still has _sanitize_steering function — "
@@ -47,7 +47,7 @@ class TestNoSanitizeSteering:
 
     def test_steering_module_has_no_sections_to_strip(self) -> None:
         """Verify _SECTIONS_TO_STRIP config is also removed."""
-        import steering
+        from core import steering
 
         assert not hasattr(steering, "_SECTIONS_TO_STRIP"), (
             "steering module still has _SECTIONS_TO_STRIP — sanitization config should be removed"
@@ -103,14 +103,14 @@ class TestMCPServerConfigs:
 
     def test_build_server_configs_returns_13_configs(self) -> None:
         """Import build_server_configs and verify it returns 13 configs."""
-        from mcp_manager import build_server_configs
+        from core.mcp_manager import build_server_configs
 
         configs = build_server_configs()
         assert len(configs) == 13, f"Expected 13 server configs, got {len(configs)}"
 
     def test_build_server_configs_has_correct_names(self) -> None:
         """Verify all 13 expected server names are present."""
-        from mcp_manager import build_server_configs
+        from core.mcp_manager import build_server_configs
 
         configs = build_server_configs()
         names = sorted(c.name for c in configs)
@@ -119,7 +119,7 @@ class TestMCPServerConfigs:
 
     def test_each_config_has_valid_fields(self) -> None:
         """Verify each ServerConfig has non-empty name, prefix, command, and cwd."""
-        from mcp_manager import build_server_configs
+        from core.mcp_manager import build_server_configs
 
         configs = build_server_configs()
         for config in configs:
@@ -134,7 +134,7 @@ class TestMCPManagerInitializes:
 
     def test_mcp_manager_accepts_all_configs(self) -> None:
         """Create an MCPManager with build_server_configs() and verify it has 13 configs."""
-        from mcp_manager import MCPManager, build_server_configs
+        from core.mcp_manager import MCPManager, build_server_configs
 
         configs = build_server_configs()
         manager = MCPManager(configs)
@@ -145,7 +145,7 @@ class TestMCPManagerInitializes:
 
     def test_mcp_manager_has_empty_instances_on_init(self) -> None:
         """Verify no servers are spawned on initialization (lazy startup)."""
-        from mcp_manager import MCPManager, build_server_configs
+        from core.mcp_manager import MCPManager, build_server_configs
 
         configs = build_server_configs()
         manager = MCPManager(configs)

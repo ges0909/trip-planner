@@ -16,7 +16,7 @@ def temp_db_path(tmp_path):
 @pytest.fixture
 def mock_db_path(temp_db_path, monkeypatch):
     """Patch DB_PATH to use temporary database."""
-    import db
+    import storage.db as db
 
     monkeypatch.setattr(db, "DB_PATH", temp_db_path)
     monkeypatch.setattr(db, "DB_DIR", temp_db_path.parent)
@@ -29,7 +29,7 @@ class TestDeleteTourBySlug:
     @pytest.mark.asyncio
     async def test_delete_existing_tour_by_slug(self, mock_db_path):
         """Deleting an existing tour by slug should return True."""
-        import db
+        import storage.db as db
 
         await db.init_db()
 
@@ -57,7 +57,7 @@ class TestDeleteTourBySlug:
     @pytest.mark.asyncio
     async def test_delete_nonexistent_slug_returns_false(self, mock_db_path):
         """Deleting a non-existent slug should return False."""
-        import db
+        import storage.db as db
 
         await db.init_db()
 
@@ -67,7 +67,7 @@ class TestDeleteTourBySlug:
     @pytest.mark.asyncio
     async def test_delete_by_slug_only_deletes_matching(self, mock_db_path):
         """delete_tour_by_slug should only delete the matching tour."""
-        import db
+        import storage.db as db
 
         await db.init_db()
 
@@ -88,13 +88,13 @@ class TestGenerateSlug:
 
     def test_basic_slug_generation(self):
         """Basic title should become lowercase hyphenated slug."""
-        from db import generate_slug
+        from storage.db import generate_slug
 
         assert generate_slug("My Great Tour") == "my-great-tour"
 
     def test_german_umlauts_replaced(self):
         """German umlauts should be replaced with ASCII equivalents."""
-        from db import generate_slug
+        from storage.db import generate_slug
 
         assert generate_slug("Berliner Überlandradweg") == "berliner-ueberlandradweg"
         assert generate_slug("Köln nach München") == "koeln-nach-muenchen"
@@ -102,33 +102,33 @@ class TestGenerateSlug:
 
     def test_eszett_replaced(self):
         """ß should be replaced with ss."""
-        from db import generate_slug
+        from storage.db import generate_slug
 
         assert generate_slug("Große Straße") == "grosse-strasse"
 
     def test_special_characters_removed(self):
         """Special characters become hyphens."""
-        from db import generate_slug
+        from storage.db import generate_slug
 
         assert generate_slug("Tour: Berlin → Potsdam!") == "tour-berlin-potsdam"
 
     def test_consecutive_hyphens_collapsed(self):
         """Multiple special chars become single hyphen."""
-        from db import generate_slug
+        from storage.db import generate_slug
 
         assert generate_slug("A   B   C") == "a-b-c"
         assert generate_slug("X---Y---Z") == "x-y-z"
 
     def test_leading_trailing_hyphens_removed(self):
         """No leading or trailing hyphens."""
-        from db import generate_slug
+        from storage.db import generate_slug
 
         assert generate_slug("  Spaces Around  ") == "spaces-around"
         assert generate_slug("---dashes---") == "dashes"
 
     def test_empty_title_returns_untitled(self):
         """Empty or special-only title returns 'untitled'."""
-        from db import generate_slug
+        from storage.db import generate_slug
 
         assert generate_slug("") == "untitled"
         assert generate_slug("---") == "untitled"
@@ -136,7 +136,7 @@ class TestGenerateSlug:
 
     def test_unicode_normalization(self):
         """Accented characters should be normalized."""
-        from db import generate_slug
+        from storage.db import generate_slug
 
         # é can be represented as e + combining accent
         assert generate_slug("Café Tour") == "cafe-tour"

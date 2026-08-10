@@ -7,9 +7,9 @@ the content through the simplified steering module SHALL preserve all `mcp_`
 prefixed names unchanged in the output.
 """
 
+from core.steering import build_system_prompt
 from hypothesis import given, settings
 from hypothesis import strategies as st
-from steering import build_system_prompt
 
 # --- Strategies ---
 

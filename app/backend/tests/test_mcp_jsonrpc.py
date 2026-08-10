@@ -12,7 +12,7 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from mcp_manager import MCPManager, ServerConfig, ServerInstance
+from core.mcp_manager import MCPManager, ServerConfig, ServerInstance
 
 
 @pytest.fixture
@@ -191,7 +191,7 @@ class TestTimeoutHandling:
         manager = MCPManager(configs=[])
 
         # Patch asyncio.wait_for to simulate the 60s timeout expiring
-        with patch("mcp_manager.asyncio.wait_for", side_effect=TimeoutError()):
+        with patch("core.mcp_manager.asyncio.wait_for", side_effect=TimeoutError()):
             with pytest.raises(asyncio.TimeoutError):
                 await manager._send_request(server_instance, "tools/call", {"name": "slow"})
 

@@ -12,9 +12,9 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from core.mcp_manager import MCPManager, ServerConfig, ServerInstance
 from hypothesis import given, settings
 from hypothesis import strategies as st
-from mcp_manager import MCPManager, ServerConfig, ServerInstance
 
 # Strategy: JSON-RPC error codes (standard range -32700 to -32000, plus custom)
 error_codes = st.one_of(

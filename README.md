@@ -52,13 +52,13 @@ The LLM is both **planner** and **author** — it doesn't just route, it researc
 A browser UI that replicates the Kiro workflow without requiring the IDE:
 
 - **Frontend:** Vue 3 + Vite + TypeScript + Leaflet
-- **Backend:** FastAPI + Google Gemini 2.5 Flash (SSE streaming)
+- **Backend:** FastAPI + OpenRouter (SSE streaming)
 - **MCP Manager:** Subprocess manager spawning MCP servers on demand
 
 ```bash
 # Run locally
-cd app/backend && uv run uvicorn main:app --reload  # Port 8000
-cd app/frontend && npm install && npm run dev        # Port 5173 (proxies /api)
+cd app/backend && uv run python -m uvicorn main:app --reload  # Port 8000
+cd app/frontend && npm install && npm run dev                  # Port 5173 (proxies /api)
 ```
 
 Open http://localhost:5173 and start planning.
@@ -69,13 +69,22 @@ Open http://localhost:5173 and start planning.
 
 - **Python:** 3.12+ (managed by [uv](https://docs.astral.sh/uv/getting-started/installation/))
 - **Node.js:** 20+ (for frontend)
-- **API Keys:** Create a `.env` file in the project root:
+- **API Keys:** Loaded from two locations (in order):
+  1. `~/.env` — Personal keys (shared across projects, not in git)
+  2. `project/.env` — Project-specific overrides (gitignored)
+
+  Project values override home if both define the same key.
 
 ```bash
-GEMINI_API_KEY=your-key        # Free: https://aistudio.google.com
-ORS_API_KEY=your-key           # Free: https://openrouteservice.org/dev/#/signup
-TAVILY_API_KEY=your-key        # Free (1000 req/month): https://tavily.com
-SERPAPI_API_KEY=your-key       # Optional: https://serpapi.com (flight search)
+# Option 1: Personal keys in home directory (recommended)
+echo "OPENROUTER_API_KEY=your-key" >> ~/.env     # Required: https://openrouter.ai/keys
+echo "ORS_API_KEY=your-key" >> ~/.env            # Free: https://openrouteservice.org/dev/#/signup
+echo "TAVILY_API_KEY=your-key" >> ~/.env         # Free (1000 req/month): https://tavily.com
+echo "SERPAPI_API_KEY=your-key" >> ~/.env        # Optional: https://serpapi.com (flight search)
+
+# Option 2: Project-specific overrides
+cp .env.example .env
+# Edit .env with project-specific values
 ```
 
 All other MCP servers use free/public APIs without keys.
@@ -93,7 +102,7 @@ MCP servers are auto-configured via `.kiro/settings/mcp.json`.
 
 ```bash
 # Backend
-cd app/backend && uv run uvicorn main:app --reload
+cd app/backend && uv run python -m uvicorn main:app --reload
 
 # Frontend (separate terminal)
 cd app/frontend && npm install && npm run dev
@@ -106,7 +115,7 @@ Open http://localhost:5173
 ```bash
 cd app && docker build -t gerrit-on-tour .
 docker run -p 8000:8000 \
-  -e GEMINI_API_KEY=... \
+  -e OPENROUTER_API_KEY=... \
   -e ORS_API_KEY=... \
   -e TAVILY_API_KEY=... \
   gerrit-on-tour
@@ -167,12 +176,19 @@ The `fileMatch` system ensures only relevant rules are loaded per tour type, pre
 ## Project Structure
 
 ```
+├── .env.example              API keys template (copy to .env)
 ├── app/
-│   ├── backend/              FastAPI + Gemini agent
-│   │   ├── main.py           SSE endpoint, MCP lifecycle
-│   │   ├── agent.py          Gemini tool calling loop
-│   │   ├── mcp_manager.py    MCP subprocess manager
-│   │   └── steering.py       Load steering files
+│   ├── backend/              FastAPI + pydantic-ai agent
+│   │   ├── main.py           App setup, lifespan, router includes
+│   │   ├── app/routes/       API endpoints (chat, tours, sessions, trash, health)
+│   │   ├── core/             Business logic
+│   │   │   ├── agent.py      pydantic-ai agent with tool calling
+│   │   │   ├── mcp_manager.py MCP subprocess manager
+│   │   │   ├── model_gateway.py OpenRouter LLM configuration
+│   │   │   └── steering.py   Load steering files
+│   │   └── storage/          Data layer
+│   │       ├── db.py         SQLite schema + operations
+│   │       └── tour_storage.py Filesystem + trash
 │   └── frontend/             Vue 3 + Leaflet + Tailwind
 ├── mcp/                      13 MCP servers (self-contained)
 │   ├── brouter/              Bike routing + maps
