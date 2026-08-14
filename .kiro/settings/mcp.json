@@ -1,5 +1,11 @@
 {
   "mcpServers": {
+    "web-scraper": {
+      "command": "uv",
+      "args": ["run", "--directory", "mcp/web-scraper", "python", "server.py"],
+      "disabled": false,
+      "autoApprove": ["fetch_page", "extract_text", "extract_links"]
+    },
     "brouter": {
       "command": "uv",
       "args": ["run", "--directory", "mcp/brouter", "python", "server.py"],
