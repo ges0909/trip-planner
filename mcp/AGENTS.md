@@ -1,8 +1,3 @@
----
-inclusion: fileMatch
-fileMatchPattern: ["mcp/**"]
----
-
 # MCP Server Development Guide
 
 Guidelines for developing MCP servers in this project.

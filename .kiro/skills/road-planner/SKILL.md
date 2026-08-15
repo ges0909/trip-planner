@@ -1,11 +1,22 @@
 ---
-inclusion: fileMatch
-fileMatchPattern: "trips/road/**"
+name: road-planner
+description: >-
+  Plan, extend or revise a multi-day European car road trip — day-by-day itinerary,
+  driving times, flights, accommodation, hikes and food. Use when the user asks for a
+  roadtrip, Autoreise or Mietwagen-Reise, or works on files under trips/road/.
 ---
 
 # Roadtrip Planner — Europe
 
-Workflow for planning multi-day car rental road trips across Europe. See `road-output-template.md` for document formatting, `user-preferences.md` for universal rules, and `road-preferences.md` for roadtrip-specific preferences (flights, accommodation, food, interests).
+Workflow for planning multi-day car rental road trips across Europe.
+
+## Before you start
+
+Read these first — they hold the user's preferences and the required output format:
+
+- `trips/AGENTS.md` — universal rules (home base, content integrity, verification dates)
+- `trips/road/AGENTS.md` — roadtrip preferences (flights, interests, food, seasonal rules)
+- `.kiro/skills/road-planner/references/output-template.md` — document structure, follow it exactly
 
 ## Language
 
@@ -78,7 +89,7 @@ Note: Do NOT use 🍇 (Weingüter) or ☕ (Kaffee) as standalone POI categories 
 
 ### Waymarked Trails Pattern
 
-Use `search_routes_in_region` to discover marked cycling routes near stops. See `user-preferences.md` for the full tool sequence and rating thresholds.
+Use `search_routes_in_region` to discover marked cycling routes near stops. See `trips/AGENTS.md` for the full tool sequence and rating thresholds.
 
 ### Podcast Pattern (optional enrichment)
 
@@ -95,7 +106,7 @@ Best used during Phase 1 research alongside written itinerary sources.
 ### Phase 1: Route Design
 
 1. **Travel advisory** — Search `"Auswärtiges Amt Reisehinweise {country}"`. Full warning → inform user and pause. Partial → note prominently in the output.
-2. **Flights** — `mcp_serpapi_flights_search_flights` (BER origin). Apply flight preferences from `user-preferences.md`. Note prices and schedules for outbound and return.
+2. **Flights** — `mcp_serpapi_flights_search_flights` (BER origin). Apply flight preferences from `trips/AGENTS.md`. Note prices and schedules for outbound and return.
 3. **Research itineraries** — Search `"Rundreise {region}"` and `"{region} road trip itinerary"`. Extract patterns from 3–5 sources. Search podcasts for local insights not found in written guides.
 4. **Route shape** — Linear A→B trip: verify a direct return flight exists. No direct flight → prefer a circular route.
 5. **Design stops** — 4–8 stops, logical loop, incorporating researched highlights.
@@ -114,7 +125,7 @@ Best used during Phase 1 research alongside written itinerary sources.
     - Flag difficulty level and gear requirements
     - Identify Einkehr options at start/endpoint
 12. **Swimming** — Web search for beaches, lakes, thermal baths, river pools, rock pools. Check driving-day routes for en-route swimming stops.
-13. **Food & Drink** — Apply rules from `user-preferences.md`. Note markets and local specialties.
+13. **Food & Drink** — Apply rules from `trips/AGENTS.md`. Note markets and local specialties.
 14. **Culture & Art** — Prioritize modern/contemporary art per interest table.
 15. **Practical verification** — For every major POI, confirm via web search:
     - Opening days (note weekly closures)
@@ -124,7 +135,7 @@ Best used during Phase 1 research alongside written itinerary sources.
 
 ### Phase 3: Output
 
-17. **Write trip markdown** — `trips/road/{name}/index.md` following `road-output-template.md`.
+17. **Write trip markdown** — `trips/road/{name}/index.md` following `.kiro/skills/road-planner/references/output-template.md`.
 18. **Update catalog** — Append a row to `trips/road/README.md`. Do NOT rewrite the file.
 19. **Present summary** — German, to user.
 

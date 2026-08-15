@@ -1,15 +1,10 @@
----
-inclusion: fileMatch
-fileMatchPattern: "trips/bike/**"
----
-
 # Bike Tour Output Template
 
 Every tour file starts directly with the title — no YAML front matter. Sections are separated by `---` horizontal rules. Omit section 6 (Badestellen) if no swimming spots exist.
 
 ## Verification Date Rule
 
-Update `ℹ️ Zuletzt geprüft:` dates per rule 8 in `user-preferences.md`.
+Update `ℹ️ Zuletzt geprüft:` dates per rule 8 in `trips/AGENTS.md`.
 
 ## 1. Title
 

@@ -1,11 +1,6 @@
----
-inclusion: fileMatch
-fileMatchPattern: "trips/**"
----
-
 # Universal Travel Preferences — Gerrit on Tour
 
-These rules apply to all travel types (cycling, hiking, roadtrips). Type-specific preferences are in separate steering files (`bike-preferences.md`, `road-preferences.md`).
+These rules apply to all travel types (cycling, hiking, roadtrips). Type-specific preferences are in `trips/bike/AGENTS.md` and `trips/road/AGENTS.md`.
 
 ## User Profile
 
@@ -90,4 +85,4 @@ Every tour request produces at minimum:
 - GPX track(s): `trips/{type}/{tour-name}/gpx/{segment-name}.gpx`
 - Route map PNG: `trips/{type}/{tour-name}/maps/route-map.png`
 
-Additional outputs are defined in the type-specific output template (`bike-output-template.md`, `road-output-template.md`).
+Additional outputs are defined in the type-specific output template (`.kiro/skills/bike-planner/references/output-template.md`, `.kiro/skills/road-planner/references/output-template.md`).

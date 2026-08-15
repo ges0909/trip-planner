@@ -14,7 +14,7 @@ Universal guidelines for all AI assistants in this repository.
 - When working in `trips/**` → Travel planning context active (user perspective)
 - When working in `app/**`, `mcp/**` → Development context active (developer perspective)
 
-Context-specific rules are organized in `.kiro/steering/` with fileMatch patterns and are loaded automatically based on active files.
+Context-specific rules live in nested `AGENTS.md` files and in `.kiro/skills/`, loaded automatically based on the files you work on and the task you are doing.
 
 ---
 
@@ -105,25 +105,35 @@ When the user types **"commit"** (or equivalent like "committen", "einchecken"):
 
 ## Context-Specific Rules
 
-The following additional rules are loaded automatically based on active files:
+Context is split by *kind*, and both Kiro and Claude Code read the same files natively —
+no tool-specific duplicates. Never copy content between them; reference it.
 
-### Reiseplanung (active in `trips/**`)
+**Preferences and conventions** — facts that apply whenever you work in a directory tree.
+Plain `AGENTS.md` files, loaded automatically by path (parent files load too, so
+`trips/AGENTS.md` also applies inside `trips/road/`):
 
-- `travel/user-preferences.md` — Universal travel preferences, home base, content integrity
-- `travel/bike-preferences.md` — Cycling tour preferences (distance, terrain, interests, food)
-- `travel/bike-planner.md` — Cycling tour workflow + BRouter/VBB rules
-- `travel/bike-output-template.md` — Cycling tour output format
-- `travel/road-preferences.md` — Roadtrip preferences (flights, accommodation, food, interests)
-- `travel/road-planner.md` — Roadtrip workflow + ORS/OSRM rules
-- `travel/road-output-template.md` — Roadtrip output format
+| File | Content |
+| --- | --- |
+| `trips/AGENTS.md` | Universal travel preferences, home base, content integrity |
+| `trips/road/AGENTS.md` | Roadtrip preferences (flights, interests, food) |
+| `trips/bike/AGENTS.md` | Bike tour preferences (distance, terrain, Einkehr) |
+| `app/AGENTS.md` | Web app architecture + coding guidelines (Vue 3 + FastAPI) |
+| `mcp/AGENTS.md` | MCP server development guidelines |
 
-### App-Entwicklung (active in `app/**`, `mcp/**`, `docs/**`, `scripts/**`)
+**Workflows** — procedures loaded on demand when you actually plan a tour, not on every
+file touch. Skills under `.kiro/skills/<name>/`, each with `SKILL.md` plus
+`references/output-template.md`:
 
-- `dev/app-product.md` — Platform architecture, tech stack, MCP ecosystem, naming conventions
-- `dev/mcp-development.md` — MCP server development guidelines
-- `app/AGENTS.md` — Web app coding guidelines (Vue 3 + FastAPI)
+| Skill | Content |
+| --- | --- |
+| `road-planner` | Roadtrip workflow (ORS/OSRM, flights) + output template |
+| `bike-planner` | Bike tour workflow (BRouter/VBB, Overpass) + output template |
 
-**Note:** You do not need to manually load these files. Kiro's fileMatch system loads them automatically when you work on matching files.
+Claude Code reads the skills through `.claude/skills/<name>/SKILL.md`, a symlink to the
+`.kiro/skills/` original — the file needs no tool-specific syntax, so one copy serves both.
+
+A third consumer, `app/backend/core/steering.py`, assembles the same files into the web
+app's system prompt. Moving or renaming any file above means updating that module.
 
 ---
 

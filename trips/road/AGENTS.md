@@ -1,11 +1,6 @@
----
-inclusion: fileMatch
-fileMatchPattern: "trips/road/**"
----
-
 # Roadtrip Preferences
 
-Personal preferences for multi-day car road trips across Europe. Supplements `user-preferences.md` (universal rules) and `road-planner.md` (workflow and tool usage).
+Personal preferences for multi-day car road trips across Europe. Supplements `trips/AGENTS.md` (universal rules) and `.kiro/skills/road-planner/SKILL.md` (workflow and tool usage).
 
 ## Trip Profile
 

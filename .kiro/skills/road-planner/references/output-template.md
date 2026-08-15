@@ -1,13 +1,8 @@
----
-inclusion: fileMatch
-fileMatchPattern: "trips/road/**"
----
-
 # Roadtrip Output Template
 
 Format specification for roadtrip markdown files in `trips/road/`. Each file is a self-contained multi-day itinerary combining driving routes, activities, and maps.
 
-This document defines the **output structure only**. For workflow, tool usage, and research process, see `road-planner.md`. For user preferences (interests, food, accommodation), see `road-preferences.md`.
+This document defines the **output structure only**. For workflow, tool usage, and research process, see `.kiro/skills/road-planner/SKILL.md`. For user preferences (interests, food, accommodation), see `trips/road/AGENTS.md`.
 
 ## File & Naming Conventions
 
@@ -307,7 +302,7 @@ Sehempfehlungen zur Vorbereitung (ÖR Mediathek):
 - Include duration and availability window (e.g., "bis 2029") for Mediathek content.
 - Prefer official broadcaster sources (BR, WDR, NDR) over commercial platforms.
 - Always end Quellen section with: `ℹ️ Zuletzt geprüft: {Datum}`
-- Update verification dates per rule 8 in `user-preferences.md`.
+- Update verification dates per rule 8 in `trips/AGENTS.md`.
 
 ---
 

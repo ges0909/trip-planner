@@ -1,15 +1,26 @@
 ---
-inclusion: fileMatch
-fileMatchPattern: "trips/bike/**"
+name: bike-planner
+description: >-
+  Plan, extend or revise a cycling day trip in the Berlin/Brandenburg region — route,
+  transit connections, swimming spots, Einkehr and GPX export. Use when the user asks for
+  a Radtour, Fahrradtour, bike tour or hike near Berlin, or works on files under trips/bike/.
 ---
 
 # Bike Tour Planner — Berlin/Brandenburg
 
-Rules for planning, generating, and presenting cycling day-trip tours in the Berlin/Brandenburg region. Read alongside `user-preferences.md` (universal rules), `bike-preferences.md` (personal cycling preferences), and `bike-output-template.md` (output format).
+Rules for planning, generating, and presenting cycling day-trip tours in the Berlin/Brandenburg region.
+
+## Before you start
+
+Read these first — they hold the user's preferences and the required output format:
+
+- `trips/AGENTS.md` — universal rules (home base, content integrity, verification dates)
+- `trips/bike/AGENTS.md` — cycling preferences (distance, terrain, interests, food)
+- `.kiro/skills/bike-planner/references/output-template.md` — document structure, follow it exactly
 
 ## Language
 
-User-facing output in **German**. Code, filenames, GPX metadata, and MCP parameters in **English/kebab-case**. See `user-preferences.md` for full language rules.
+User-facing output in **German**. Code, filenames, GPX metadata, and MCP parameters in **English/kebab-case**. See `trips/AGENTS.md` for full language rules.
 
 ## Geographic Scope
 
@@ -36,7 +47,7 @@ These rules are hard constraints. Violating any of them produces incorrect outpu
 4. **Transit verification**: Never state line names, connections, or travel times without querying the VBB API. If the API is unavailable, say so explicitly.
 5. **Map–POI sync**: Every POI mentioned in the tour text MUST appear as a marker on the map. If POIs change after the map is rendered, re-render.
 6. **Seasonal awareness**: For every major POI, verify opening days, advance booking requirements, and seasonal closures. Flag required advance booking with `⚠️ vorab buchen`.
-7. **No fabrication**: Present only data obtained from API results or web search. If data is unavailable, state it explicitly. See `user-preferences.md` for full content integrity rules.
+7. **No fabrication**: Present only data obtained from API results or web search. If data is unavailable, state it explicitly. See `trips/AGENTS.md` for full content integrity rules.
 
 ## Allowed MCP Servers
 
@@ -90,7 +101,7 @@ Call in this order:
 2. `get_route_details(route_id)` — retrieve length, markings, and operator.
 3. `get_route_segments(route_id)` — get stages and towns along the route.
 
-For hiking options use `activity="hiking"`. Apply rating thresholds from `user-preferences.md` (≥4.0 stars, ≥30 reviews).
+For hiking options use `activity="hiking"`. Apply rating thresholds from `trips/AGENTS.md` (≥4.0 stars, ≥30 reviews).
 
 ## Routing
 
@@ -138,7 +149,7 @@ Use when selecting waypoints and writing segment descriptions.
 
 ## Points of Interest
 
-POI priorities and interest order are defined in `user-preferences.md`. Map marker categories map to emojis as follows:
+POI priorities and interest order are defined in `trips/AGENTS.md`. Map marker categories map to emojis as follows:
 
 | Emoji | Overpass categories                                |
 | ----- | -------------------------------------------------- |
@@ -152,8 +163,8 @@ Pass Overpass category names directly to the `render_gpx_map` `pois` parameter.
 ### POI Curation for Map Rendering
 
 - Select ~15–25 POIs for the map.
-- Prioritize by interest order from `user-preferences.md`.
-- Deduplicate within a 200 m radius (see `user-preferences.md`).
+- Prioritize by interest order from `trips/AGENTS.md`.
+- Deduplicate within a 200 m radius (see `trips/AGENTS.md`).
 
 ### POI Formatting in Tour Text
 
@@ -283,7 +294,7 @@ Execute phases in order. Do not skip or reorder steps.
 
 5. **Search POIs** via `search_pois_along_route` with presets `einkehr`, `badestellen`, `sehenswuerdigkeiten`, `kunst` — **one call at a time, sequentially**.
 6. **Render map** via `render_gpx_map` with ~15–25 curated, deduplicated POI markers. Save to `trips/bike/{name}/maps/{name}.png`.
-7. **Hiking options** — `search_routes_in_region` + web search for ratings. Apply thresholds from `user-preferences.md`.
+7. **Hiking options** — `search_routes_in_region` + web search for ratings. Apply thresholds from `trips/AGENTS.md`.
 8. **Swimming** — web search for lakes, rivers, and outdoor pools along the entire route.
 9. **Practical info** — verify opening days, booking requirements, and seasonal closures for every major POI via web search.
 10. **Query weather** for the tour date using start-location coordinates.

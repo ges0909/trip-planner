@@ -1,11 +1,6 @@
----
-inclusion: fileMatch
-fileMatchPattern: "trips/bike/**"
----
-
 # Bike Tour Preferences — Berlin/Brandenburg Tagestouren
 
-Persönliche Präferenzen für Radtouren. Diese Datei ergänzt `user-preferences.md` (universelle Regeln) und `bike-planner.md` (technische Workflow-Regeln).
+Persönliche Präferenzen für Radtouren. Diese Datei ergänzt `trips/AGENTS.md` (universelle Regeln) und `.kiro/skills/bike-planner/SKILL.md` (technische Workflow-Regeln).
 
 ## Tour Profile
 

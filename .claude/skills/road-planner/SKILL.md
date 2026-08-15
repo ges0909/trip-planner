@@ -1,0 +1,1 @@
+../../../.kiro/skills/road-planner/SKILL.md

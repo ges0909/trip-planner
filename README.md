@@ -147,27 +147,25 @@ Self-contained Python servers providing tour planning capabilities via [Model Co
 
 **Architecture:** FastMCP + httpx, spawned as subprocesses via stdio JSON-RPC. Each server is self-contained with its own `pyproject.toml`.
 
-## Steering Files (Planning Rules)
+## Planning Rules (AGENTS.md + Skills)
 
-Steering files in `.kiro/steering/` define preferences, workflow, and output format. Loaded automatically via `fileMatch` patterns:
+Preferences and workflows are split by kind, so only relevant context is loaded. Both Kiro
+and Claude Code read these files natively — no tool-specific duplicates.
 
-**Universal (always loaded):**
+**Preferences** — nested `AGENTS.md`, loaded by path (parent files apply too):
 
-- `user-preferences.md` — Home base, interests, content integrity rules
+- `trips/AGENTS.md` — Home base, interests, content integrity rules
+- `trips/bike/AGENTS.md` — Distance limits, terrain, interests priority, food/drink rules
+- `trips/road/AGENTS.md` — Flight preferences, accommodation rules, hiking priorities
 
-**Bike tours (`trips/bike/**`):\*\*
+**Workflows** — skills in `.kiro/skills/`, loaded on demand when planning a tour:
 
-- `bike-preferences.md` — Distance limits, terrain, interests priority, food/drink rules
-- `bike-planner.md` — Workflow (BRouter routing, VBB transit, Overpass POIs)
-- `bike-output-template.md` — Markdown structure and formatting
+- `bike-planner/` — BRouter routing, VBB transit, Overpass POIs + output template
+- `road-planner/` — ORS/OSRM routing, flight search, daily driving limits + output template
 
-**Roadtrips (`trips/road/**`):\*\*
-
-- `road-preferences.md` — Flight preferences, accommodation rules, hiking priorities
-- `road-planner.md` — Workflow (ORS/OSRM routing, flight search, daily driving limits)
-- `road-output-template.md` — Markdown structure and formatting
-
-The `fileMatch` system ensures only relevant rules are loaded per tour type, preventing context bloat.
+Claude Code reads the skills via `.claude/skills/<name>/SKILL.md`, a symlink to the
+`.kiro/skills/` original. The web app assembles the same files into its system prompt
+(`app/backend/core/steering.py`).
 
 ---
 
@@ -185,7 +183,7 @@ The `fileMatch` system ensures only relevant rules are loaded per tour type, pre
 │   │   │   ├── agent.py      pydantic-ai agent with tool calling
 │   │   │   ├── mcp_manager.py MCP subprocess manager
 │   │   │   ├── model_gateway.py OpenRouter LLM configuration
-│   │   │   └── steering.py   Load steering files
+│   │   │   └── steering.py   Assemble system prompt from AGENTS.md + skills
 │   │   └── storage/          Data layer
 │   │       ├── db.py         SQLite schema + operations
 │   │       └── tour_storage.py Filesystem + trash
@@ -205,6 +203,9 @@ The `fileMatch` system ensures only relevant rules are loaded per tour type, pre
 │   ├── travel-videos/        Public broadcaster videos
 │   └── podcasts/             Podcast search + transcripts
 ├── trips/
+│   ├── AGENTS.md             Universal travel preferences
+│   ├── bike/AGENTS.md        Bike tour preferences
+│   ├── road/AGENTS.md        Roadtrip preferences
 │   ├── bike/{tour-name}/     Bike tour documents
 │   │   ├── index.md          Tour description (German)
 │   │   ├── gpx/              GPX tracks
@@ -215,7 +216,8 @@ The `fileMatch` system ensures only relevant rules are loaded per tour type, pre
 │       └── maps/             Route maps per driving day (tag-{NN}-{start}-{ziel}.png)
 ├── .kiro/
 │   ├── settings/mcp.json     MCP server configuration
-│   └── steering/             Planning rules (fileMatch-based)
+│   └── skills/               Tour planning workflows (SKILL.md + templates)
+├── .claude/skills/           Symlinks to .kiro/skills/*/SKILL.md
 ├── scripts/                  Map rendering utilities
 ├── ruff.toml                 Linter/formatter config
 └── .env                      API keys (gitignored)
@@ -288,12 +290,11 @@ Output: confirmed OK, issues found, suggested optimizations.
 
 ### Context Management
 
-The project uses a **two-layer context system**:
+The project uses a **three-layer context system**, shared by Kiro, Claude Code and the web app:
 
-1. **AGENTS.md** (repo root) — Universal rules for all AI assistants (Conventional Commits, project overview)
-2. **`.kiro/steering/*.md`** — Context-specific rules loaded via fileMatch patterns
-
-See [`docs/Context-Management.md`](docs/Context-Management.md) for details.
+1. **`AGENTS.md`** (repo root) — Universal rules for all AI assistants (Conventional Commits, project overview)
+2. **Nested `AGENTS.md`** (`trips/`, `trips/road/`, `trips/bike/`, `app/`, `mcp/`) — Preferences and conventions, loaded by path
+3. **`.kiro/skills/*/SKILL.md`** — Tour planning workflows, loaded on demand by task
 
 ## Licenses & Data Sources
 

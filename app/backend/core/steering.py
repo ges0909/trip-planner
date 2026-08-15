@@ -6,8 +6,13 @@ from typing import Literal
 
 logger = logging.getLogger(__name__)
 
-# Base directory for travel steering files (4 levels up from core/)
-STEERING_DIR: Path = Path(__file__).parent.parent.parent.parent / ".kiro" / "steering" / "travel"
+# Project root (4 levels up from core/)
+ROOT: Path = Path(__file__).parent.parent.parent.parent
+
+# Travel preferences live in nested AGENTS.md files (shared with Kiro and Claude Code),
+# tour workflows and output templates in .kiro/skills/ (shared as SKILL.md).
+TRIPS_DIR: Path = ROOT / "trips"
+SKILLS_DIR: Path = ROOT / ".kiro" / "skills"
 
 # Tour type literal for type safety
 TourType = Literal["bike", "road", "general"]
@@ -27,34 +32,31 @@ def _detect_tour_type(message: str) -> TourType:
 
 
 def get_steering_for_tour_type(tour_type: TourType) -> list[Path]:
-    """Get list of steering file paths for a given tour type.
+    """Get list of context file paths for a given tour type.
 
     Args:
         tour_type: One of "bike", "road", or "general".
 
     Returns:
-        List of Path objects to steering files that exist.
+        List of Path objects to context files that exist.
     """
     paths: list[Path] = []
 
-    # Always include user preferences
-    user_prefs = STEERING_DIR / "user-preferences.md"
-    if user_prefs.exists():
-        paths.append(user_prefs)
+    # Always include universal travel preferences
+    candidates = [TRIPS_DIR / "AGENTS.md"]
 
-    if tour_type == "bike":
-        bike_dir = STEERING_DIR / "bike"
-        for name in ("bike-preferences.md", "bike-planner.md", "bike-output-template.md"):
-            path = bike_dir / name
-            if path.exists():
-                paths.append(path)
-    elif tour_type == "road":
-        road_dir = STEERING_DIR / "road"
-        for name in ("road-preferences.md", "road-planner.md", "road-output-template.md"):
-            path = road_dir / name
-            if path.exists():
-                paths.append(path)
-    # "general" → only user-preferences, keep prompt small
+    if tour_type in ("bike", "road"):
+        skill_dir = SKILLS_DIR / f"{tour_type}-planner"
+        candidates += [
+            TRIPS_DIR / tour_type / "AGENTS.md",  # tour-type preferences
+            skill_dir / "SKILL.md",  # workflow + tool usage
+            skill_dir / "references" / "output-template.md",  # output format
+        ]
+    # "general" → only universal preferences, keep prompt small
+
+    for path in candidates:
+        if path.exists():
+            paths.append(path)
 
     return paths
 

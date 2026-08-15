@@ -2,6 +2,47 @@
 
 Rules for the Trip Planner web application (`app/` directory).
 
+## Platform Context
+
+Two deployment modes share the same context files and MCP servers:
+
+1. **IDE-native workflow (primary)** — user types a tour request in Kiro or Claude Code, MCP
+   servers provide routing/weather/POIs/transit, the `road-planner` / `bike-planner` skills
+   drive the workflow, results are saved as Markdown + GPX under `trips/`.
+2. **Standalone web app** — browser UI (Vue 3 + FastAPI) replicating the agent loop with
+   SSE streaming, usable without an IDE. `core/steering.py` assembles the same context into
+   a system prompt.
+
+Generated tours are committed to the repository:
+
+```
+trips/
+├── bike/{tour-name}/
+│   ├── index.md        # German-language tour description
+│   ├── gpx/            # GPX track(s)
+│   └── maps/           # Route map + elevation profile PNGs
+└── road/{trip-name}/
+    ├── index.md        # German-language trip description
+    ├── review.md       # Optional cross-LLM review
+    ├── gpx/            # One GPX per driving day
+    └── maps/           # One route map per driving day (tag-{NN}-{start}-{ziel}.png)
+```
+
+## Key Design Principles
+
+1. **Simplicity over abstraction** — clear code, minimal indirection
+2. **Context-driven behavior** — preferences in nested `AGENTS.md`, workflows in `.kiro/skills/`
+3. **Structured tool use** — function calling with a hard iteration cap
+4. **Output reproducibility** — all generated tours committed to git
+
+## Project Goals
+
+**Current (personal use):** plan and document personal bike/car trips from Berlin/Brandenburg;
+experiment with AI-assisted tour planning workflows.
+
+**Future (platform):** generalize for other users/regions, collaborative features (shared trips,
+reviews), booking integrations, mobile app (React Native or PWA).
+
 ## Code Philosophy
 
 - Simplicity and readability over complexity. No clever abstractions, premature optimization, or over-engineering.
@@ -18,7 +59,7 @@ app/
 │   ├── main.py        # FastAPI app, SSE endpoint, static file serving
 │   ├── agent.py       # Gemini agent loop (tool calling, streaming SSE events)
 │   ├── tools.py       # Tool wrappers + Gemini function declarations (TOOL_REGISTRY)
-│   ├── steering.py    # Loads .kiro/steering/ files → assembles system prompt
+│   ├── core/steering.py  # Loads AGENTS.md + skill files → assembles system prompt
 │   ├── i18n.py        # Bilingual error messages (de/en), key-based lookup
 │   └── pyproject.toml # Dependencies managed with uv
 ├── frontend/          # Vue 3 + TypeScript (Vite)
@@ -85,7 +126,7 @@ cd app/backend && uv run pytest
 - Never let exceptions escape the SSE generator — catch and yield an `error` event.
 - Tool wrappers in `tools.py` return structured dicts, never formatted strings.
 - The agent loop in `agent.py` has a hard cap of 15 iterations.
-- System prompt assembled at runtime in `steering.py` from `.kiro/steering/` markdown files (YAML front matter stripped).
+- System prompt assembled at runtime in `core/steering.py` from the nested `trips/**/AGENTS.md` preference files and the `.kiro/skills/*/` workflow files (YAML front matter stripped).
 - Use `>=` version constraints in `pyproject.toml`, not pinned versions.
 
 ## SSE Event Protocol

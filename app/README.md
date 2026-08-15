@@ -147,10 +147,11 @@ app/
 
 The backend uses pydantic-ai with OpenRouter for LLM access (supporting 100+ models including Llama, Claude, Gemini). The agent loop iterates: prompt → tool calls → results → final markdown response, streamed via SSE.
 
-Steering files from `.kiro/steering/` are loaded based on detected tour type:
+Context files are loaded based on detected tour type — the same files the IDE agents use:
 
-- **Bike** keywords → `user-preferences.md` + `bike-planning.md` + `bike-template.md`
-- **Road** keywords → `user-preferences.md` + `road-planning.md` + `road-template.md`
+- **Bike** keywords → `trips/AGENTS.md` + `trips/bike/AGENTS.md` + `.kiro/skills/bike-planner/` (SKILL.md + output template)
+- **Road** keywords → `trips/AGENTS.md` + `trips/road/AGENTS.md` + `.kiro/skills/road-planner/` (SKILL.md + output template)
+- **Neither** → `trips/AGENTS.md` only, to keep the prompt small
 
 Tours are persisted in SQLite (metadata) + filesystem (markdown, GPX, maps).
 
