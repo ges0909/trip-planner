@@ -149,9 +149,12 @@ The backend uses pydantic-ai with OpenRouter for LLM access (supporting 100+ mod
 
 Context files are loaded based on detected tour type — the same files the IDE agents use:
 
-- **Bike** keywords → `trips/AGENTS.md` + `trips/bike/AGENTS.md` + `.kiro/skills/bike-planner/` (SKILL.md + output template)
-- **Road** keywords → `trips/AGENTS.md` + `trips/road/AGENTS.md` + `.kiro/skills/road-planner/` (SKILL.md + output template)
-- **Neither** → `trips/AGENTS.md` only, to keep the prompt small
+- **Bike** keywords → `user-preferences.md` + `bike-preferences.md` + `skills/bike-planner/` (SKILL.md + output template)
+- **Road** keywords → `user-preferences.md` + `road-preferences.md` + `skills/road-planner/` (SKILL.md + output template)
+- **Neither** → `user-preferences.md` only, to keep the prompt small
+
+Preferences come from `steering/travel/`, workflows from the top-level `skills/` —
+the canonical paths, not the tool-specific symlinks.
 
 Tours are persisted in SQLite (metadata) + filesystem (markdown, GPX, maps).
 

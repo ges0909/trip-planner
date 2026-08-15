@@ -16,7 +16,7 @@ Read these first — they hold the user's preferences and the required output fo
 
 - `trips/AGENTS.md` — universal rules (home base, content integrity, verification dates)
 - `trips/road/AGENTS.md` — roadtrip preferences (flights, interests, food, seasonal rules)
-- `.kiro/skills/road-planner/references/output-template.md` — document structure, follow it exactly
+- `skills/road-planner/references/output-template.md` — document structure, follow it exactly
 
 ## Language
 
@@ -135,7 +135,7 @@ Best used during Phase 1 research alongside written itinerary sources.
 
 ### Phase 3: Output
 
-17. **Write trip markdown** — `trips/road/{name}/index.md` following `.kiro/skills/road-planner/references/output-template.md`.
+17. **Write trip markdown** — `trips/road/{name}/index.md` following `skills/road-planner/references/output-template.md`.
 18. **Update catalog** — Append a row to `trips/road/README.md`. Do NOT rewrite the file.
 19. **Present summary** — German, to user.
 

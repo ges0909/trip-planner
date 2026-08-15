@@ -1,1 +1,0 @@
-../../../.kiro/skills/bike-planner/SKILL.md

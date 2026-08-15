@@ -9,10 +9,10 @@ logger = logging.getLogger(__name__)
 # Project root (4 levels up from core/)
 ROOT: Path = Path(__file__).parent.parent.parent.parent
 
-# Travel preferences live in nested AGENTS.md files (shared with Kiro and Claude Code),
-# tour workflows and output templates in .kiro/skills/ (shared as SKILL.md).
-TRIPS_DIR: Path = ROOT / "trips"
-SKILLS_DIR: Path = ROOT / ".kiro" / "skills"
+# Canonical content locations, resolved directly rather than through the tool-specific
+# symlinks (.kiro/*, .claude/*, */AGENTS.md), which a Windows checkout breaks.
+STEERING_DIR: Path = ROOT / "steering" / "travel"
+SKILLS_DIR: Path = ROOT / "skills"
 
 # Tour type literal for type safety
 TourType = Literal["bike", "road", "general"]
@@ -43,12 +43,12 @@ def get_steering_for_tour_type(tour_type: TourType) -> list[Path]:
     paths: list[Path] = []
 
     # Always include universal travel preferences
-    candidates = [TRIPS_DIR / "AGENTS.md"]
+    candidates = [STEERING_DIR / "user-preferences.md"]
 
     if tour_type in ("bike", "road"):
         skill_dir = SKILLS_DIR / f"{tour_type}-planner"
         candidates += [
-            TRIPS_DIR / tour_type / "AGENTS.md",  # tour-type preferences
+            STEERING_DIR / tour_type / f"{tour_type}-preferences.md",  # tour-type preferences
             skill_dir / "SKILL.md",  # workflow + tool usage
             skill_dir / "references" / "output-template.md",  # output format
         ]

@@ -16,7 +16,7 @@ Read these first — they hold the user's preferences and the required output fo
 
 - `trips/AGENTS.md` — universal rules (home base, content integrity, verification dates)
 - `trips/bike/AGENTS.md` — cycling preferences (distance, terrain, interests, food)
-- `.kiro/skills/bike-planner/references/output-template.md` — document structure, follow it exactly
+- `skills/bike-planner/references/output-template.md` — document structure, follow it exactly
 
 ## Language
 

@@ -2,7 +2,7 @@
 
 Format specification for roadtrip markdown files in `trips/road/`. Each file is a self-contained multi-day itinerary combining driving routes, activities, and maps.
 
-This document defines the **output structure only**. For workflow, tool usage, and research process, see `.kiro/skills/road-planner/SKILL.md`. For user preferences (interests, food, accommodation), see `trips/road/AGENTS.md`.
+This document defines the **output structure only**. For workflow, tool usage, and research process, see `skills/road-planner/SKILL.md`. For user preferences (interests, food, accommodation), see `trips/road/AGENTS.md`.
 
 ## File & Naming Conventions
 

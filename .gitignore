@@ -15,3 +15,6 @@ __pycache__/
 .pytest_cache/
 
 .ruff_cache/
+
+# Machine-local agent settings (shared config stays tracked)
+.claude/settings.local.json
