@@ -24,7 +24,7 @@ one of them gets a link, not a copy.
 | --- | --- | --- |
 | **Kiro** | `AGENTS.md` hierarchy, `.kiro/skills/`, `.kiro/settings/mcp.json` | none — these are its native locations |
 | **Claude Code** | `AGENTS.md` hierarchy, `.claude/skills/`, `.mcp.json` | symlinks for skills and MCP config |
-| **Web app** | assembled by `app/backend/core/steering.py` | none — reads the originals by path |
+| **Web app** | assembled by `app/backend/core/context.py` | none — reads the originals by path |
 
 Kiro previously used `.kiro/steering/*.md`. That directory is gone; its content moved into
 the `AGENTS.md` hierarchy and `.kiro/skills/`, which both assistants read.
@@ -123,7 +123,7 @@ API keys need no bridging at all. Every server loads the project-root `.env` its
 
 ## Layer 4 — The web app
 
-`app/backend/core/steering.py` is the third consumer and behaves differently: instead of
+`app/backend/core/context.py` is the third consumer and behaves differently: instead of
 loading files by proximity, it detects the tour type from the user's message and
 concatenates a subset into one system prompt.
 
@@ -154,7 +154,7 @@ Two constraints follow:
 | Add a skill | Create `.kiro/skills/<name>/SKILL.md`, then symlink it (below) |
 | Edit a skill or template | Edit the `.kiro/` original |
 | Add a preference | Put it in the narrowest `AGENTS.md` that covers it |
-| Move or rename any context file | Update `app/backend/core/steering.py` |
+| Move or rename any context file | Update `app/backend/core/context.py` |
 
 Adding a skill:
 

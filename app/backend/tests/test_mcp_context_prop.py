@@ -2,12 +2,12 @@
 
 **Validates: Requirements 6.1**
 
-For any steering file content containing `mcp_` prefixed tool names, loading
-the content through the simplified steering module SHALL preserve all `mcp_`
+For any context file content containing `mcp_` prefixed tool names, loading
+the content through the simplified context module SHALL preserve all `mcp_`
 prefixed names unchanged in the output.
 """
 
-from core.steering import build_system_prompt
+from core.context import build_system_prompt
 from hypothesis import given, settings
 from hypothesis import strategies as st
 

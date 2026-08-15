@@ -14,7 +14,7 @@ Universal guidelines for all AI assistants in this repository.
 - When working in `trips/**` → Travel planning context active (user perspective)
 - When working in `app/**`, `mcp/**` → Development context active (developer perspective)
 
-Context-specific rules live in `steering/` and `skills/`, loaded automatically based on the files you work on and the task you are doing.
+Context-specific rules live in `context/` and `skills/`, loaded automatically based on the files you work on and the task you are doing.
 
 ---
 
@@ -108,25 +108,25 @@ When the user types **"commit"** (or equivalent like "committen", "einchecken"):
 Context is split by *kind*, and both Kiro and Claude Code read the same files natively —
 no tool-specific duplicates. Never copy content between them; reference it.
 
-All content lives in two vendor-neutral top-level directories, `steering/` and `skills/`.
+All content lives in two vendor-neutral top-level directories, `context/` and `skills/`.
 Everything a tool discovers elsewhere is a symlink into them — `.kiro/` and `.claude/` hold
 no content at all, only `mcp.json` and symlinks. Edit the target, never a copy.
 
 **Preferences and conventions** — facts that apply whenever you work in a directory tree.
-Kiro loads these as steering files via `fileMatchPattern` (finding them through
-`.kiro/steering -> ../steering`); Claude Code reads the same bytes through an `AGENTS.md`
+Kiro loads these as context files via `fileMatchPattern` (finding them through
+`.kiro/steering -> ../context`); Claude Code reads the same bytes through an `AGENTS.md`
 symlink at the matching directory root (parent files load too, so `trips/AGENTS.md` also
 applies inside `trips/road/`):
 
 | Content file (edit this) | Discovered as | Content |
 | --- | --- | --- |
-| `steering/travel/user-preferences.md` | `trips/AGENTS.md` | Universal travel preferences, home base, content integrity |
-| `steering/travel/road/road-preferences.md` | `trips/road/AGENTS.md` | Roadtrip preferences (flights, interests, food) |
-| `steering/travel/bike/bike-preferences.md` | `trips/bike/AGENTS.md` | Bike tour preferences (distance, terrain, Einkehr) |
-| `steering/dev/app.md` | `app/AGENTS.md` | Web app architecture + coding guidelines (Vue 3 + FastAPI) |
-| `steering/dev/mcp.md` | `mcp/AGENTS.md` | MCP server development guidelines |
+| `context/travel/user-preferences.md` | `trips/AGENTS.md` | Universal travel preferences, home base, content integrity |
+| `context/travel/road/road-preferences.md` | `trips/road/AGENTS.md` | Roadtrip preferences (flights, interests, food) |
+| `context/travel/bike/bike-preferences.md` | `trips/bike/AGENTS.md` | Bike tour preferences (distance, terrain, Einkehr) |
+| `context/dev/app.md` | `app/AGENTS.md` | Web app architecture + coding guidelines (Vue 3 + FastAPI) |
+| `context/dev/mcp.md` | `mcp/AGENTS.md` | MCP server development guidelines |
 
-New steering files need explicit frontmatter — Kiro's default is `inclusion: always`, which
+New context files need explicit frontmatter — Kiro's default is `inclusion: always`, which
 would load them in every session:
 
 ```yaml
@@ -149,8 +149,8 @@ Both tools discover them through a directory symlink — `.kiro/skills` and `.cl
 each point at `../skills`. No `SKILL.md` contains tool-specific syntax, so one copy serves
 both. A new skill is a new directory under `skills/`; nothing else needs touching.
 
-A third consumer, `app/backend/core/steering.py`, assembles the same files into the web app's
-system prompt, resolving the canonical `steering/` and `skills/` paths directly rather than
+A third consumer, `app/backend/core/context.py`, assembles the same files into the web app's
+system prompt, resolving the canonical `context/` and `skills/` paths directly rather than
 the symlinks. Moving or renaming any file above means updating that module.
 
 **Caveat:** the symlinks require `core.symlinks` support. A checkout on native Windows turns

@@ -15,7 +15,7 @@ Two deployment modes share the same context files and MCP servers:
    servers provide routing/weather/POIs/transit, the `road-planner` / `bike-planner` skills
    drive the workflow, results are saved as Markdown + GPX under `trips/`.
 2. **Standalone web app** — browser UI (Vue 3 + FastAPI) replicating the agent loop with
-   SSE streaming, usable without an IDE. `core/steering.py` assembles the same context into
+   SSE streaming, usable without an IDE. `core/context.py` assembles the same context into
    a system prompt.
 
 Generated tours are committed to the repository:
@@ -36,7 +36,7 @@ trips/
 ## Key Design Principles
 
 1. **Simplicity over abstraction** — clear code, minimal indirection
-2. **Context-driven behavior** — preferences in `steering/`, workflows in `skills/`
+2. **Context-driven behavior** — preferences in `context/`, workflows in `skills/`
 3. **Structured tool use** — function calling with a hard iteration cap
 4. **Output reproducibility** — all generated tours committed to git
 
@@ -64,7 +64,7 @@ app/
 │   ├── main.py        # FastAPI app, SSE endpoint, static file serving
 │   ├── agent.py       # Gemini agent loop (tool calling, streaming SSE events)
 │   ├── tools.py       # Tool wrappers + Gemini function declarations (TOOL_REGISTRY)
-│   ├── core/steering.py  # Loads AGENTS.md + skill files → assembles system prompt
+│   ├── core/context.py  # Loads AGENTS.md + skill files → assembles system prompt
 │   ├── i18n.py        # Bilingual error messages (de/en), key-based lookup
 │   └── pyproject.toml # Dependencies managed with uv
 ├── frontend/          # Vue 3 + TypeScript (Vite)
@@ -131,7 +131,7 @@ cd app/backend && uv run pytest
 - Never let exceptions escape the SSE generator — catch and yield an `error` event.
 - Tool wrappers in `tools.py` return structured dicts, never formatted strings.
 - The agent loop in `agent.py` has a hard cap of 15 iterations.
-- System prompt assembled at runtime in `core/steering.py` from the `steering/travel/` preference files and the `skills/*/` workflow files (YAML front matter stripped).
+- System prompt assembled at runtime in `core/context.py` from the `context/travel/` preference files and the `skills/*/` workflow files (YAML front matter stripped).
 - Use `>=` version constraints in `pyproject.toml`, not pinned versions.
 
 ## SSE Event Protocol

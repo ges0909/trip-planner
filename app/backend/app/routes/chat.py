@@ -8,7 +8,7 @@ from collections.abc import AsyncGenerator
 from typing import Any
 
 from core.agent import run_agent
-from core.steering import _detect_tour_type
+from core.context import _detect_tour_type
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 from i18n import msg

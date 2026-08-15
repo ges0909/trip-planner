@@ -1,4 +1,4 @@
-"""Load steering files and assemble system prompt for the LLM."""
+"""Load context files and assemble system prompt for the LLM."""
 
 import logging
 from pathlib import Path
@@ -11,7 +11,7 @@ ROOT: Path = Path(__file__).parent.parent.parent.parent
 
 # Canonical content locations, resolved directly rather than through the tool-specific
 # symlinks (.kiro/*, .claude/*, */AGENTS.md), which a Windows checkout breaks.
-STEERING_DIR: Path = ROOT / "steering" / "travel"
+CONTEXT_DIR: Path = ROOT / "context" / "travel"
 SKILLS_DIR: Path = ROOT / "skills"
 
 # Tour type literal for type safety
@@ -31,7 +31,7 @@ def _detect_tour_type(message: str) -> TourType:
     return "general"
 
 
-def get_steering_for_tour_type(tour_type: TourType) -> list[Path]:
+def get_context_for_tour_type(tour_type: TourType) -> list[Path]:
     """Get list of context file paths for a given tour type.
 
     Args:
@@ -43,12 +43,12 @@ def get_steering_for_tour_type(tour_type: TourType) -> list[Path]:
     paths: list[Path] = []
 
     # Always include universal travel preferences
-    candidates = [STEERING_DIR / "user-preferences.md"]
+    candidates = [CONTEXT_DIR / "user-preferences.md"]
 
     if tour_type in ("bike", "road"):
         skill_dir = SKILLS_DIR / f"{tour_type}-planner"
         candidates += [
-            STEERING_DIR / tour_type / f"{tour_type}-preferences.md",  # tour-type preferences
+            CONTEXT_DIR / tour_type / f"{tour_type}-preferences.md",  # tour-type preferences
             skill_dir / "SKILL.md",  # workflow + tool usage
             skill_dir / "references" / "output-template.md",  # output format
         ]
@@ -62,9 +62,9 @@ def get_steering_for_tour_type(tour_type: TourType) -> list[Path]:
 
 
 def _select_files(user_message: str) -> list[Path]:
-    """Select steering file paths based on detected tour type."""
+    """Select context file paths based on detected tour type."""
     detected = _detect_tour_type(user_message) if user_message else "general"
-    return get_steering_for_tour_type(detected)
+    return get_context_for_tour_type(detected)
 
 
 def build_system_prompt(
@@ -80,7 +80,7 @@ def build_system_prompt(
         user_message: The user's input, used to detect tour type.
 
     Returns:
-        Combined steering content as a single string.
+        Combined context content as a single string.
     """
     lang_name = "German" if language == "de" else "English"
     tool_list_str = ", ".join(f"`{name}`" for name in tool_names)
@@ -122,7 +122,7 @@ Detect the tour type from the user input and use the matching template:
 Follow the chosen template structure strictly.
 """
 
-    # Load steering files (no sanitization needed)
+    # Load context files (no sanitization needed)
     parts: list[str] = [base_prompt]
     loaded_count = 0
     for path in _select_files(user_message):
@@ -135,7 +135,7 @@ Follow the chosen template structure strictly.
                     content = content[end + 3 :].strip()
             parts.append(content)
             loaded_count += 1
-            logger.debug("Loaded steering file: %s", path.name)
+            logger.debug("Loaded context file: %s", path.name)
         else:
             logger.debug("Steering file not found: %s", path)
 

@@ -1,1 +1,1 @@
-../steering/dev/mcp.md
+../context/dev/mcp.md

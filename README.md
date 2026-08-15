@@ -152,14 +152,14 @@ Self-contained Python servers providing tour planning capabilities via [Model Co
 Preferences and workflows are split by kind, so only relevant context is loaded. There is
 exactly one copy of every file; each tool reaches it through a symlink.
 
-**Preferences** — steering files in the top-level `steering/`, loaded by path:
+**Preferences** — context files in the top-level `context/`, loaded by path:
 
 - `travel/user-preferences.md` — Home base, interests, content integrity rules
 - `travel/bike/bike-preferences.md` — Distance limits, terrain, interests priority, food rules
 - `travel/road/road-preferences.md` — Flight preferences, accommodation rules, hiking priorities
 - `dev/app.md`, `dev/mcp.md` — Web app and MCP server development guidelines
 
-Kiro loads these via `fileMatchPattern` (through `.kiro/steering -> ../steering`); Claude Code reads the same bytes through an
+Kiro loads these via `fileMatchPattern` (through `.kiro/steering -> ../context`); Claude Code reads the same bytes through an
 `AGENTS.md` symlink at the matching directory root (`trips/`, `trips/road/`, `trips/bike/`,
 `app/`, `mcp/`).
 
@@ -169,7 +169,7 @@ Kiro loads these via `fileMatchPattern` (through `.kiro/steering -> ../steering`
 - `road-planner/` — ORS/OSRM routing, flight search, daily driving limits + output template
 
 Both `.kiro/skills` and `.claude/skills` are directory symlinks to `skills/`. The web app
-assembles the same files into its system prompt (`app/backend/core/steering.py`).
+assembles the same files into its system prompt (`app/backend/core/context.py`).
 
 ---
 
@@ -187,7 +187,7 @@ assembles the same files into its system prompt (`app/backend/core/steering.py`)
 │   │   │   ├── agent.py      pydantic-ai agent with tool calling
 │   │   │   ├── mcp_manager.py MCP subprocess manager
 │   │   │   ├── model_gateway.py OpenRouter LLM configuration
-│   │   │   └── steering.py   Assemble system prompt from AGENTS.md + skills
+│   │   │   └── context.py   Assemble system prompt from AGENTS.md + skills
 │   │   └── storage/          Data layer
 │   │       ├── db.py         SQLite schema + operations
 │   │       └── tour_storage.py Filesystem + trash
@@ -206,14 +206,14 @@ assembles the same files into its system prompt (`app/backend/core/steering.py`)
 │   ├── travel-content/       Travel articles + route tips
 │   ├── travel-videos/        Public broadcaster videos
 │   └── podcasts/             Podcast search + transcripts
-├── steering/                 Preferences — fileMatch-scoped (travel/, dev/)
+├── context/                 Preferences — fileMatch-scoped (travel/, dev/)
 ├── skills/                   Tour planning workflows (vendor-neutral)
 │   ├── bike-planner/         SKILL.md + references/output-template.md
 │   └── road-planner/         SKILL.md + references/output-template.md
 ├── trips/
-│   ├── AGENTS.md             → steering/travel/user-preferences.md
-│   ├── bike/AGENTS.md        → steering/travel/bike/bike-preferences.md
-│   ├── road/AGENTS.md        → steering/travel/road/road-preferences.md
+│   ├── AGENTS.md             → context/travel/user-preferences.md
+│   ├── bike/AGENTS.md        → context/travel/bike/bike-preferences.md
+│   ├── road/AGENTS.md        → context/travel/road/road-preferences.md
 │   ├── bike/{tour-name}/     Bike tour documents
 │   │   ├── index.md          Tour description (German)
 │   │   ├── gpx/              GPX tracks
@@ -224,7 +224,7 @@ assembles the same files into its system prompt (`app/backend/core/steering.py`)
 │       └── maps/             Route maps per driving day (tag-{NN}-{start}-{ziel}.png)
 ├── .kiro/
 │   ├── settings/mcp.json     MCP server configuration
-│   ├── steering/             → ../steering
+│   ├── context/             → ../context
 │   └── skills/               → ../skills
 ├── .claude/skills/           → ../skills
 ├── scripts/                  Map rendering utilities
@@ -302,7 +302,7 @@ Output: confirmed OK, issues found, suggested optimizations.
 The project uses a **three-layer context system**, shared by Kiro, Claude Code and the web app:
 
 1. **`AGENTS.md`** (repo root) — Universal rules for all AI assistants (Conventional Commits, project overview)
-2. **`steering/`** (top level) — Preferences and conventions, loaded by path; surfaced to Claude Code as `AGENTS.md` symlinks in `trips/`, `trips/road/`, `trips/bike/`, `app/`, `mcp/`
+2. **`context/`** (top level) — Preferences and conventions, loaded by path; surfaced to Claude Code as `AGENTS.md` symlinks in `trips/`, `trips/road/`, `trips/bike/`, `app/`, `mcp/`
 3. **`skills/*/SKILL.md`** — Tour planning workflows, loaded on demand by task; surfaced via the `.kiro/skills` and `.claude/skills` directory symlinks
 
 Every file exists exactly once. Edit the target, never a symlink copy — and note that the

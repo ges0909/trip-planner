@@ -34,7 +34,7 @@ from pydantic_ai.tools import ToolDefinition
 
 from core.mcp_manager import MCPManager
 from core.model_gateway import get_model
-from core.steering import build_system_prompt
+from core.context import build_system_prompt
 
 logger = logging.getLogger(__name__)
 

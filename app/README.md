@@ -110,7 +110,7 @@ app/
 │   │   ├── agent.py         # pydantic-ai agent with tool calling
 │   │   ├── mcp_manager.py   # MCP subprocess management
 │   │   ├── model_gateway.py # OpenRouter LLM configuration
-│   │   └── steering.py      # Tour-type detection + prompts
+│   │   └── context.py      # Tour-type detection + prompts
 │   ├── storage/             # Data layer
 │   │   ├── db.py            # SQLite schema and operations
 │   │   └── tour_storage.py  # Filesystem + trash
@@ -153,7 +153,7 @@ Context files are loaded based on detected tour type — the same files the IDE 
 - **Road** keywords → `user-preferences.md` + `road-preferences.md` + `skills/road-planner/` (SKILL.md + output template)
 - **Neither** → `user-preferences.md` only, to keep the prompt small
 
-Preferences come from `steering/travel/`, workflows from the top-level `skills/` —
+Preferences come from `context/travel/`, workflows from the top-level `skills/` —
 the canonical paths, not the tool-specific symlinks.
 
 Tours are persisted in SQLite (metadata) + filesystem (markdown, GPX, maps).

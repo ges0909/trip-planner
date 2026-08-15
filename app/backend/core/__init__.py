@@ -1,1 +1,1 @@
-"""Core business logic — agent, LLM, MCP, steering."""
+"""Core business logic — agent, LLM, MCP, context."""

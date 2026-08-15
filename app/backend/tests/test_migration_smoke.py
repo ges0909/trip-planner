@@ -36,21 +36,21 @@ class TestNoLibImports:
 class TestNoSanitizeSteering:
     """Verify no `_sanitize_steering` function exists (Requirement 6.1)."""
 
-    def test_steering_module_has_no_sanitize_function(self) -> None:
-        """Import steering module and verify _sanitize_steering is not an attribute."""
-        from core import steering
+    def test_context_module_has_no_sanitize_function(self) -> None:
+        """Import context module and verify _sanitize_steering is not an attribute."""
+        from core import context
 
-        assert not hasattr(steering, "_sanitize_steering"), (
-            "steering module still has _sanitize_steering function — "
+        assert not hasattr(context, "_sanitize_steering"), (
+            "context module still has _sanitize_steering function — "
             "sanitization logic should be removed"
         )
 
-    def test_steering_module_has_no_sections_to_strip(self) -> None:
+    def test_context_module_has_no_sections_to_strip(self) -> None:
         """Verify _SECTIONS_TO_STRIP config is also removed."""
-        from core import steering
+        from core import context
 
-        assert not hasattr(steering, "_SECTIONS_TO_STRIP"), (
-            "steering module still has _SECTIONS_TO_STRIP — sanitization config should be removed"
+        assert not hasattr(context, "_SECTIONS_TO_STRIP"), (
+            "context module still has _SECTIONS_TO_STRIP — sanitization config should be removed"
         )
 
 
@@ -66,7 +66,7 @@ class TestNoToolRegistry:
 
     def test_no_module_exports_tool_registry(self) -> None:
         """Verify no backend module exports TOOL_REGISTRY."""
-        backend_modules = ["agent", "main", "mcp_manager", "steering", "i18n"]
+        backend_modules = ["agent", "main", "mcp_manager", "context", "i18n"]
         violations: list[str] = []
 
         for module_name in backend_modules:
