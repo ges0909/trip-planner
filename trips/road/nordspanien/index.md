@@ -1,11 +1,11 @@
 # Nordspanien Roadtrip
 
-**Reisezeitraum:** Fr 4. September – So 20. September 2026 · 17 Tage · ~1.250 km (inkl.
+**Reisezeitraum:** Fr 4. September – So 20. September 2026 · 17 Tage · ~1.450 km (inkl.
 Tagesausflüge) **Flug:** BER ↔ Bilbao BIO, Direktflug Eurowings (nur Mo/Fr/So,
 Abendflüge) **Mietwagen:** Übernahme Fr 4. Sep (Flughafen Bilbao) / Abgabe Fr 18. Sep
 (Flughafen) — 14 Tage
 
-**Reiseverlauf:** [Bilbao](#tag-1) → [Bakio](#tag-1) → [San Sebastián](#tag-3) → [Santander](#tag-4) → [Potes](#tag-6) → [Picos de Europa](#tag-8) → [Gijón](#tag-10) / [Oviedo](#tag-11) → [San Vicente de la Barquera](#tag-12) → [Vitoria-Gasteiz](#tag-13) → [Bilbao](#tag-15). Alle Etappen unter 2,5 Std. Fahrzeit.
+**Reiseverlauf:** [Bilbao](#tag-1) → [Bakio](#tag-1) → [San Sebastián](#tag-2) → [Santander](#tag-4) → [Potes](#tag-6) → [Cangas de Onís](#tag-7) / [Picos de Europa](#tag-8) → [Gijón](#tag-10) / [Oviedo](#tag-11) → [San Vicente de la Barquera](#tag-12) → [Vitoria-Gasteiz](#tag-13) → [Bilbao](#tag-15). Längste Etappe: Tag 13 mit ~3 Std., alle übrigen unter 2h45.
 
 🌊 Die spanische Nordküste: grüne Berge, wilde Atlantikküste, Pintxos-Bars, Sidra-Häuser und die Picos de Europa direkt hinter dem Strand. Anfang September: warm, wenig Touristen, perfekte Wanderbedingungen.
 
@@ -33,7 +33,7 @@ Abendflüge) **Mietwagen:** Übernahme Fr 4. Sep (Flughafen Bilbao) / Abgabe Fr 
 | So 13. – Di 15. Sep | 2      | [Gijón](#tag-10)                      | [Hotel Santa Rosa, Blue Hoteles](https://www.booking.com/hotel/es/blue-santa-rosa.de.html)          |
 | Di 15. – Mi 16. Sep | 1      | [San Vicente de la Barquera](#tag-12) | [Hotel Verdemar by Grupo A Cobijo](https://www.booking.com/hotel/es/spa-verdemar.de.html)           |
 | Mi 16. – Fr 18. Sep | 2      | [Vitoria-Gasteiz](#tag-13)            | [Ibis budget Vitoria Gasteiz](https://www.booking.com/hotel/es/ibis-budget-vitoria-gasteiz.de.html) |
-| Fr 18. – So 20. Sep | 2      | [Bilbao](#tag-15)                     |                                                                                                     |
+| Fr 18. – So 20. Sep | 2      | [Bilbao](#tag-15)                     | [Hotel Miró](https://www.booking.com/hotel/es/mirohotel.html)                                       |
 
 **Gesamt:** 16 Nächte (4.–20. Sep 2026)
 
@@ -45,9 +45,10 @@ Einige Attraktionen und Transporte auf dieser Route erfordern oder empfehlen ein
 
 | Tag / Datum             | Aktivität / Ort                       | Vorlauf     | Details & Buchungs-Link                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | ✅  |
 | :---------------------- | :------------------------------------ | :---------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-: |
-| **Tag 2** (Sa 5. Sep)   | **San Juan de Gaztelugatxe**          | 2–4 Wochen  | Kostenloses Zeitslot-Ticket erforderlich (falls Zugang nach 10:00 Uhr). [visitbiscay.eus](https://www.visitbiscay.eus/en/san-juan-gaztelugatxe)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | ✅  |
+| **Tag 2** (Sa 5. Sep)   | **San Juan de Gaztelugatxe**          | 2–4 Wochen  | Kostenloses Zeitslot-Ticket nur nötig für Zugang **9:30–19:00 Uhr**. ⚠️ Bei Nichterscheinen wird die Reservierung nach 60 Min. storniert und man ist **1 Jahr für Neubuchungen gesperrt** — Backup-Ticket rechtzeitig absagen. [visitbiscay.eus](https://www.visitbiscay.eus/en/san-juan-gaztelugatxe)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | ✅  |
 | **Tag 3** (So 6. Sep)   | **Bar Nestor** (San Sebastián)        | Am Reisetag | Keine Online-Buchung. Persönliches Eintragen auf die Liste vor Ort um **12:00 Uhr** (mittags) oder **19:00 Uhr** (abends) für Tortilla.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |     |
 | **Tag 6** (Mi 9. Sep)   | **Höhle von Altamira** (Neocueva)     | 2–4 Wochen  | Replika-Museum & Höhle in Santillana del Mar. Tickets vorab sichern. [culturaydeporte.gob.es](https://www.culturaydeporte.gob.es/mnaltamira/en/home.html)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |     |
+| **Tag 7** (Do 10. Sep)  | **Fuente Dé Seilbahn**                | 2–3 Wochen  | Zeitfenster-Reservierung, Anfang September Hochsaison (bis 30. Sep). 20 €/P. hin+zurück. [telefericodefuentede.com](https://telefericodefuentede.com/tarifas/)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |     |
 | **Tag 9** (Sa 12. Sep)  | **Lagos de Covadonga Bus**            | 2–3 Wochen  | PKW-Zufahrt im September gesperrt. ALSA-Shuttlebus ab Cangas de Onís reservieren (~9 € p.P.). [alsa.es](<https://www.alsa.es/checkout?p_p_id=com_babel_alsa_espania_purchase_web_PurchasePortlet&p_p_lifecycle=1&p_p_state=normal&p_p_mode=view&_com_babel_alsa_espania_purchase_web_PurchasePortlet_javax.portlet.action=SearchJourneysAction&p_auth=EptwErhO&code=&serviceType=&accessible=0&_com_babel_alsa_global_portlet_AlsaGlobalJourneySearchPortlet_INSTANCE_odyl_originStationNameId=Lagos%20Covadonga%20Subida%20(Todas%20las%20paradas)&originStationId=20969&originStationSimplifiedName=Lagos%20Covadonga%20Subida&originStationIsMoveliaStop=false&destinationStationId=8892&destinationStationSimplifiedName=Lagos%20Covadonga&destinationStationIsMoveliaStop=false&departureDate=12%2F09%2F2026&_departureDate=12%2F09%2F2026&returnDate=12%2F09%2F2026&_returnDate=12%2F09%2F2026&originalLocale=es_ES&locationMode=3&passengerType-1=0&passengerType-4=0&passengerType-5=2&passengerType-2=0&passengerType-3=0&numPassengers=2&regionalZone=&travelType=RETURN&youngPromoCode=&promoCode=&jsonAlsaPassPassenger=&jsonVoucherPassenger=>) |     |
 | **Tag 13** (Mi 16. Sep) | **Catedral de Santa María** (Vitoria) | 1–2 Wochen  | Führung „Abierto por obras" mit Schutzhelm. Online-Reservierung. [catedralvitoria.eus](https://www.catedralvitoria.eus/en)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |     |
 | **Tag 16** (Sa 19. Sep) | **Guggenheim Museum** (Bilbao)        | 2–3 Wochen  | Zeitslot-Ticket zwingend empfohlen (morgens bevorzugt). [guggenheim-bilbao.eus](https://www.guggenheim-bilbao.eus/en)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |     |
@@ -70,13 +71,16 @@ Einige Attraktionen und Transporte auf dieser Route erfordern oder empfehlen ein
 [📍 Google Maps](https://www.google.com/maps/dir/43.305130,-2.906570/43.427066,-2.808386)
 
 **Hinflug:** BER → Bilbao (BIO), Direktflug Eurowings EW8552, ~2,5 Std. Abflug 17:00
-Uhr, Ankunft Bilbao ca. 19:35 Uhr Ortszeit (Fr).
+Uhr, Ankunft Bilbao ca. 19:35 Uhr Ortszeit (Fr). Eurowings fliegt die Strecke 3×/Woche
+(Mo/Fr/So) — unter der Woche gibt es keinen Direktflug. 💰 Hin+zurück ~1.140 € für 2 P.;
+Umsteigeverbindungen liegen bei 720 € (Eurowings via DUS) bzw. 634 € (Vueling via BCN,
+mit Nacht im Transit).
 [→ Direktflüge BER→BIO, 4. Sep](https://www.skyscanner.de/g/referrals/v1/flights/day-view/?origin=BER&destination=BIO&outboundDate=2026-09-04&adults=2&stops=0&currency=EUR&locale=de-DE&market=DE)
 
 **Mietwagen:** Übernahme am Flughafen Bilbao direkt nach Ankunft. Kompaktwagen,
 ~400–650 € für 14 Tage (Vollkasko inkl.). Abgabe Tag 15 am Flughafen.
 
-**Fahrt nach Bakio:** ~35 Min. direkt vom Flughafen. Ankunft ca. 20:30 Uhr.
+**Fahrt nach Bakio:** ~27 Min. direkt vom Flughafen. Ankunft ca. 20:30 Uhr.
 
 **Abendessen:** Hotel-Restaurant (regionale Küche) oder Bakio Ortskern (5 Min. zu Fuß).
 
@@ -97,10 +101,10 @@ Uhr, Ankunft Bilbao ca. 19:35 Uhr Ortszeit (Fr).
 
 Gaztelugatxe früh morgens, dann entspannt entlang der Küste nach San Sebastián. Fokus auf die Highlights, ohne Hetze.
 
-1. 🏛️ **[San Juan de Gaztelugatxe](https://www.visitbiscay.eus/en/san-juan-gaztelugatxe)** (**7:30–9:00 Uhr**, 5 Min. Fahrt) — Felsinsel, 241 Stufen, GoT „Dragonstone". **Freier Zugang vor 10:00 Uhr** (keine Ticketkontrolle). Backup-Ticket 13:55 Uhr vorhanden.
+1. 🏛️ **[San Juan de Gaztelugatxe](https://www.visitbiscay.eus/en/san-juan-gaztelugatxe)** (**7:30–9:00 Uhr**, 5 Min. Fahrt) — Felsinsel, 241 Stufen, GoT „Dragonstone". **Freier Zugang vor 9:30 Uhr** (Kontrolle läuft 9:30–19:00). ⚠️ Backup-Ticket 13:55 Uhr vorhanden — wenn ihr morgens geht, **vorher stornieren**: Ein No-Show sperrt euch ein Jahr lang für Neureservierungen.
 2. ☕ **Playa de Bakio** (~9:30 Uhr) — Kaffeepause am Hotelstrand, Koffer ins Auto.
 3. 🏛️ **[Bermeo](https://tourism.euskadi.eus/en/towns/bermeo/webtur00-content/en/)** (~10:30 Uhr, 10 Min.) — Fischerhafen, Ercilla-Turm (15. Jh.), zweites Frühstück.
-4. 🌿 **[Urdaibai](https://www.visitbiscay.eus/en/urdaibai) / Playa de Laga** (~11:30–13:00 Uhr) [📍](https://www.google.com/maps/search/?api=1&query=43.3983,-2.6617) — UNESCO-Biosphärenreservat, Aussichtspunkt Mundaka. Badestopp + Mittagspause am goldenen Sandstrand.
+4. 🌿 **[Urdaibai](https://www.visitbiscay.eus/en/urdaibai) / Playa de Laga** (~11:30–13:00 Uhr) [📍](https://www.google.com/maps/search/?api=1&query=43.4093,-2.6574) — UNESCO-Biosphärenreservat, Aussichtspunkt Mundaka. Badestopp + Mittagspause am goldenen Sandstrand.
 5. 🏛️ **[Zumaia Flysch](https://geoparkea.eus/en/what-see/essential-places)** (~14:30–16:00 Uhr) — UNESCO Geopark, 60 Mio. Jahre Erdgeschichte. **Playa de Itzurun** zwischen den Flysch-Formationen + **Ermita de San Telmo** (5 Min. Aufstieg, Panoramablick).
 6. 🍷 **Getaria Hafen** (~16:30 Uhr) — Gegrillter Fisch auf Holzkohle, Txakoli-Wein.
 7. **Ankunft San Sebastián** (~17:30 Uhr)
@@ -167,8 +171,8 @@ Gaztelugatxe früh morgens, dann entspannt entlang der Küste nach San Sebastiá
 
 **Unterwegs:**
 
-- 🏛️ **[Castro Urdiales](https://www.spain.info/en/destination/castro-urdiales/)** (~1 Std. ab San Sebastián) — Gotische Kirche Santa María, Leuchtturm auf römischen Ruinen. Kaffeepause am Hafen.
-- 🏊 **Playa de Oriñón** [📍](https://www.google.com/maps/search/?api=1&query=43.4025,-3.3258) (~20 Min. vor Santander) — Goldener Dünenstrand in geschützter Bucht. Perfekter Zwischenstopp zum Erfrischen.
+- 🏛️ **[Castro Urdiales](https://www.spain.info/en/destination/castro-urdiales/)** (132 km, ~1h40 ab San Sebastián) — Gotische Kirche Santa María, Leuchtturm auf römischen Ruinen. Kaffeepause am Hafen.
+- 🏊 **Playa de Oriñón** [📍](https://www.google.com/maps/search/?api=1&query=43.4025,-3.3258) (55 km / ~40 Min. vor Santander) — Goldener Dünenstrand in geschützter Bucht. Perfekter Zwischenstopp zum Erfrischen.
 
 Ankunft Santander ca. 13:00 Uhr.
 
@@ -190,7 +194,7 @@ Ankunft Santander ca. 13:00 Uhr.
 - 🎨 **[Centro Botín](https://www.centrobotin.org/en/)** — Renzo Piano, zeitgenössische
   Kunst. **Highlight.** (~9 €/P., Di–So, Mo geschlossen)
 - 🏊 **Playa de la Arnía**
-  [📍](https://www.google.com/maps/search/?api=1&query=43.4738,-3.8783) — Wilde
+  [📍](https://www.google.com/maps/search/?api=1&query=43.4742,-3.9156) — Wilde
   Felsbucht, spektakuläre Felsformationen. 15 Min. Fahrt.
 - 🍷 **[Bodega del Riojano](https://bodegadelriojano.com)** — Historisches Lokal seit 1908, kantabrische Atmosphäre.
 
@@ -223,7 +227,7 @@ Ankunft Santander ca. 13:00 Uhr.
   (Anfahrt) — Gaudís El Capricho.
 - 🏛️ **Desfiladero de la Hermida** (Anfahrt) — 21 km Schlucht, 600 m Felswände.
 - 🏊 **[Balneario La Hermida](https://balneariolahermida.com/)**
-  [📍](https://www.google.com/maps/search/?api=1&query=43.2283,-4.6017) — Thermalquelle
+  [📍](https://www.google.com/maps/search/?api=1&query=43.2486,-4.5958) — Thermalquelle
   (60°C) mitten in der Schlucht. Thermalhöhle + Außenbecken 38°C. Direkt auf der Route.
 
 - 🍷 **Cocido Lebaniego** — Kichererbsen-Eintopf, Spezialität des Tals. (Die Fuente Dé
@@ -240,7 +244,7 @@ Ankunft Santander ca. 13:00 Uhr.
 
 <a id="tag-7"></a>
 
-### Tag 7 · Do 10. Sep · Potes → Picos de Europa / Cangas de Onís · ~150 km, ~2,5 Std. Fahrzeit (zzgl. Seilbahn-Ausflug)
+### Tag 7 · Do 10. Sep · Potes → Picos de Europa / Cangas de Onís · ~165 km, ~2h40 Fahrzeit (inkl. Fuente-Dé-Schleife)
 
 <details>
 <summary>🗺️ Karte anzeigen</summary>
@@ -249,23 +253,29 @@ Ankunft Santander ca. 13:00 Uhr.
 
 </details>
 
-[📍 Google Maps](https://www.google.com/maps/dir/43.154381,-4.622185/43.143100,-4.812400/43.154381,-4.622185/43.351964,-5.128428)
+[📍 Google Maps](https://www.google.com/maps/dir/43.154381,-4.622185/43.143100,-4.812400/43.154381,-4.622185/42.985600,-5.001100/43.351964,-5.128428)
 
-Vormittags Ausflug von Potes zur Seilbahn und Wanderung in den Picos de Europa.
-Nachmittags spektakuläre Fahrt über den Puerto de San Glorio und das Desfiladero de los Beyos nach Cangas de Onís.
+Vormittags Seilbahn-Ausflug von Potes nach Fuente Dé, nachmittags die Panoramaroute nach
+Cangas de Onís: über den Puerto de San Glorio nach León hinunter, am Stausee von Riaño
+vorbei und durch das Desfiladero de los Beyos zurück nach Norden. Das sind ~37 km und
+~30 Min. mehr als die direkte Strecke durch die Hermida-Schlucht — die ihr an Tag 6
+ohnehin schon gefahren seid.
 
 - 🥾 **[Fuente Dé Seilbahn](https://telefericodefuentede.com)**
-  [📍](https://www.google.com/maps/search/?api=1&query=43.1536,-4.8092) (morgens ab Potes, ~30 Min. Anfahrt) → Wanderung zu **Horcados Rojos** (hochalpin, 4 Std.) oder gemütlich über die Puertos de Áliva zurück. (~21 €/P. hin+zurück).
+  [📍](https://www.google.com/maps/search/?api=1&query=43.1536,-4.8092) (morgens ab Potes, ~25 Min. Anfahrt) — Auffahrt auf 1.823 m in 4 Min. (~20 €/P. hin+zurück, Hochsaison bis 30. Sep). ⚠️ Zeitfenster vorab online reservieren. Oben: **Mirador del Cable** (~1 Std., leicht), Panorama über das Liébana-Tal. Ambitionierte Alternative: **Horcados Rojos** (hochalpin, 4 Std.) — geht sich zeitlich aus, kostet aber Kraft vor der Ruta del Cares an Tag 8.
+- 🏛️ **Mirador de Llesba** (Collado de Llesba, kurze Stichstraße am Puerto de San Glorio) — Bärendenkmal von Jesús Otero, Panorama auf den Macizo Oriental der Picos.
+- 🌿 **Desfiladero de los Beyos** — Enge Kalksteinschlucht, durch die sich die N-625 dem Río Sella entlang nach Norden windet.
 - 🏛️ **[Puente Romano](https://www.spain.info/en/places-of-interest/puente-rio-sella/)** (Cangas) — Römische Brücke, Wahrzeichen Asturiens. Abendlicher Spaziergang.
 - 🍷 **Sidrería** — Sidra escanciar (aus Höhe einschenken) lernen.
 
-> 🌧️ **Plan B bei schlechtem Wetter:** Seilbahn fährt bei starkem Wind/Nebel nicht. Alternative: Direkt über die landschaftlich spektakuläre Route (Puerto de San Glorio) nach Cangas fahren. Unterwegs Stopp am **Mirador del Pozo de Andara** für Bergpanorama (auch bei Wolken beeindruckend). In Cangas früher ankommen → Sidrería-Nachmittag + römische Brücke.
+> 🌧️ **Plan B bei schlechtem Wetter:** Die Seilbahn fährt bei starkem Wind oder Nebel nicht — Status morgens auf der Website prüfen. Fällt sie aus, entfällt die Fuente-Dé-Schleife (46 km, 45 Min.) und der ganze Tag gehört der Passroute: mehr Zeit am Mirador de Llesba, am Stausee von Riaño und in der Beyos-Schlucht, die bei tiefhängenden Wolken eher gewinnt. In Cangas früher ankommen → Sidrería-Nachmittag + römische Brücke. Bei Schnee oder Eis auf 1.609 m (Anfang September unwahrscheinlich, aber möglich): stattdessen direkt über die Hermida-Schlucht via Panes und Arenas de Cabrales — 81 km, ~1h25.
 
 <a id="tag-8"></a>
 
 ### Tag 8 · Fr 11. Sep · Picos de Europa (Ruta del Cares)
 
-- 🥾 **Ruta del Cares** [PR-PNPE 3] — 22 km (hin+zurück), 6–8 Std., moderat. ⭐ 4,5 (1.880 Reviews). Schlucht-Wanderung durch die „Garganta Divina" — ~70 in den Fels gehauene Tunnel. Ganztageswanderung ab Poncebos. ⚠️ Steinschlagrisiko vorab prüfen. **Nur bei trockenem Wetter!**
+- 🥾 **Ruta del Cares** [PR-PNPE 3] — 24 km (hin+zurück, 2 × 12 km), 6–8 Std., moderat. ⭐ 4,5 (1.880 Reviews). Schlucht-Wanderung durch die „Garganta Divina" — 71 in den Fels gehauene Tunnel. Ganztageswanderung ab Poncebos. ⚠️ Steinschlagrisiko vorab prüfen. **Nur bei trockenem Wetter!**
+  - 🚗 **Anfahrt:** Cangas de Onís → Poncebos 38 km, ~50 Min. je Richtung (76 km / 1h40 hin und zurück). Parkplatz Poncebos ist im September früh voll — zeitig los.
   - ⚠️ **Kein Handyempfang** in weiten Teilen der Schlucht — Route vorher offline speichern, Begleitung empfohlen.
 - 🍷 **Quesu Cabrales & Gamonéu** — Blauschimmelkäse & Höhlenkäse-Tasting in Arenas de Cabrales.
 
@@ -317,7 +327,7 @@ Ankunft Gijón ca. 13:00 Uhr. Maritime Hafenstadt mit Atlantik-Flair.
 
 ### Tag 11 · Mo 14. Sep · Oviedo (Tagesausflug ab Gijón)
 
-- 🎊 **Fiestas de San Mateo** (Oviedo) — Größtes Stadtfest (11.–21. Sep.) mit Live-Musik & Chiringuitos.
+- 🎊 **Fiestas de San Mateo** (Oviedo) — Größtes Stadtfest (10.–21. Sep.) mit Live-Musik & Chiringuitos.
 - 🏛️ **[Catedral de San Salvador](https://catedraldeoviedo.com/)** — Gotisches Meisterwerk. Cámara Santa (UNESCO) mit Heiligem Grabtuch und asturischen Königskreuzen.
 - 🏛️ **[Präromanische Kirchen](https://www.turismoasturias.es/en/descubre/cultura/prerromanico/santa-maria-del-naranco)** (UNESCO) — Santa María del Naranco & San Miguel de Lillo am Monte Naranco (9. Jh., Mo Vormittag kostenlos).
 - 🎨 **Skulpturen-Freilichtmuseum** — Über 100 Bronzestatuen in der Innenstadt. Fotomotive: Woody Allen, Mafalda auf Parkbank im Campo de San Francisco, Botero.
@@ -339,7 +349,7 @@ Ankunft Gijón ca. 13:00 Uhr. Maritime Hafenstadt mit Atlantik-Flair.
 
 [📍 Google Maps](https://www.google.com/maps/dir/43.537055,-5.667170/43.386368,-4.398566)
 
-> 🎊 **Regionalfeiertag (Kantabrien):** La Bien Aparecida. Restaurants & Strände belebt.
+> 🎊 **Gesetzlicher Feiertag in Kantabrien:** La Bien Aparecida (Schutzpatronin, 15. Sep). Restaurants & Strände belebt — ⚠️ Geschäfte, Supermärkte und Behörden aber überwiegend geschlossen. Einkäufe auf Tag 11 vorziehen.
 
 Fahrt entlang der Küste nach Kantabrien. Malerisches Fischerstädtchen auf einem Hügel zwischen Rías, Stränden und Picos-Panorama.
 
@@ -437,7 +447,7 @@ Vormittags Fahrt nach Bilbao, Mietwagen-Rückgabe am Flughafen. Nachmittags Erku
 
 - 🚗 **Mietwagen-Abgabe:** Abgabe am Flughafen Bilbao (BIO) vormittags (Ende der 14-tägigen Mietdauer). Vom Flughafen per Bus A3247 (alle 15 Min., 20 Min. Fahrt, ~3 €) zurück in die Innenstadt.
 - 🏛️ **[Mercado de la Ribera](https://www.mercadodelaribera.biz/)** — Europas größte überdachte Markthalle am Fluss. Erdgeschoss: klassische Marktstände (Fisch, Fleisch, Gemüse). Obergeschoss: moderne Food-Hall mit Pintxos-Bars. Perfekt für Brunch/Mittagessen.
-- 🏛️ **[Puente Bizkaia](https://puente-colgante.com/en)** [📍](https://www.google.com/maps/search/?api=1&query=43.3231,-3.0172) — UNESCO-Schwebefähre (1893), älteste der Welt. Gondel-Überfahrt Portugalete ↔ Getxo (~1,50 €) oder Fußgängerbrücke oben (45 m hoch, ~10 €). Erreichbar mit Metro L1 nach Portugalete (~30 Min. ab Casco Viejo).
+- 🏛️ **[Puente Bizkaia](https://puente-colgante.com/en)** [📍](https://www.google.com/maps/search/?api=1&query=43.3231,-3.0172) — UNESCO-Schwebefähre (1893), älteste der Welt. Gondel-Überfahrt Portugalete ↔ Getxo (**0,60 €** p.P.) oder Fußgängerbrücke oben (45 m hoch, **11 €**, Audioguide +3 €). Erreichbar mit Metro **L2** nach Portugalete (~30 Min. ab Casco Viejo), von dort ~15 Min. zu Fuß.
 - 🥾 **Artxanda Funicular + Rundweg** — 6 km, 2 Std., leicht. Panorama zum Sonnenuntergang. [Funicular de Artxanda](https://funicularartxanda.bilbao.eus/) · [Routenbeschreibung Turismo Vasco](https://turismovasco.com/en/bizkaia/what-to-see-in-bizkaia/artxanda-viewpoint-promenade/) · [AllTrails Route (7,4 km)](https://www.alltrails.com/trail/spain/biscay/uribarri-mirador-de-artxanda-etxebarria-parkea)
 - 🍷 **Plaza Nueva Pintxos** — Gilda (Ur-Pintxo: Olive, Peperoni, Sardelle), Bacalao al Pil-Pil. Dazu Txakoli (spritziger Weißwein) oder Zurrito (kleines Bier).
 
@@ -447,11 +457,11 @@ Vormittags Fahrt nach Bilbao, Mietwagen-Rückgabe am Flughafen. Nachmittags Erku
 
 ### Tag 16 · Sa 19. Sep · Bilbao (Kultur & Altstadt)
 
-- 🎨 **[Guggenheim Bilbao](https://www.guggenheim-bilbao.eus/en)** — Gehry-Ikone, zeitgenössische Kunst. **Pflichtbesuch.** (~16 €/P., 3 Std., ⚠️ vorab buchen!) 💡 Tipp: morgens früh da sein — vor Öffnung reinigen sogenannte „Spidermans" die Titanfassade im Abseilverfahren, ein Spektakel für sich. Außenskulpturen: „Puppy" (Jeff Koons Blumenhund) und „Maman" (Louise Bourgeois Riesenspinne).
+- 🎨 **[Guggenheim Bilbao](https://www.guggenheim-bilbao.eus/en)** — Gehry-Ikone, zeitgenössische Kunst. **Pflichtbesuch.** (15 € online / 16 € Kasse — Nebensaisonpreis ab 14. Sep, davor 18 €. 3 Std., ⚠️ vorab buchen!) 💡 Tipp: morgens früh da sein — vor Öffnung reinigen sogenannte „Spidermans" die Titanfassade im Abseilverfahren, ein Spektakel für sich. Außenskulpturen: „Puppy" (Jeff Koons Blumenhund) und „Maman" (Louise Bourgeois Riesenspinne).
 - 🏛️ **Casco Viejo** — Siete Calles (Die sieben Straßen), mittelalterliche Altstadt. [Santiago-Kathedrale](https://catedralbilbao.com/) und Plaza Nueva.
 - 🍷 **Plaza Nueva & Casco Viejo** — Pintxos-Zentrum unter den Arkaden. **Probieren:** Gilda (Ur-Pintxo: Olive, Peperoni, Sardelle), Bacalao al Pil-Pil. Dazu Txakoli oder Zurrito.
 - 🏛️ **[Café Iruña](https://www.cafeirunabilbao.net/)** [📍](https://www.google.com/maps/search/?api=1&query=43.2634,-2.9253) — Seit 1903, neo-maurischer Stil, Bilbaos bekanntestes Traditionslokal. Sehenswert für Architektur & Atmosphäre.
-- 🎨 **[Museo de Bellas Artes](https://bilbaomuseoa.eus)** — Goya bis Chillida, El Greco bis zeitgenössische Kunst. (~9 €/P.)
+- 🎨 **[Museo de Bellas Artes](https://bilbaomuseoa.eus)** — Goya bis Chillida, El Greco bis zeitgenössische Kunst. ⚠️ War wegen der Foster-Erweiterung („Agravitas") jahrelang geschlossen; Wiedereröffnung angekündigt für **24. Juni 2026**. Vor der Reise prüfen, ob der Termin gehalten wurde — Eintrittspreise stehen dann neu fest (bisher ~9 €/P.).
 
 **Weitere POIs in Bilbao:**
 
@@ -470,8 +480,9 @@ Flughafen spätestens 17:30 Uhr** (Check-in bis 18:30 Uhr, Abflug 20:30 Uhr). Bu
 zum Flughafen ~30 Min.
 
 **Rückflug:** Bilbao (BIO) → BER, Direktflug Eurowings EW8553, ~2,5 Std. Abflug 20:30
-Uhr (So). ℹ️ Pünktlichkeit laut Airportia gut (4,6/5 Sterne, Stand Jun 2026) — Ankunft
-BER ca. 22:55 Uhr.
+Uhr (So) — Ankunft BER ca. 22:55 Uhr. ⚠️ Google Flights führt EW8553 als **„oft
+verspätet"** (Stand Aug 2026); die früher notierte Airportia-Wertung von 4,6/5 deckt
+sich damit nicht. Bei Anschluss-ÖPNV ab BER Puffer einplanen.
 [→ Direktflüge BIO→BER, 20. Sep](https://www.skyscanner.de/g/referrals/v1/flights/day-view/?origin=BIO&destination=BER&outboundDate=2026-09-20&adults=2&stops=0&currency=EUR&locale=de-DE&market=DE)
 
 **Optionale Ausflüge ab Bilbao (per Metro/Bus):**
@@ -487,7 +498,7 @@ Markierte Wanderwege ([Waymarked Trails](https://waymarkedtrails.org), OSM-Daten
 
 | Route                            | Länge  | Link                                                                        | GPX |
 | -------------------------------- | ------ | --------------------------------------------------------------------------- | --- |
-| Ruta del Cares                   | 21 km  | [waymarkedtrails.org](https://hiking.waymarkedtrails.org/#route?id=2687934) | —   |
+| Ruta del Cares                   | 24 km  | ⚠️ Nicht im OSM-Wanderrouten-Index (frühere Relation 2687934 existiert nicht mehr)  | —   |
 | Lagos de Covadonga               | 6,4 km | [waymarkedtrails.org](https://hiking.waymarkedtrails.org/#route?id=4664408) | —   |
 | Camino del Norte (Euskal Herria) | 228 km | [waymarkedtrails.org](https://hiking.waymarkedtrails.org/#route?id=1116809) | —   |
 
@@ -522,5 +533,9 @@ Sehempfehlungen zur Vorbereitung (ÖR Mediathek):
 | BR     | Podcast: Radioreisen — Nordspanien: Picos, Padrón, Bilbao→Porto (54 Min.) | [Apple Podcasts](https://podcasts.apple.com/at/podcast/nordspanien-kalksteingebirge-picos-de-europa-gr%C3%BCnes/id560983615?i=1000770007595)                                                                    |
 | Arte   | Unbekanntes Spanien — Von Asturien nach Zamora (43 Min., bis 17.10.2026)  | [Arte Mediathek](https://www.arte.tv/de/videos/RC-027779/unbekanntes-spanien)                                                                                                                                   |
 
-> ℹ️ Zuletzt geprüft: 2026-08-08. GPX-Routen und Karten aktualisiert (2026-08-08).
+> ℹ️ Zuletzt geprüft: 2026-08-15. Fahrzeiten und Distanzen per OSRM/OpenRouteService
+> nachgerechnet, Wanderrouten gegen die OSM-Relationen von Waymarked Trails geprüft,
+> Flüge gegen Google Flights verifiziert. Tag 7 auf die San-Glorio-Route umgestellt,
+> GPX und Karte neu gerendert (2026-08-15).
 > Wanderrouten-Bewertungen aus Web-Recherche (2026-05), Quelle: AllTrails. Nicht per API verifiziert.
+> Öffnungszeiten und Preise Stand Aug 2026 — vor der Reise stichprobenartig nachprüfen.
