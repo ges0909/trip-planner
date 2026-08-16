@@ -24,9 +24,11 @@ mein-projekt/
 ├── skills/                       <-- SINGLE SOURCE OF TRUTH für Workflows (In Git versioniert)
 │   ├── bike-planner/
 │   │   ├── SKILL.md              <-- Modularer Fahrradtour-Skill mit YAML-Kopf
-│   │   └── references/
+│   │   └── references/           <-- Vorlagen & Schema-Referenzen (optional)
 │   └── road-planner/
-│       └── SKILL.md              <-- Modularer Roadtrip-Skill mit YAML-Kopf
+│       ├── SKILL.md              <-- Modularer Roadtrip-Skill mit YAML-Kopf
+│       ├── references/           <-- Vorlagen & Schema-Referenzen (optional)
+│       └── scripts/              <-- Ausführbare Hilfsskripte & Assets (optional)
 ├── context/                      <-- SINGLE SOURCE OF TRUTH für Travel- & Dev-Preferences
 │   ├── dev/
 │   └── travel/
@@ -69,7 +71,11 @@ mein-projekt/
 
 ### Schritt 2: Modulare Skills herstellerneutral anlegen (`skills/`)
 
-Jeder Skill liegt in einem eigenen Unterordner innerhalb des sichtbaren Top-Level-Ordners `skills/`. Das Herzstück ist der YAML-Kopf (Frontmatter) am Anfang der `SKILL.md`. Dieser steuert das **Progressive Disclosure** (schrittweise Offenlegung): Die KI liest beim Starten der Session nur die Metadaten. Der eigentliche, tokenintensive Inhalt wird erst geladen, wenn der Skill aktiv wird.
+Jeder Skill liegt in einem eigenen Unterordner innerhalb des sichtbaren Top-Level-Ordners `skills/`. Ein Skill kann neben dem zentralen `SKILL.md` auch zwei optionale Unterordner enthalten:
+- **`references/`**: Für zusätzliche Dokumentation, Schemas und Ausgabe-Templates.
+- **`scripts/`**: Für auszuführende Hilfsskripte und zugehörige Assets (z. B. Karten-Render-Skripte), die exklusiv zu diesem Workflow gehören.
+
+Das Herzstück ist der YAML-Kopf (Frontmatter) am Anfang der `SKILL.md`. Dieser steuert das **Progressive Disclosure** (schrittweise Offenlegung): Die KI liest beim Starten der Session nur die Metadaten. Der eigentliche, tokenintensive Inhalt wird erst geladen, wenn der Skill aktiv wird.
 
 **Beispiel für `skills/bike-planner/SKILL.md`:**
 
