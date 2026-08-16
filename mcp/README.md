@@ -4,7 +4,7 @@ Custom [Model Context Protocol](https://modelcontextprotocol.io/) servers for th
 
 ## Configuration
 
-- **MCP registration**: `mcp/servers.json`
+- **MCP registration**: `.mcp.json` at project root
 - **API keys**: `.env` at project root (gitignored)
 - **Python**: ≥ 3.11, managed via [uv](https://docs.astral.sh/uv/)
 
@@ -62,7 +62,7 @@ load_dotenv(Path(__file__).resolve().parent.parent.parent / ".env")
 
 ## Enabling / Disabling Servers
 
-Set `"disabled": true/false` per server in `mcp/servers.json`.
+Set `"disabled": true/false` per server in `.mcp.json`.
 
 ---
 
@@ -89,7 +89,7 @@ mcp/<name>/
 2. Add `pyproject.toml` with at minimum `fastmcp` and `httpx` as dependencies.
 3. Write `<name>.py` with async functions that call the external API and return dicts.
 4. Write `server.py` with `FastMCP("<Name>")`, `@mcp.tool()` functions, and `if __name__ == "__main__": mcp.run()`.
-5. Add entry to `mcp/servers.json`:
+5. Add entry to `.mcp.json`:
    ```json
    "<name>": {
      "command": "uv",

@@ -55,6 +55,7 @@ mein-projekt/
    # Claude Code Instruktionen
 
    # Importiert die globalen Kern-Regeln vollautomatisch:
+
    @AGENTS.md
    ```
 
@@ -72,6 +73,7 @@ mein-projekt/
 ### Schritt 2: Modulare Skills herstellerneutral anlegen (`skills/`)
 
 Jeder Skill liegt in einem eigenen Unterordner innerhalb des sichtbaren Top-Level-Ordners `skills/`. Ein Skill kann neben dem zentralen `SKILL.md` auch zwei optionale Unterordner enthalten:
+
 - **`references/`**: Für zusätzliche Dokumentation, Schemas und Ausgabe-Templates.
 - **`scripts/`**: Für auszuführende Hilfsskripte und zugehörige Assets (z. B. Karten-Render-Skripte), die exklusiv zu diesem Workflow gehören.
 
@@ -89,6 +91,7 @@ when_to_use:
 ---
 
 # 🚴 Bike Tour Planning Workflow
+
 ...
 ```
 
@@ -149,10 +152,9 @@ Damit herstellerspezifische Cache-Verzeichnisse oder lokale Tool-Konfigurationen
 
 ## 6. Unterstützte KI-Agenten & Kompatibilitätsmatrix
 
-| KI-Agent | globale Regeln (`AGENTS.md`) | Unterordner-Regeln (`@context/...`) | Skills & Workflows (`skills/`) | MCP-Server (`.mcp.json`) |
-| :--- | :---: | :---: | :---: | :---: |
-| **Antigravity** | ✅ Nativ (User Rules) | ✅ Nativ via `@import` | ✅ Nativ (On-Demand & `scripts/`) | ✅ Nativ |
-| **Claude Code** | ✅ Nativ / `@AGENTS.md` | ✅ Nativ via `@import` | ✅ Nativ via `skills/` | ✅ Nativ |
-| **Kiro** | ✅ Nativ | ✅ Nativ via `@import` | ✅ Via `.vscode/settings.json` | ✅ Nativ |
-| **Cursor / Windsurf** | ✅ Nativ | ✅ Nativ via `@import` | ✅ Nativ via `skills/` | ✅ Nativ |
-
+| KI-Agent              | globale Regeln (`AGENTS.md`) | Unterordner-Regeln (`@context/...`) | Skills & Workflows (`skills/`)    | MCP-Server (`.mcp.json`) |
+| :-------------------- | :--------------------------- | :---------------------------------- | :-------------------------------- | :----------------------- |
+| **Antigravity**       | ✅ Nativ (User Rules)        | ✅ Nativ via `@import`              | ✅ Nativ (On-Demand & `scripts/`) | ✅ Nativ                 |
+| **Claude Code**       | ✅ Nativ / `@AGENTS.md`      | ✅ Nativ via `@import`              | ✅ Nativ via `skills/`            | ✅ Nativ                 |
+| **Kiro**              | ✅ Nativ                     | ✅ Nativ via `@import`              | ✅ Via `.vscode/settings.json`    | ✅ Nativ                 |
+| **Cursor / Windsurf** | ✅ Nativ                     | ✅ Nativ via `@import`              | ✅ Nativ via `skills/`            | ✅ Nativ                 |

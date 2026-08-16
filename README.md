@@ -96,7 +96,7 @@ All other MCP servers use free/public APIs without keys.
 3. Type your tour request in chat (e.g., _"Plan a bike tour from Berlin to Potsdam"_)
 4. Results are saved in `trips/bike/` or `trips/road/`
 
-MCP servers are auto-configured via `mcp/servers.json`.
+MCP servers are auto-configured via `.mcp.json`.
 
 ### Run the Web App (Optional)
 
@@ -207,14 +207,14 @@ assembles the same files into its system prompt (`app/backend/core/context.py`).
 │   ├── travel-videos/        Public broadcaster videos
 │   ├── podcasts/             Podcast search + transcripts
 │   └── servers.json          MCP server registry (canonical)
-├── context/                  Preferences — fileMatch-scoped (travel/, dev/)
-├── skills/                   Tour planning workflows (vendor-neutral)
+├── context/                  Preferences (travel/, dev/)
+├── skills/                   Tour planning workflows & scripts (vendor-neutral)
 │   ├── bike-planner/         SKILL.md + references/output-template.md
-│   └── road-planner/         SKILL.md + references/output-template.md
+│   └── road-planner/         SKILL.md + references/ + scripts/
 ├── trips/
-│   ├── AGENTS.md             → context/travel/user-preferences.md
-│   ├── bike/AGENTS.md        → context/travel/bike/bike-preferences.md
-│   ├── road/AGENTS.md        → context/travel/road/road-preferences.md
+│   ├── AGENTS.md             Imports @context/travel/user-preferences.md
+│   ├── bike/AGENTS.md        Imports @context/travel/bike/bike-preferences.md
+│   ├── road/AGENTS.md        Imports @context/travel/road/road-preferences.md
 │   ├── bike/{tour-name}/     Bike tour documents
 │   │   ├── index.md          Tour description (German)
 │   │   ├── gpx/              GPX tracks
@@ -223,13 +223,11 @@ assembles the same files into its system prompt (`app/backend/core/context.py`).
 │       ├── index.md          Trip description (German)
 │       ├── gpx/              Car route GPX per day
 │       └── maps/             Route maps per driving day (tag-{NN}-{start}-{ziel}.png)
-├── .kiro/
-│   ├── settings/mcp.json     → ../../mcp/servers.json
-│   ├── steering/             → ../context
-│   └── skills/               → ../skills
-├── .claude/skills/           → ../skills
-├── .mcp.json                 → mcp/servers.json
-├── scripts/                  Map rendering utilities
+├── .vscode/settings.json     Agent skills path configuration
+├── .mcp.json                 MCP server registry (Single Source of Truth)
+├── AGENTS.md                 Core AI rules (Single Source of Truth)
+├── CLAUDE.md                 Claude Code instructions (imports @AGENTS.md)
+├── scripts/                  Repository maintenance utilities
 ├── ruff.toml                 Linter/formatter config
 └── .env                      API keys (gitignored)
 ```
