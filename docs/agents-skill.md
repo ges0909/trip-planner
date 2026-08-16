@@ -1,6 +1,8 @@
 # Konzept: Plattformübergreifende KI-Agenten-Architektur
 
-Dieses Dokument definiert den standardisierten, werkzeugunabhängigen Umgang mit KI-Instruktionen (`AGENTS.md`, `CLAUDE.md`, etc.), MCP-Servern (`.mcp.json`) und modularen Erweiterungen (`SKILL.md`) im Projekt. Ziel ist eine Architektur, die vollkommen **ohne Dateiverknüpfungen (Symlinks)** auskommt, auf allen Betriebssystemen (`Windows`, `macOS`, `Linux`) identisch funktioniert und die Token-Kosten durch intelligentes On-Demand-Loading minimiert.
+**STATUS: Konzeptuell.** Dieses Dokument beschreibt das ideale Architektur-Design. Die praktische Implementierung im Projekt nutzt eine vereinfachte Variante mit AGENTS.md Symlinks und der `skills/` + `context/` Struktur — siehe [README.md](../README.md) und [AGENTS.md](../AGENTS.md) für die aktuelle Realität.
+
+Dieses Dokument definiert den standardisierten, werkzeugunabhängigen Umgang mit KI-Instruktionen (`AGENTS.md`, `CLAUDE.md`, etc.), MCP-Servern (`.mcp.json`) und modularen Erweiterungen (`SKILL.md`) im Projekt. Ziel ist eine Architektur, auf allen Betriebssystemen (`Windows`, `macOS`, `Linux`) identisch funktioniert und die Token-Kosten durch intelligentes On-Demand-Loading minimiert.
 
 ---
 
@@ -33,7 +35,7 @@ mein-projekt/
 │   ├── dev/
 │   └── travel/
 ├── .vscode/
-│   └── settings.json             <-- Pfad-Konfiguration für VS Code, Kiro & Copilot
+│   └── settings.json             <-- Pfad-Konfiguration für VS Code & Copilot
 ├── .mcp.json                     <-- SINGLE SOURCE OF TRUTH für MCP-Server (Alle Tools)
 ├── AGENTS.md                     <-- Die echte Source of Truth für globale Kern-Regeln
 └── CLAUDE.md                     <-- Brückendatei mit Import (@AGENTS.md)
@@ -59,8 +61,8 @@ mein-projekt/
    @AGENTS.md
    ```
 
-3. **Verzeichnis-spezifische Regeln (Symlink-Frei):**
-   In Unterverzeichnissen (z.B. `trips/AGENTS.md`, `app/AGENTS.md`, `mcp/AGENTS.md`) platzieren wir echte Dateien, die per `@context/...` auf die kanonischen Preferences verweisen:
+3. **Verzeichnis-spezifische Regeln (mit AGENTS.md Symlinks):**
+   In Unterverzeichnissen (z.B. `trips/AGENTS.md`, `app/AGENTS.md`, `mcp/AGENTS.md`) platzieren wir echte Dateien als Symlinks zur Verzeichnis-Ebene (oder echte Dateien), die per `@context/...` auf die kanonischen Preferences verweisen:
 
    ```markdown
    # Web App Architecture & Guidelines
@@ -109,9 +111,7 @@ when_to_use:
 
 ---
 
-### Schritt 3: Werkzeuge auf die Source of Truth verweisen
-
-Anstatt Dateien oder Ordner im Dateisystem per Symlink zu duplizieren, teilen wir den Werkzeugen über ihre nativer Konfiguration mit, wo sie nach Skills und MCP-Servern suchen sollen.
+### Schritt 3: Werkzeuge auf die Source of Truth verweisen (Konfiguration & Symlinks)
 
 #### 1. Konfiguration für VS Code, Kiro und Copilot (`.vscode/settings.json`)
 
@@ -145,7 +145,7 @@ Damit herstellerspezifische Cache-Verzeichnisse oder lokale Tool-Konfigurationen
 ```gitignore
 # Lokale KI-Tool-Verzeichnisse und Caches ignorieren
 .claude/
-.kiro/
+.kiro/settings/mcp.json  # Aber .kiro/settings/ selbst ignorieren? Oder Symlink zulassen?
 .cursor/
 .windsurf/
 .agents/
@@ -157,7 +157,6 @@ Damit herstellerspezifische Cache-Verzeichnisse oder lokale Tool-Konfigurationen
 # Die Single Source of Truth explizit einschließen
 !skills/
 !context/
-!steering/
 ```
 
 ---
@@ -173,7 +172,18 @@ Damit herstellerspezifische Cache-Verzeichnisse oder lokale Tool-Konfigurationen
 
 ---
 
-## 7. Bekannte Einschränkungen
+## Praktische Implementierung: Wie Copilot/Claude Code damit arbeitet
+
+Das Projekt setzt dieses Konzept in einer vereinfachten Form um:
+
+1. **Globale Regeln**: `AGENTS.md` (root) → Wird von Copilot/Claude Code automatisch gelesen
+2. **CLAUDE.md Alias**: `CLAUDE.md` (root) → Importiert `@AGENTS.md` 
+3. **Verzeichnis-Regeln**: `trips/AGENTS.md`, `app/AGENTS.md`, `mcp/AGENTS.md` → Echte Dateien oder Symlinks, importieren via `@context/...`
+4. **Preferences**: `context/travel/`, `context/dev/` → Echte Quellen, referenziert von AGENTS.md Dateien
+5. **Workflows**: `skills/bike-planner/`, `skills/road-planner/` → SKILL.md mit YAML-Header, registriert in `.vscode/settings.json`
+6. **MCP-Server**: `.mcp.json` (root) → Wird von Copilot/Claude Code nativ gelesen
+
+**Resultat:** Copilot kennt alle Regeln, Präferenzen und Workflows über die Kombination aus globaler Basis (`AGENTS.md`) + Verzeichnis-Kontext (`AGENTS.md` lokal) + automatische Skill-Aktivierung (`skills/`) + MCP-Server (`.mcp.json`).
 
 ### Kiro: MCP-Server-Konfiguration
 
