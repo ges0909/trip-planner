@@ -144,3 +144,15 @@ Damit herstellerspezifische Cache-Verzeichnisse oder lokale Tool-Konfigurationen
 !context/
 !steering/
 ```
+
+---
+
+## 6. Unterstützte KI-Agenten & Kompatibilitätsmatrix
+
+| KI-Agent | globale Regeln (`AGENTS.md`) | Unterordner-Regeln (`@context/...`) | Skills & Workflows (`skills/`) | MCP-Server (`.mcp.json`) |
+| :--- | :---: | :---: | :---: | :---: |
+| **Antigravity** | ✅ Nativ (User Rules) | ✅ Nativ via `@import` | ✅ Nativ (On-Demand & `scripts/`) | ✅ Nativ |
+| **Claude Code** | ✅ Nativ / `@AGENTS.md` | ✅ Nativ via `@import` | ✅ Nativ via `skills/` | ✅ Nativ |
+| **Kiro** | ✅ Nativ | ✅ Nativ via `@import` | ✅ Via `.vscode/settings.json` | ✅ Nativ |
+| **Cursor / Windsurf** | ✅ Nativ | ✅ Nativ via `@import` | ✅ Nativ via `skills/` | ✅ Nativ |
+
