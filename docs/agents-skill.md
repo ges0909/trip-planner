@@ -1,143 +1,140 @@
-# Konzept:Plattformübergreifende KI-Agenten-Architektur
+# Konzept: Plattformübergreifende KI-Agenten-Architektur
 
-Dieses Dokument definiert den standardisierten, werkzeugunabhängigen Umgang mit KI-Instruktionen (`CLAUDE.md`, `AGENTS.md`, etc.) und modularen Erweiterungen (`SKILL.md`) im Projekt. Ziel ist eine Architektur, die ohne fehleranfällige Dateiverknüpfungen (Symlinks) auskommt, auf allen Betriebssystemen (`Windows`, `macOS`, `Linux`) identisch funktioniert und die Token-Kosten durch intelligentes On-Demand-Loading minimiert.
+Dieses Dokument definiert den standardisierten, werkzeugunabhängigen Umgang mit KI-Instruktionen (`AGENTS.md`, `CLAUDE.md`, etc.), MCP-Servern (`.mcp.json`) und modularen Erweiterungen (`SKILL.md`) im Projekt. Ziel ist eine Architektur, die vollkommen **ohne Dateiverknüpfungen (Symlinks)** auskommt, auf allen Betriebssystemen (`Windows`, `macOS`, `Linux`) identisch funktioniert und die Token-Kosten durch intelligentes On-Demand-Loading minimiert.
 
 ---
 
 ## 1. Die Ausgangslage und das Problem
 
-Moderne KI-Entwicklungswerkzeuge wie Kiro, Claude Code, Cursor oder Windsurf unterstützen den offenen "Agent Skills"-Standard. Sie fragmentieren das Projekt jedoch durch unterschiedliche Anforderungen an die Ordnerstruktur:
+Moderne KI-Entwicklungswerkzeuge wie Kiro, Claude Code, Cursor, Windsurf oder Antigravity unterstützen den offenen "Agent Skills"-Standard und Verzeichniskontexte. Sie fragmentieren das Projekt jedoch oft durch unterschiedliche Anforderungen:
 
-- **Pfad-Konflikte**: Jedes Tool sucht standardmäßig in einem anderen, proprietären Verzeichnis (z. B. `.claude/skills/` vs. `.agents/skills/`).
-- **Schnittstellen-Konflikte**: Einige Tools erwarten zwingend eine CLAUDE.md, andere verlangen eine AGENTS.md im Hauptverzeichnis.
-- **Betriebssystem-Barrieren**: Die Verknüpfung dieser Ordner via Symbolische Links (ln -s) bricht auf Windows-Systemen ohne Administratorrechte oder den Windows-Entwicklermodus.
-- **Kontext-Verschwendung (Token-Kosten)**: Werden alle Anweisungen unbesehen in eine einzige globale Datei kopiert, ist der System-Prompt bei jeder trivialen Anfrage überladen. Das erhöht die Kosten, verlangsamt die Antwortzeiten und verwirrt die KI.
+- **Pfad-Konflikte**: Jedes Tool sucht standardmäßig in proprietären Unterverzeichnissen (z. B. `.claude/skills/` vs. `.kiro/skills/`).
+- **Schnittstellen-Konflikte**: Einige Tools erwarten zwingend eine `CLAUDE.md`, andere eine `AGENTS.md` im Haupt- oder Verzeichnis-Root.
+- **Betriebssystem-Barrieren**: Die Verknüpfung dieser Ordner via Symbolische Links (`ln -s`) bricht auf Windows-Systemen ohne Administratorrechte oder den Windows-Entwicklermodus (`core.symlinks = false`).
+- **Kontext-Verschwendung (Token-Kosten)**: Werden alle Anweisungen unbesehen in eine einzige globale Datei kopiert, wird der System-Prompt überladen. Das erhöht Kosten, verlangsamt Antworten und verwirrt die KI.
 
 ---
 
 ## 2. Die Ziel-Architektur: "Single Source of Truth" via Konfiguration
 
-Wir trennen **statische, globale Anweisungen** (immer im Kontext) von **dynamischen, modularen Fachkenntnissen** (nur bei Bedarf im Kontext). Als Datenbasis dient ein herstellerneutrales Verzeichnis.
+Wir trennen **statische, globale Anweisungen** (immer im Kontext) von **lokalen Verzeichnis-Regeln** und **dynamischen, modularen Fachkenntnissen** (nur bei Bedarf im Kontext). Als Datenbasis dienen herstellerneutrale Verzeichnisse im Repository-Root:
 
 ```text
 mein-projekt/
-├── .skills/                      <-- SINGLE SOURCE OF TRUTH (In Git versioniert)
-│   ├── api-tester/
-│   │   └── SKILL.md              <-- Modularer API-Skill mit YAML-Kopf
-│   └── db-helper/
-│       └── SKILL.md              <-- Modularer Datenbank-Skill mit YAML-Kopf
+├── skills/                       <-- SINGLE SOURCE OF TRUTH für Workflows (In Git versioniert)
+│   ├── bike-planner/
+│   │   ├── SKILL.md              <-- Modularer Fahrradtour-Skill mit YAML-Kopf
+│   │   └── references/
+│   └── road-planner/
+│       └── SKILL.md              <-- Modularer Roadtrip-Skill mit YAML-Kopf
+├── context/                      <-- SINGLE SOURCE OF TRUTH für Travel- & Dev-Preferences
+│   ├── dev/
+│   └── travel/
 ├── .vscode/
-│   └── settings.json             <-- Pfad-Konfiguration für VS Code & Kiro
-├── AGENTS.md                     <-- Die echte Single Source für globale Regeln
-└── CLAUDE.md                     <-- Die Brückendatei (Automatisch verknüpft)
+│   └── settings.json             <-- Pfad-Konfiguration für VS Code, Kiro & Copilot
+├── .mcp.json                     <-- SINGLE SOURCE OF TRUTH für MCP-Server (Alle Tools)
+├── AGENTS.md                     <-- Die echte Source of Truth für globale Kern-Regeln
+└── CLAUDE.md                     <-- Brückendatei mit Import (@AGENTS.md)
 ```
+
+---
 
 ## 3. Umsetzung und Konfiguration
 
-### Globale & Statische Regeln (`CLAUDE.md` / `AGENTS.md`)
+### Schritt 1: Globale & Verzeichnisbezogene Regeln (`AGENTS.md` / `CLAUDE.md`)
 
-Für grundlegende Projektinfos (Build-Befehle, Tech-Stack, Code-Style) nutzen wir eine `AGENTS.md` im Root-Verzeichnis.
+1. **Globale Regeln (`AGENTS.md` im Root):**
+   Gilt universell für alle KI-Assistenten (Build-Befehle, Tech-Stack, Commit-Richtlinien, Rollenverteilung).
 
-```markdown
-# Projektanweisungen (Core Context)
+2. **Brückendatei für Claude Code (`CLAUDE.md` im Root):**
+   Für Werkzeuge, die explizit nach einer `CLAUDE.md` suchen, nutzen wir die native Import-Syntax:
 
-## Tech-Stack
+   ```markdown
+   # Claude Code Instruktionen
 
-- Node.js v24, TypeScript, Vitest
+   # Importiert die globalen Kern-Regeln vollautomatisch:
+   @AGENTS.md
+   ```
 
-## Build & Test Befehle
+3. **Verzeichnis-spezifische Regeln (Symlink-Frei):**
+   In Unterverzeichnissen (z. B. `trips/AGENTS.md`, `app/AGENTS.md`, `mcp/AGENTS.md`) platzieren wir echte Dateien, die per `@context/...` auf die kanonischen Preferences verweisen:
 
-- Build: `npm run build`
-- Tests: `npm run test`
-```
+   ```markdown
+   # Web App Architecture & Guidelines
 
-Die Datei `AGENTS.md` dient als einzige, echte Quelle (_Source of Truth_). Für Werkzeuge wie Claude Code, die explizit nach einer `CLAUDE.md` suchen, nutzen wir die native Import-Syntax des Standards.
+   @context/dev/app.md
+   ```
 
-```markdown
-# Claude Code Instruktionen
+---
 
-# Importiert die globalen Kern-Regeln vollautomatisch:
+### Schritt 2: Modulare Skills herstellerneutral anlegen (`skills/`)
 
-@AGENTS.md
+Jeder Skill liegt in einem eigenen Unterordner innerhalb des sichtbaren Top-Level-Ordners `skills/`. Das Herzstück ist der YAML-Kopf (Frontmatter) am Anfang der `SKILL.md`. Dieser steuert das **Progressive Disclosure** (schrittweise Offenlegung): Die KI liest beim Starten der Session nur die Metadaten. Der eigentliche, tokenintensive Inhalt wird erst geladen, wenn der Skill aktiv wird.
 
-## Claude-spezifische Parameter
-
-- CLI-Startbefehl: `claude --skills-path .skills`
-```
-
-### Schritt 2: Modulare Skills herstellerneutral anlegen
-
-Jeder Skill liegt in einem eigenen Unterordner innerhalb von `.skills/`. Das Herzstück ist der YAML-Kopf (Frontmatter) am Anfang der `SKILL.md`. Dieser steuert das **Progressive Disclosure** (schrittweise Offenlegung): Die KI liest beim Starten der Session nur die Metadaten. Der eigentliche, tokenintensive Inhalt wird erst geladen, wenn der Skill aktiv wird. 
-
-**Beispiel für `.skills/api-tester/SKILL.md`:** 
+**Beispiel für `skills/bike-planner/SKILL.md`:**
 
 ```markdown
 ---
-name: api-tester
-description: Aktivieren, wenn der Nutzer API-Endpunkte testen, HTTP-Requests simulieren oder Integrationstests schreiben möchte.
+name: bike-planner
+description: Aktivieren, wenn der Nutzer eine Radtour planen, BRouter-Routen berechnen oder ÖPNV/VBB-Anreisen prüfen möchte.
 when_to_use:
-  - Erstellen von Endpunkt-Tests mit Supertest
-  - Debugging von HTTP-Statuscodes und REST-Schnittstellen
+  - Planung von Mehrtages- oder Tages-Radtouren
+  - Berechnung von GPX-Tracks & Höhenprofilen
 ---
 
-# 🛠️ API Testing Workflow
-
-## 1. Test-Struktur
-
-- Nutze für jeden Endpunkt einen separaten `describe`-Block, z. B. `describe('GET /api/v1/users')`.
-- Mocke externe Dienste konsequent über `msw` (Mock Service Worker).
-
-## 2. Sicherheits-Vorgaben
-
-- Teste jeden geschützten Endpunkt explizit auf ein fehlendes oder ungültiges Bearer-Token (erwarteter Status: 401 Unauthorized).
+# 🚴 Bike Tour Planning Workflow
+...
 ```
+
+---
 
 ### Schritt 3: Werkzeuge auf die Source of Truth verweisen
 
-Anstatt Dateien im Dateisystem zu duplizieren, teilen wir den Werkzeugen über ihre Konfiguration mit, wo sie nach den Skills suchen sollen. Dies eliminiert Symlink-Probleme. 
+Anstatt Dateien oder Ordner im Dateisystem per Symlink zu duplizieren, teilen wir den Werkzeugen über ihre nativer Konfiguration mit, wo sie nach Skills und MCP-Servern suchen sollen.
 
-#### 1. Konfiguration für VS Code und Kiro
+#### 1. Konfiguration für VS Code, Kiro und Copilot (`.vscode/settings.json`)
 
-Erstellen oder erweitern Sie die Datei `.vscode/settings.json` im Projekt. Die Einstellung `chat.agentSkillsLocations` zwingt Kiro und alle VS-Code-basierten Agenten dazu, den neutralen Ordner direkt anzusteuern: 
+Die Einstellung `chat.agentSkillsLocations` weist VS Code, Kiro und kompatible Agenten an, den neutralen `skills/`-Ordner anzusteuern:
 
 ```json
 {
-  "chat.agentSkillsLocations": [".skills"]
+  "chat.agentSkillsLocations": ["skills"]
 }
 ```
 
-#### 2. Konfiguration für Claude Code (CLI)
+#### 2. Konfiguration für MCP-Server (`.mcp.json` im Root)
 
-Claude Code wird beim Start im Terminal über einen expliziten Parameter an den projektweiten Ordner gekoppelt: 
+Die `.mcp.json` im Root-Verzeichnis dient als direkte Anlaufstelle für Claude Code, Cursor, Windsurf, Antigravity und VS Code MCP-Clients. Sie benötigt keine Symlinks in `.claude/` oder `.kiro/`.
 
-```bash
-claude --skills-path .skills
-```
+---
 
-### 4. Funktionsweise im Entwicklungsalltag
+## 4. Funktionsweise im Entwicklungsalltag
 
-Nachdem die Konfiguration hinterlegt ist, werden die Skills auf zwei Wegen aktiviert: 
+Nachdem die Konfiguration hinterlegt ist, werden die Skills auf zwei Wegen aktiviert:
 
-1. **Automatische Aktivierung (KI-gesteuert):** Sie geben im Chat eine Prompt-Eingabe ein, wie zum Beispiel: _"Schreibe einen Test für die Registrierungs-Route"_. `Kiro` oder `Claude Code` scannen die kurzen Beschreibungen im YAML-Kopf aller Skills. Die KI erkennt das Match mit dem `api-tester`, aktiviert den Skill autonom und lädt die detaillierten Workflow-Regeln genau in diesem Moment in den Chat-Kontext.
-2. **Manuelle Aktivierung (Mensch-gesteuert):** Sie möchten sicherstellen, dass die Regeln sofort gelten. Sie tippen im Chat ein **/** (Slash). Der Editor öffnet eine Autocomplete-Liste aller Skills aus `.skills/`. Wählen Sie `/api-tester` aus, um das gesamte Expertenwissen für die aktuelle Session sofort zu erzwingen.
+1. **Automatische Aktivierung (KI-gesteuert):** Der Entwickler gibt eine Anfrage ein, z. B. _"Plane eine Radtour von Potsdam nach Brandenburg"_. Kiro, Claude Code oder Antigravity scannen die kurzen Beschreibungen im YAML-Kopf aller Skills in `skills/`. Die KI erkennt das Match mit `bike-planner`, aktiviert den Skill autonom und lädt die detaillierten Workflow-Regeln in den Chat-Kontext.
+2. **Manuelle Aktivierung (Mensch-gesteuert):** Tippen von `/` (Slash) im Chat öffnet eine Autocomplete-Liste aller Skills aus `skills/`. Die Auswahl von `/bike-planner` erzwingt das Regelwerk sofort.
 
-### 5. Git-Hygiene (.gitignore)
+---
 
-Damit herstellerspezifische Cache-Verzeichnisse oder lokale Tool-Konfigurationen nicht im gemeinsamen Git-Repository landen, wird die `.gitignore` wie folgt angepasst. Der neutrale `.skills/`-Ordner bleibt hiervon unberührt und wird ganz normal versioniert: 
+## 5. Git-Hygiene (`.gitignore`)
 
-```text
+Damit herstellerspezifische Cache-Verzeichnisse oder lokale Tool-Konfigurationen nicht im gemeinsamen Git-Repository landen, werden lokale Tool-Ordner ignoriert. Die Single-Source-Ordner und Konfigurationsdateien bleiben explizit versioniert:
+
+```gitignore
 # Lokale KI-Tool-Verzeichnisse und Caches ignorieren
-
 .claude/
+.kiro/
 .cursor/
 .windsurf/
 .agents/
 
-# Ausnahmen für globale Konfigurationsdateien (falls benötigt)
-
-!.claude.json
+# Ausnahmen für globale Konfigurationsdateien
+!.mcp.json
+!.vscode/settings.json
 
 # Die Single Source of Truth explizit einschließen
-
-!.skills/
+!skills/
+!context/
+!steering/
 ```
