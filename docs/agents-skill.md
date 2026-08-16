@@ -70,6 +70,19 @@ mein-projekt/
 
 ---
 
+### Schritt 1b: Rolle des Verzeichnisses `context/` (Wissen & Präferenzen)
+
+Das Verzeichnis `context/` dient als herstellerneutrale **Single Source of Truth für alle Fach- und Entwicklungs-Präferenzen**. Es trennt statische Regeln (Wissen) von aktiven Handlungsanweisungen (Workflows in `skills/`).
+
+- **`context/travel/`**: Beinhaltet universelle und tour-spezifische Reisepräferenzen (`user-preferences.md`, `bike/bike-preferences.md`, `road/road-preferences.md`).
+- **`context/dev/`**: Beinhaltet technische Architektur- und Entwickler-Guidelines (`app.md`, `mcp.md`).
+
+**Duale Nutzung:**
+1. **Für KI-Assistenten im Editor:** Verzeichnis-lokale `AGENTS.md`-Dateien binden diese Vorgaben per `@context/...` ein.
+2. **Für das Web-App Backend:** Das Python-Backend (`app/backend/core/context.py`) liest exakt dieselben Dateien aus `context/travel/`, um den System-Prompt für das LLM in der Web-Anwendung dynamisch zusammenzubauen. Dadurch haben KI-Editor und Web-App einheitliches Wissen.
+
+---
+
 ### Schritt 2: Modulare Skills herstellerneutral anlegen (`skills/`)
 
 Jeder Skill liegt in einem eigenen Unterordner innerhalb des sichtbaren Top-Level-Ordners `skills/`. Ein Skill kann neben dem zentralen `SKILL.md` auch zwei optionale Unterordner enthalten:
