@@ -96,7 +96,7 @@ All other MCP servers use free/public APIs without keys.
 3. Type your tour request in chat (e.g., _"Plan a bike tour from Berlin to Potsdam"_)
 4. Results are saved in `trips/bike/` or `trips/road/`
 
-MCP servers are auto-configured via `.kiro/settings/mcp.json`.
+MCP servers are auto-configured via `mcp/servers.json`.
 
 ### Run the Web App (Optional)
 
@@ -205,8 +205,9 @@ assembles the same files into its system prompt (`app/backend/core/context.py`).
 │   ├── serpapi-flights/      Flight search (Google Flights)
 │   ├── travel-content/       Travel articles + route tips
 │   ├── travel-videos/        Public broadcaster videos
-│   └── podcasts/             Podcast search + transcripts
-├── context/                 Preferences — fileMatch-scoped (travel/, dev/)
+│   ├── podcasts/             Podcast search + transcripts
+│   └── servers.json          MCP server registry (canonical)
+├── context/                  Preferences — fileMatch-scoped (travel/, dev/)
 ├── skills/                   Tour planning workflows (vendor-neutral)
 │   ├── bike-planner/         SKILL.md + references/output-template.md
 │   └── road-planner/         SKILL.md + references/output-template.md
@@ -223,10 +224,11 @@ assembles the same files into its system prompt (`app/backend/core/context.py`).
 │       ├── gpx/              Car route GPX per day
 │       └── maps/             Route maps per driving day (tag-{NN}-{start}-{ziel}.png)
 ├── .kiro/
-│   ├── settings/mcp.json     MCP server configuration
-│   ├── context/             → ../context
+│   ├── settings/mcp.json     → ../../mcp/servers.json
+│   ├── steering/             → ../context
 │   └── skills/               → ../skills
 ├── .claude/skills/           → ../skills
+├── .mcp.json                 → mcp/servers.json
 ├── scripts/                  Map rendering utilities
 ├── ruff.toml                 Linter/formatter config
 └── .env                      API keys (gitignored)

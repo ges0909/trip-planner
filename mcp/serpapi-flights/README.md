@@ -76,4 +76,4 @@ cd mcp/serpapi-flights
 uv run python server.py
 ```
 
-Or via MCP config (see `.kiro/settings/mcp.json`).
+Or via MCP config (see `mcp/servers.json`).

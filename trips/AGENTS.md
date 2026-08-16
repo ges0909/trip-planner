@@ -1,1 +1,3 @@
-../context/travel/user-preferences.md
+# Travel Planning Context
+
+@context/travel/user-preferences.md

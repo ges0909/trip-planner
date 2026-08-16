@@ -25,7 +25,7 @@ MCP server for web search and content extraction via the [Tavily API](https://ta
    uv sync
    ```
 
-4. Enable in `.kiro/settings/mcp.json`:
+4. Enable in `mcp/servers.json`:
 
    ```json
    {

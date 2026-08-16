@@ -105,36 +105,21 @@ When the user types **"commit"** (or equivalent like "committen", "einchecken"):
 
 ## Context-Specific Rules
 
-Context is split by *kind*, and both Kiro and Claude Code read the same files natively —
-no tool-specific duplicates. Never copy content between them; reference it.
+Context is split by *kind*, and all AI assistants (Kiro, Claude Code, Antigravity, Cursor) read the same files natively without symbolical links (symlinks):
 
-All content lives in two vendor-neutral top-level directories, `context/` and `skills/`.
-Everything a tool discovers elsewhere is a symlink into them — `.kiro/` and `.claude/` hold
-no content at all, only `mcp.json` and symlinks. Edit the target, never a copy.
+All content lives in two vendor-neutral top-level directories, `steering/` and `skills/`.
+No tool-specific duplicates or symlinks exist — `.mcp.json` and `.vscode/settings.json` point tools to the single source of truth.
 
 **Preferences and conventions** — facts that apply whenever you work in a directory tree.
-Kiro loads these as context files via `fileMatchPattern` (finding them through
-`.kiro/steering -> ../context`); Claude Code reads the same bytes through an `AGENTS.md`
-symlink at the matching directory root (parent files load too, so `trips/AGENTS.md` also
-applies inside `trips/road/`):
+Root `AGENTS.md` defines global rules. Subfolder `AGENTS.md` files use native `@steering/...` imports:
 
 | Content file (edit this) | Discovered as | Content |
 | --- | --- | --- |
-| `context/travel/user-preferences.md` | `trips/AGENTS.md` | Universal travel preferences, home base, content integrity |
-| `context/travel/road/road-preferences.md` | `trips/road/AGENTS.md` | Roadtrip preferences (flights, interests, food) |
-| `context/travel/bike/bike-preferences.md` | `trips/bike/AGENTS.md` | Bike tour preferences (distance, terrain, Einkehr) |
-| `context/dev/app.md` | `app/AGENTS.md` | Web app architecture + coding guidelines (Vue 3 + FastAPI) |
-| `context/dev/mcp.md` | `mcp/AGENTS.md` | MCP server development guidelines |
-
-New context files need explicit frontmatter — Kiro's default is `inclusion: always`, which
-would load them in every session:
-
-```yaml
----
-inclusion: fileMatch
-fileMatchPattern: "trips/**"
----
-```
+| `steering/travel/user-preferences.md` | `trips/AGENTS.md` | Universal travel preferences, home base, content integrity |
+| `steering/travel/road/road-preferences.md` | `trips/road/AGENTS.md` | Roadtrip preferences (flights, interests, food) |
+| `steering/travel/bike/bike-preferences.md` | `trips/bike/AGENTS.md` | Bike tour preferences (distance, terrain, Einkehr) |
+| `steering/dev/app.md` | `app/AGENTS.md` | Web app architecture + coding guidelines (Vue 3 + FastAPI) |
+| `steering/dev/mcp.md` | `mcp/AGENTS.md` | MCP server development guidelines |
 
 **Workflows** — procedures loaded on demand when you actually plan a tour, not on every
 file touch. Skills in the vendor-neutral top-level `skills/<name>/`, each with `SKILL.md`
@@ -145,16 +130,10 @@ plus `references/output-template.md`:
 | `skills/road-planner/` | Roadtrip workflow (ORS/OSRM, flights) + output template |
 | `skills/bike-planner/` | Bike tour workflow (BRouter/VBB, Overpass) + output template |
 
-Both tools discover them through a directory symlink — `.kiro/skills` and `.claude/skills`
-each point at `../skills`. No `SKILL.md` contains tool-specific syntax, so one copy serves
-both. A new skill is a new directory under `skills/`; nothing else needs touching.
+Tools discover skills natively via `.vscode/settings.json` (`"chat.agentSkillsLocations": ["skills"]`) and standard root scanning.
 
-A third consumer, `app/backend/core/context.py`, assembles the same files into the web app's
-system prompt, resolving the canonical `context/` and `skills/` paths directly rather than
-the symlinks. Moving or renaming any file above means updating that module.
-
-**Caveat:** the symlinks require `core.symlinks` support. A checkout on native Windows turns
-them into plain text files containing a path, and both tools silently lose that context.
+A third consumer, `app/backend/core/steering.py`, assembles the same files into the web app's
+system prompt, resolving the canonical `steering/` and `skills/` paths directly.
 
 ---
 

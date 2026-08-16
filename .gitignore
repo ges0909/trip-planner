@@ -13,8 +13,20 @@ __pycache__/
 
 # Pytest cache
 .pytest_cache/
-
 .ruff_cache/
 
-# Machine-local agent settings (shared config stays tracked)
-.claude/settings.local.json
+# Lokale KI-Tool-Verzeichnisse und Caches ignorieren
+.claude/
+.kiro/
+.cursor/
+.windsurf/
+.agents/
+
+# Ausnahmen für globale Konfigurationsdateien
+!.mcp.json
+!.vscode/settings.json
+
+# Single Source of Truth explizit einschließen
+!skills/
+!steering/
+!context/

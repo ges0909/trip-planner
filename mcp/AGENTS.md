@@ -1,1 +1,3 @@
-../context/dev/mcp.md
+# MCP Server Guidelines
+
+@context/dev/mcp.md

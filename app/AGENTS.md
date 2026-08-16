@@ -1,1 +1,3 @@
-../context/dev/app.md
+# Web App Architecture & Guidelines
+
+@context/dev/app.md

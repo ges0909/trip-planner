@@ -96,7 +96,7 @@ uv run python server.py
 
 ## Kiro MCP configuration
 
-Add the following entry to `.kiro/settings/mcp.json`:
+Add the following entry to `mcp/servers.json`:
 
 ```json
 {
