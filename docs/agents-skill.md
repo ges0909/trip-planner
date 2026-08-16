@@ -177,7 +177,7 @@ Damit herstellerspezifische Cache-Verzeichnisse oder lokale Tool-Konfigurationen
 Das Projekt setzt dieses Konzept in einer vereinfachten Form um:
 
 1. **Globale Regeln**: `AGENTS.md` (root) → Wird von Copilot/Claude Code automatisch gelesen
-2. **CLAUDE.md Alias**: `CLAUDE.md` (root) → Importiert `@AGENTS.md` 
+2. **CLAUDE.md Alias**: `CLAUDE.md` (root) → Importiert `@AGENTS.md`
 3. **Verzeichnis-Regeln**: `trips/AGENTS.md`, `app/AGENTS.md`, `mcp/AGENTS.md` → Echte Dateien oder Symlinks, importieren via `@context/...`
 4. **Preferences**: `context/travel/`, `context/dev/` → Echte Quellen, referenziert von AGENTS.md Dateien
 5. **Workflows**: `skills/bike-planner/`, `skills/road-planner/` → SKILL.md mit YAML-Header, registriert in `.vscode/settings.json`
