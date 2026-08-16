@@ -323,7 +323,7 @@ mcp_osrm_route_to_gpx(
 **Step 2 — Render map image** with labeled stations and POI markers:
 
 ```bash
-python scripts/render_roadtrip_map.py \
+.venv/bin/python skills/road-planner/scripts/render_roadtrip_map.py \
   trips/road/{trip-name}/gpx/{start}-{ziel}.gpx \
   trips/road/{trip-name}/maps/tag-{NN}-{start}-{ziel}.png \
   --stations 'T{N} {Name}:{lon},{lat}' ... \

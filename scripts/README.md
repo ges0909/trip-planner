@@ -10,14 +10,14 @@ Standalone-Skripte für die offline-Generierung von Tourkarten (PNG) und Projekt
 
 ---
 
-## render_roadtrip_map.py
+## render_roadtrip_map.py (in `skills/road-planner/scripts/`)
 
-Rendert eine Roadtrip-Route als PNG-Karte mit OpenStreetMap-Hintergrund, Stationsmarkern und POI-Icons.
+Rendert eine Roadtrip-Route als PNG-Karte mit OpenStreetMap-Hintergrund, Stationsmarkern und POI-Icons (kapsuliert im `road-planner`-Skill).
 
 **Verwendung:**
 
 ```bash
-.venv/bin/python scripts/render_roadtrip_map.py <gpx_file> <output_png> \
+.venv/bin/python skills/road-planner/scripts/render_roadtrip_map.py <gpx_file> <output_png> \
     [--stations 'Name:lon,lat' ...] \
     [--pois 'category:name:lon,lat' ...] \
     [--width 900] [--height 600]
@@ -26,7 +26,7 @@ Rendert eine Roadtrip-Route als PNG-Karte mit OpenStreetMap-Hintergrund, Station
 **Beispiel:**
 
 ```bash
-.venv/bin/python scripts/render_roadtrip_map.py \
+.venv/bin/python skills/road-planner/scripts/render_roadtrip_map.py \
     trips/road/nordspanien/gpx/bilbao-bakio.gpx \
     trips/road/nordspanien/maps/tag-01-bilbao-bakio.png \
     --stations 'T1 Bilbao:-2.9253,43.2627' 'T2-3 San Sebastián:-1.9812,43.3183' \

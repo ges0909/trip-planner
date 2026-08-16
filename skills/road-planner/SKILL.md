@@ -170,7 +170,7 @@ One map per driving day. Steps:
 mcp_osrm_route_to_gpx(waypoints=[[lon,lat], ...], output_path="trips/road/{trip}/gpx/{start}-{ziel}.gpx", station_names=[...])
 
 # 2. Render with labeled stations and POIs
-python scripts/render_roadtrip_map.py trips/road/{trip}/gpx/{start}-{ziel}.gpx trips/road/{trip}/maps/tag-{NN}-{start}-{ziel}.png \
+.venv/bin/python skills/road-planner/scripts/render_roadtrip_map.py trips/road/{trip}/gpx/{start}-{ziel}.gpx trips/road/{trip}/maps/tag-{NN}-{start}-{ziel}.png \
   --stations 'T{N} {Name}:{lon},{lat}' ... \
   --pois 'category:name:lon,lat' ...
 ```
