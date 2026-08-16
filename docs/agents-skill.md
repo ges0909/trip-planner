@@ -4,18 +4,18 @@ Dieses Dokument definiert den standardisierten, werkzeugunabhängigen Umgang mit
 
 ---
 
-## 1. Die Ausgangslage und das Problem
+## 1. Die Ausgangslage
 
-Moderne KI-Entwicklungswerkzeuge wie Kiro, Claude Code, Cursor, Windsurf oder Antigravity unterstützen den offenen "Agent Skills"-Standard und Verzeichniskontexte. Sie fragmentieren das Projekt jedoch oft durch unterschiedliche Anforderungen:
+Moderne KI-Entwicklungswerkzeuge wie `Kiro`, `Claude Code`, `Cursor`, `Windsurf` oder `Antigravity` unterstützen den offenen [Agent Skills](https://agentskills.io/home)-Standard und Verzeichniskontexte. Sie fragmentieren das Projekt jedoch oft durch unterschiedliche Anforderungen:
 
 - **Pfad-Konflikte**: Jedes Tool sucht standardmäßig in proprietären Unterverzeichnissen (z. B. `.claude/skills/` vs. `.kiro/skills/`).
-- **Schnittstellen-Konflikte**: Einige Tools erwarten zwingend eine `CLAUDE.md`, andere eine `AGENTS.md` im Haupt- oder Verzeichnis-Root.
+- **Schnittstellen-Konflikte**: Einige Tools erwarten zwingend eine `CLAUDE.md`, andere eine `AGENTS.md` Root-Verzeichnis.
 - **Betriebssystem-Barrieren**: Die Verknüpfung dieser Ordner via Symbolische Links (`ln -s`) bricht auf Windows-Systemen ohne Administratorrechte oder den Windows-Entwicklermodus (`core.symlinks = false`).
 - **Kontext-Verschwendung (Token-Kosten)**: Werden alle Anweisungen unbesehen in eine einzige globale Datei kopiert, wird der System-Prompt überladen. Das erhöht Kosten, verlangsamt Antworten und verwirrt die KI.
 
 ---
 
-## 2. Die Ziel-Architektur: "Single Source of Truth" via Konfiguration
+## 2. Das Ziel: "Single Source of Truth" via Konfiguration
 
 Wir trennen **statische, globale Anweisungen** (immer im Kontext) von **lokalen Verzeichnis-Regeln** und **dynamischen, modularen Fachkenntnissen** (nur bei Bedarf im Kontext). Als Datenbasis dienen herstellerneutrale Verzeichnisse im Repository-Root:
 
@@ -45,10 +45,10 @@ mein-projekt/
 
 ### Schritt 1: Globale & Verzeichnisbezogene Regeln (`AGENTS.md` / `CLAUDE.md`)
 
-1. **Globale Regeln (`AGENTS.md` im Root):**
+1. **Globale Regeln (`AGENTS.md` in Root):**
    Gilt universell für alle KI-Assistenten (Build-Befehle, Tech-Stack, Commit-Richtlinien, Rollenverteilung).
 
-2. **Brückendatei für Claude Code (`CLAUDE.md` im Root):**
+2. **Brückendatei für Claude Code (`CLAUDE.md` in Root):**
    Für Werkzeuge, die explizit nach einer `CLAUDE.md` suchen, nutzen wir die native Import-Syntax:
 
    ```markdown
@@ -60,7 +60,7 @@ mein-projekt/
    ```
 
 3. **Verzeichnis-spezifische Regeln (Symlink-Frei):**
-   In Unterverzeichnissen (z. B. `trips/AGENTS.md`, `app/AGENTS.md`, `mcp/AGENTS.md`) platzieren wir echte Dateien, die per `@context/...` auf die kanonischen Preferences verweisen:
+   In Unterverzeichnissen (z.B. `trips/AGENTS.md`, `app/AGENTS.md`, `mcp/AGENTS.md`) platzieren wir echte Dateien, die per `@context/...` auf die kanonischen Preferences verweisen:
 
    ```markdown
    # Web App Architecture & Guidelines
@@ -68,9 +68,7 @@ mein-projekt/
    @context/dev/app.md
    ```
 
----
-
-### Schritt 1b: Rolle des Verzeichnisses `context/` (Wissen & Präferenzen)
+**Rolle des Verzeichnisses `context/` (Wissen & Präferenzen):**
 
 Das Verzeichnis `context/` dient als herstellerneutrale **Single Source of Truth für alle Fach- und Entwicklungs-Präferenzen**. Es trennt statische Regeln (Wissen) von aktiven Handlungsanweisungen (Workflows in `skills/`).
 
@@ -78,6 +76,7 @@ Das Verzeichnis `context/` dient als herstellerneutrale **Single Source of Truth
 - **`context/dev/`**: Beinhaltet technische Architektur- und Entwickler-Guidelines (`app.md`, `mcp.md`).
 
 **Duale Nutzung:**
+
 1. **Für KI-Assistenten im Editor:** Verzeichnis-lokale `AGENTS.md`-Dateien binden diese Vorgaben per `@context/...` ein.
 2. **Für das Web-App Backend:** Das Python-Backend (`app/backend/core/context.py`) liest exakt dieselben Dateien aus `context/travel/`, um den System-Prompt für das LLM in der Web-Anwendung dynamisch zusammenzubauen. Dadurch haben KI-Editor und Web-App einheitliches Wissen.
 
@@ -169,5 +168,41 @@ Damit herstellerspezifische Cache-Verzeichnisse oder lokale Tool-Konfigurationen
 | :-------------------- | :--------------------------- | :---------------------------------- | :-------------------------------- | :----------------------- |
 | **Antigravity**       | ✅ Nativ (User Rules)        | ✅ Nativ via `@import`              | ✅ Nativ (On-Demand & `scripts/`) | ✅ Nativ                 |
 | **Claude Code**       | ✅ Nativ / `@AGENTS.md`      | ✅ Nativ via `@import`              | ✅ Nativ via `skills/`            | ✅ Nativ                 |
-| **Kiro**              | ✅ Nativ                     | ✅ Nativ via `@import`              | ✅ Via `.vscode/settings.json`    | ✅ Nativ                 |
+| **Kiro**              | ✅ Nativ                     | ✅ Nativ via `@import`              | ✅ Via `.vscode/settings.json`    | ⚠️ Symlink nötig         |
 | **Cursor / Windsurf** | ✅ Nativ                     | ✅ Nativ via `@import`              | ✅ Nativ via `skills/`            | ✅ Nativ                 |
+
+---
+
+## 7. Bekannte Einschränkungen
+
+### Kiro: MCP-Server-Konfiguration
+
+**Stand:** August 2026
+
+Kiro liest MCP-Server-Konfigurationen ausschließlich aus `.kiro/settings/mcp.json` und ignoriert die etablierte `.mcp.json` im Projekt-Root. Dies erfordert aktuell einen Workaround:
+
+```bash
+# Symlink von Kiros Config-Pfad zur Single Source of Truth
+ln -s ../../.mcp.json .kiro/settings/mcp.json
+```
+
+**Einschränkungen dieses Workarounds:**
+
+- Symlinks funktionieren unter Windows nur mit Administratorrechten oder aktiviertem Entwicklermodus
+- Git muss mit `core.symlinks = true` konfiguriert sein (nicht der Default unter Windows)
+- Team-Mitglieder auf Windows müssen den Symlink ggf. manuell neu anlegen
+
+**Empfehlung:** Wir akzeptieren den Symlink in der Hoffnung, dass Kiro den etablierten Standard `.mcp.json` im Projekt-Root künftig nativ unterstützt — wie es Claude Code, Cursor und Windsurf bereits tun.
+
+**Alternative für Windows-Teams:** Falls Symlinks nicht praktikabel sind, kann ein Pre-Commit-Hook die Synchronisation übernehmen:
+
+```yaml
+# .pre-commit-config.yaml
+- repo: local
+  hooks:
+    - id: sync-kiro-mcp
+      name: Sync MCP config to Kiro
+      entry: cp .mcp.json .kiro/settings/mcp.json
+      language: system
+      files: ^\.mcp\.json$
+```

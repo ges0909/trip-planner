@@ -1,6 +1,6 @@
 # 🗺️ Gerrit on Tour — AI-Powered Travel Planning
 
-AI-powered tour planning with 13 custom MCP servers for routing, weather, POIs, public transit, and travel content. Plan complete bike tours and multi-day roadtrips through natural language prompts.
+AI-powered tour planning with 14 custom MCP servers for routing, weather, POIs, public transit, and travel content. Plan complete bike tours and multi-day roadtrips through natural language prompts.
 
 | Tour Type    | Description                                         | Status |
 | ------------ | --------------------------------------------------- | ------ |
@@ -34,34 +34,9 @@ All saved in `trips/bike/` or `trips/road/` with GPX files and map images.
 
 ## How It Works
 
-**Two ways to use:**
+Type a tour request → MCP servers fetch data (routing, weather, POIs, transit) → LLM plans & writes → Results saved as Markdown + GPX.
 
-### 1. In Kiro (Primary Workflow)
-
-Open this project in [Kiro](https://kiro.dev) and type your tour request:
-
-1. **MCP servers** provide data via tool calling (routing, weather, POIs, transit)
-2. **Steering files** guide the planning workflow (preferences, output format, rules)
-3. **Kiro's LLM** orchestrates everything and writes the tour document
-4. Results are saved as Markdown + GPX in `trips/{bike|road}/{tour-name}/`
-
-The LLM is both **planner** and **author** — it doesn't just route, it researches, prioritizes, and writes cohesive tour descriptions.
-
-### 2. Web App (Standalone)
-
-A browser UI that replicates the Kiro workflow without requiring the IDE:
-
-- **Frontend:** Vue 3 + Vite + TypeScript + Leaflet
-- **Backend:** FastAPI + OpenRouter (SSE streaming)
-- **MCP Manager:** Subprocess manager spawning MCP servers on demand
-
-```bash
-# Run locally
-cd app/backend && uv run python -m uvicorn main:app --reload  # Port 8000
-cd app/frontend && npm install && npm run dev                  # Port 5173 (proxies /api)
-```
-
-Open http://localhost:5173 and start planning.
+For web UI, run `cd app/backend && uv run python -m uvicorn main:app --reload` and `cd app/frontend && npm run dev`, then open http://localhost:5173.
 
 ## Quickstart
 
@@ -98,34 +73,9 @@ All other MCP servers use free/public APIs without keys.
 
 MCP servers are auto-configured via `.mcp.json`.
 
-### Run the Web App (Optional)
-
-```bash
-# Backend
-cd app/backend && uv run python -m uvicorn main:app --reload
-
-# Frontend (separate terminal)
-cd app/frontend && npm install && npm run dev
-```
-
-Open http://localhost:5173
-
-### Docker (Production)
-
-```bash
-cd app && docker build -t gerrit-on-tour .
-docker run -p 8000:8000 \
-  -e OPENROUTER_API_KEY=... \
-  -e ORS_API_KEY=... \
-  -e TAVILY_API_KEY=... \
-  gerrit-on-tour
-```
-
 ---
 
----
-
-## MCP Servers (13 Custom Tools)
+## MCP Servers (14 Custom Tools)
 
 Self-contained Python servers providing tour planning capabilities via [Model Context Protocol](https://modelcontextprotocol.io/):
 
@@ -143,93 +93,26 @@ Self-contained Python servers providing tour planning capabilities via [Model Co
 | [`serpapi-flights`](mcp/serpapi-flights/) | Flight search via Google Flights        | SerpAPI                    | Yes          |
 | [`travel-content`](mcp/travel-content/)   | Travel article search + route tips      | Tavily (quality press)     | Yes          |
 | [`travel-videos`](mcp/travel-videos/)     | Public broadcaster videos + transcripts | YouTube (ÖR channels)      | No           |
+| [`web-scraper`](mcp/web-scraper/)         | General web page scraping               | HTTP requests              | No           |
 | [`podcasts`](mcp/podcasts/)               | Travel podcast search + transcripts     | iTunes Search API          | No           |
 
 **Architecture:** FastMCP + httpx, spawned as subprocesses via stdio JSON-RPC. Each server is self-contained with its own `pyproject.toml`.
-
-## Planning Rules (AGENTS.md + Skills)
-
-Preferences and workflows are split by kind, so only relevant context is loaded. There is
-exactly one copy of every file; each tool reaches it through a symlink.
-
-**Preferences** — context files in the top-level `context/`, loaded by path:
-
-- `travel/user-preferences.md` — Home base, interests, content integrity rules
-- `travel/bike/bike-preferences.md` — Distance limits, terrain, interests priority, food rules
-- `travel/road/road-preferences.md` — Flight preferences, accommodation rules, hiking priorities
-- `dev/app.md`, `dev/mcp.md` — Web app and MCP server development guidelines
-
-Kiro loads these via `fileMatchPattern` (through `.kiro/steering -> ../context`); Claude Code reads the same bytes through an
-`AGENTS.md` symlink at the matching directory root (`trips/`, `trips/road/`, `trips/bike/`,
-`app/`, `mcp/`).
-
-**Workflows** — skills in the top-level `skills/`, loaded on demand when planning a tour:
-
-- `bike-planner/` — BRouter routing, VBB transit, Overpass POIs + output template
-- `road-planner/` — ORS/OSRM routing, flight search, daily driving limits + output template
-
-Both `.kiro/skills` and `.claude/skills` are directory symlinks to `skills/`. The web app
-assembles the same files into its system prompt (`app/backend/core/context.py`).
-
----
 
 ---
 
 ## Project Structure
 
 ```
-├── .env.example              API keys template (copy to .env)
-├── app/
-│   ├── backend/              FastAPI + pydantic-ai agent
-│   │   ├── main.py           App setup, lifespan, router includes
-│   │   ├── app/routes/       API endpoints (chat, tours, sessions, trash, health)
-│   │   ├── core/             Business logic
-│   │   │   ├── agent.py      pydantic-ai agent with tool calling
-│   │   │   ├── mcp_manager.py MCP subprocess manager
-│   │   │   ├── model_gateway.py OpenRouter LLM configuration
-│   │   │   └── context.py   Assemble system prompt from AGENTS.md + skills
-│   │   └── storage/          Data layer
-│   │       ├── db.py         SQLite schema + operations
-│   │       └── tour_storage.py Filesystem + trash
-│   └── frontend/             Vue 3 + Leaflet + Tailwind
-├── mcp/                      13 MCP servers (self-contained)
-│   ├── brouter/              Bike routing + maps
-│   ├── ors/                  Car routing (OpenRouteService)
-│   ├── osrm/                 Car routing + GPX export
-│   ├── open-meteo/           Weather forecasts
-│   ├── vbb/                  Berlin/Brandenburg transit
-│   ├── overpass/             POI search (OpenStreetMap)
-│   ├── waymarkedtrails/      Marked cycling routes
-│   ├── wikivoyage/           Travel guide content
-│   ├── tavily/               Web search
-│   ├── serpapi-flights/      Flight search (Google Flights)
-│   ├── travel-content/       Travel articles + route tips
-│   ├── travel-videos/        Public broadcaster videos
-│   ├── podcasts/             Podcast search + transcripts
-│   └── servers.json          MCP server registry (canonical)
-├── context/                  Preferences (travel/, dev/)
-├── skills/                   Tour planning workflows & scripts (vendor-neutral)
-│   ├── bike-planner/         SKILL.md + references/output-template.md
-│   └── road-planner/         SKILL.md + references/ + scripts/
-├── trips/
-│   ├── AGENTS.md             Imports @context/travel/user-preferences.md
-│   ├── bike/AGENTS.md        Imports @context/travel/bike/bike-preferences.md
-│   ├── road/AGENTS.md        Imports @context/travel/road/road-preferences.md
-│   ├── bike/{tour-name}/     Bike tour documents
-│   │   ├── index.md          Tour description (German)
-│   │   ├── gpx/              GPX tracks
-│   │   └── maps/             Route maps, elevation profiles
-│   └── road/{trip-name}/     Roadtrip documents
-│       ├── index.md          Trip description (German)
-│       ├── gpx/              Car route GPX per day
-│       └── maps/             Route maps per driving day (tag-{NN}-{start}-{ziel}.png)
-├── .vscode/settings.json     Agent skills path configuration
-├── .mcp.json                 MCP server registry (Single Source of Truth)
-├── AGENTS.md                 Core AI rules (Single Source of Truth)
-├── CLAUDE.md                 Claude Code instructions (imports @AGENTS.md)
-├── scripts/                  Repository maintenance utilities
-├── ruff.toml                 Linter/formatter config
-└── .env                      API keys (gitignored)
+├── app/                      Web app (FastAPI backend + Vue 3 frontend)
+├── mcp/                      14 MCP servers (14 Python packages)
+├── context/                  Preferences (travel/, dev/) — Single Source of Truth
+├── skills/                   Tour planning workflows (bike-planner/, road-planner/)
+├── trips/                    Tour documents (bike/, road/ with AGENTS.md)
+├── AGENTS.md                 Core AI rules
+├── CLAUDE.md                 Claude Code instructions
+├── .mcp.json                 MCP server registry
+├── .env.example              API keys template
+└── ruff.toml                 Linter config
 ```
 
 ---
@@ -251,73 +134,74 @@ uvx ruff format .   # Format
 
 Ruff config: `ruff.toml` (Python 3.12, line-length 100, double quotes)
 
-### MCP Server Development
-
-Each server is self-contained in `mcp/{name}/`:
-
-```
-mcp/{name}/
-├── server.py          # FastMCP app, tool declarations
-├── {name}.py          # Pure HTTP client (no FastMCP dependency)
-├── pyproject.toml     # Dependencies (uv-managed)
-└── tests/             # pytest + pytest-asyncio
-```
-
-Run a server standalone:
-
-```bash
-cd mcp/brouter && uv run python server.py
-```
-
-See [`docs/mcp-development.md`](docs/mcp-development.md) for detailed guidelines.
-
 ---
 
-## Advanced Features
+## Context Management
 
-### Cross-LLM Trip Review
-
-Before traveling, review finished trip plans with an independent LLM to catch errors the planning agent might miss.
-
-Save reviews as `review.md` in the trip folder (e.g., `trips/road/nordspanien-kueste/review.md`).
-
-**Example review prompt:**
-
-```
-Review this roadtrip plan for correctness and plausibility:
-
-1. Verify dates and weekdays match (use a calendar for {year})
-2. Check driving distances — are they realistic?
-3. Are museums/attractions scheduled on their closing days?
-4. Are flight times plausible for the stated airline/route?
-5. Flag any events that might not occur on stated dates
-6. Suggest timing optimizations (e.g., reorder stops to avoid closures)
-7. Note missing practical info (advance bookings, seasonal closures)
-
-Output: confirmed OK, issues found, suggested optimizations.
-```
-
-### Context Management
-
-The project uses a **three-layer context system**, shared by Kiro, Claude Code and the web app:
+The project uses a **three-layer context system**, shared by Claude Code and the web app:
 
 1. **`AGENTS.md`** (repo root) — Universal rules for all AI assistants (Conventional Commits, project overview)
 2. **`context/`** (top level) — Preferences and conventions, loaded by path; surfaced to Claude Code as `AGENTS.md` symlinks in `trips/`, `trips/road/`, `trips/bike/`, `app/`, `mcp/`
-3. **`skills/*/SKILL.md`** — Tour planning workflows, loaded on demand by task; surfaced via the `.kiro/skills` and `.claude/skills` directory symlinks
+3. **`skills/*/SKILL.md`** — Tour planning workflows, loaded on demand by task
 
-Every file exists exactly once. Edit the target, never a symlink copy — and note that the
-symlinks require `core.symlinks` support, so a checkout on native Windows loses this context.
+Every file exists exactly once; edit the target, not symlink copies.
 
-## Licenses & Data Sources
+### AI Context Reference Map
 
-| Source                                                   | License      |
-| -------------------------------------------------------- | ------------ |
-| [OpenStreetMap](https://www.openstreetmap.org/copyright) | ODbL         |
-| [BRouter](https://brouter.de)                            | MIT          |
-| [OpenRouteService](https://openrouteservice.org/)        | MIT          |
-| [OSRM](https://project-osrm.org/)                        | BSD-2        |
-| [Nominatim](https://nominatim.openstreetmap.org)         | ODbL         |
-| [Wikivoyage](https://www.wikivoyage.org/)                | CC BY-SA 3.0 |
-| [Waymarked Trails](https://waymarkedtrails.org/)         | ODbL         |
-| [Open-Meteo](https://open-meteo.com/)                    | CC BY 4.0    |
-| Map Tiles: OpenStreetMap / OpenTopoMap                   | ODbL         |
+Full hierarchy of AGENTS.md, SKILL.md files and their references:
+
+```
+trip-planner/
+│
+├── AGENTS.md (ROOT — Universal rules)
+│   └── Defines: Conventional Commits, project overview
+│
+├── CLAUDE.md (Claude Code alias)
+│   └── Imports: @AGENTS.md
+│
+├── trips/
+│   ├── AGENTS.md (Travel Planning base)
+│   │   └── Imports: @context/travel/user-preferences.md
+│   │
+│   ├── bike/
+│   │   └── AGENTS.md (Bike tour context)
+│   │       └── Imports: @context/travel/bike/bike-preferences.md
+│   │
+│   └── road/
+│       └── AGENTS.md (Roadtrip context)
+│           └── Imports: @context/travel/road/road-preferences.md
+│
+├── app/
+│   └── AGENTS.md (Web app development)
+│       └── Imports: @context/dev/app.md
+│
+├── mcp/
+│   └── AGENTS.md (MCP server development)
+│       └── Imports: @context/dev/mcp.md
+│
+├── skills/
+│   ├── bike-planner/
+│   │   └── SKILL.md
+│   │       ├── YAML header: name=bike-planner, triggers on "bike tour", trips/bike/**
+│   │       └── References: Bike tour workflow + output template
+│   │
+│   └── road-planner/
+│       └── SKILL.md
+│           ├── YAML header: name=road-planner, triggers on "roadtrip", trips/road/**
+│           └── References: Roadtrip workflow + output template + scripts
+│
+└── context/ (Preferences — Single Source of Truth)
+    ├── travel/
+    │   ├── user-preferences.md (Home base, interests, content integrity)
+    │   ├── bike/
+    │   │   └── bike-preferences.md (Distance, terrain, food rules)
+    │   └── road/
+    │       └── road-preferences.md (Flights, hotels, hiking rules)
+    │
+    └── dev/
+        ├── app.md (Vue 3 + FastAPI architecture)
+        └── mcp.md (MCP server guidelines)
+```
+
+**Load mechanism:** Claude Code reads preferences via `AGENTS.md` symlinks in directory roots. The web app
+assembles the same context in `app/backend/core/context.py`.
