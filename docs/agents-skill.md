@@ -30,7 +30,7 @@ mein-projekt/
 │   └── road-planner/
 │       ├── SKILL.md              <-- Modularer Roadtrip-Skill mit YAML-Kopf
 │       ├── references/           <-- Vorlagen & Schema-Referenzen (optional)
-│       └── scripts/              <-- Ausführbare Hilfsskripte & Assets (optional)
+│       └── tools/               <-- Ausführbare Hilfsskripte & Assets (optional)
 ├── context/                      <-- SINGLE SOURCE OF TRUTH für Travel- & Dev-Preferences
 │   ├── dev/
 │   └── travel/
@@ -89,7 +89,7 @@ Das Verzeichnis `context/` dient als herstellerneutrale **Single Source of Truth
 Jeder Skill liegt in einem eigenen Unterordner innerhalb des sichtbaren Top-Level-Ordners `skills/`. Ein Skill kann neben dem zentralen `SKILL.md` auch zwei optionale Unterordner enthalten:
 
 - **`references/`**: Für zusätzliche Dokumentation, Schemas und Ausgabe-Templates.
-- **`scripts/`**: Für auszuführende Hilfsskripte und zugehörige Assets (z. B. Karten-Render-Skripte), die exklusiv zu diesem Workflow gehören.
+- **`tools/`**: Für auszuführende Hilfsskripte und zugehörige Assets (z. B. Karten-Render-Skripte), die exklusiv zu diesem Workflow gehören.
 
 Das Herzstück ist der YAML-Kopf (Frontmatter) am Anfang der `SKILL.md`. Dieser steuert das **Progressive Disclosure** (schrittweise Offenlegung): Die KI liest beim Starten der Session nur die Metadaten. Der eigentliche, tokenintensive Inhalt wird erst geladen, wenn der Skill aktiv wird.
 
@@ -163,12 +163,12 @@ Damit herstellerspezifische Cache-Verzeichnisse oder lokale Tool-Konfigurationen
 
 ## 6. Unterstützte KI-Agenten & Kompatibilitätsmatrix
 
-| KI-Agent              | globale Regeln (`AGENTS.md`) | Unterordner-Regeln (`@context/...`) | Skills & Workflows (`skills/`)    | MCP-Server (`.mcp.json`) |
-| :-------------------- | :--------------------------- | :---------------------------------- | :-------------------------------- | :----------------------- |
-| **Antigravity**       | ✅ Nativ (User Rules)        | ✅ Nativ via `@import`              | ✅ Nativ (On-Demand & `scripts/`) | ✅ Nativ                 |
-| **Claude Code**       | ✅ Nativ / `@AGENTS.md`      | ✅ Nativ via `@import`              | ✅ Nativ via `skills/`            | ✅ Nativ                 |
-| **Kiro**              | ✅ Nativ                     | ✅ Nativ via `@import`              | ✅ Via `.vscode/settings.json`    | ⚠️ Symlink nötig         |
-| **Cursor / Windsurf** | ✅ Nativ                     | ✅ Nativ via `@import`              | ✅ Nativ via `skills/`            | ✅ Nativ                 |
+| KI-Agent              | globale Regeln (`AGENTS.md`) | Unterordner-Regeln (`@context/...`) | Skills & Workflows (`skills/`)  | MCP-Server (`.mcp.json`) |
+| :-------------------- | :--------------------------- | :---------------------------------- | :------------------------------ | :----------------------- |
+| **Antigravity**       | ✅ Nativ (User Rules)        | ✅ Nativ via `@import`              | ✅ Nativ (On-Demand & `tools/`) | ✅ Nativ                 |
+| **Claude Code**       | ✅ Nativ / `@AGENTS.md`      | ✅ Nativ via `@import`              | ✅ Nativ via `skills/`          | ✅ Nativ                 |
+| **Kiro**              | ✅ Nativ                     | ✅ Nativ via `@import`              | ✅ Via `.vscode/settings.json`  | ⚠️ Symlink nötig         |
+| **Cursor / Windsurf** | ✅ Nativ                     | ✅ Nativ via `@import`              | ✅ Nativ via `skills/`          | ✅ Nativ                 |
 
 ---
 

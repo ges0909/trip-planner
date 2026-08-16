@@ -2,12 +2,12 @@
 """Render a roadtrip route map as PNG using staticmap.
 
 Usage:
-    python scripts/render_roadtrip_map.py <gpx_file> <output_png> \
+    python skills/road-planner/scripts/render_roadtrip_map.py <gpx_file> <output_png> \
         [--stations 'Name:lon,lat' ...] \
         [--pois 'category:name:lon,lat' ...]
 
 Example:
-    python scripts/render_roadtrip_map.py \
+    python skills/road-planner/scripts/render_roadtrip_map.py \
         trips/road/gpx/nordspanien-kueste.gpx \
         trips/road/img/nordspanien-kueste.png \
         --stations 'T1 Bilbao:-2.9253,43.2627' 'T2-3 San Sebastián:-1.9812,43.3183' \

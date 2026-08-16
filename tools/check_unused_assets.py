@@ -86,7 +86,7 @@ def main() -> int:
         file=sys.stderr,
     )
     print(
-        "To delete: python scripts/check_unused_assets.py --delete",
+        "To delete: python tools/check_unused_assets.py --delete",
         file=sys.stderr,
     )
 

@@ -1,11 +1,11 @@
-# Scripts
+# Tools
 
-Standalone-Skripte für die offline-Generierung von Tourkarten (PNG) und Projektpflege.
+Standalone-Tools für die offline-Generierung von Tourkarten (PNG) und Projektpflege.
 
-**Wichtig:** Alle Scripts über die virtuelle Umgebung ausführen:
+**Wichtig:** Alle Tools über die virtuelle Umgebung ausführen:
 
 ```bash
-.venv/bin/python scripts/<script>.py ...
+.venv/bin/python tools/<tool>.py ...
 ```
 
 ---
@@ -54,18 +54,18 @@ pip install staticmap pillow
 
 **Hinweis:** Dieses Script wird für die statischen Tour-Dokumente in `trips/` verwendet. Die Web-App rendert Routen live via Leaflet im Browser.
 
-## check_unused_assets.py
+## check_unused_assets.py (in `tools/`)
 
-Findet ungenutzte Bilder in `trips/` — also PNG/JPG-Dateien in `maps/`, die in keiner `index.md` referenziert werden.
+Findet ungenutzte Bilder in `trips/` — also PNG/JPG-Dateien in `img/` und `maps/`, die in keiner `index.md` referenziert werden.
 
 **Verwendung:**
 
 ```bash
 # Nur anzeigen
-.venv/bin/python scripts/check_unused_assets.py
+.venv/bin/python tools/check_unused_assets.py
 
 # Ungenutzte Dateien löschen
-.venv/bin/python scripts/check_unused_assets.py --delete
+.venv/bin/python tools/check_unused_assets.py --delete
 ```
 
 **Pre-commit Hook:**

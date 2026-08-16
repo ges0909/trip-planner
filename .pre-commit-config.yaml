@@ -3,7 +3,7 @@ repos:
     hooks:
       - id: check-unused-assets
         name: Check for unused trip assets
-        entry: python3 scripts/check_unused_assets.py
+        entry: python3 tools/check_unused_assets.py
         language: system
         pass_filenames: false
         files: ^trips/.*\.(md|png|jpg)$
