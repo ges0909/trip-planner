@@ -44,10 +44,10 @@ function generateSessionId(): string {
  * Initialize session and load last viewed tour if available.
  */
 async function initializeSession() {
-  let sid = sessionStorage.getItem("session_id");
+  let sid = localStorage.getItem("session_id");
   if (!sid) {
     sid = generateSessionId();
-    sessionStorage.setItem("session_id", sid);
+    localStorage.setItem("session_id", sid);
   }
   sessionId.value = sid;
 

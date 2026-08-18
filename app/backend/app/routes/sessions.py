@@ -5,6 +5,7 @@ from typing import Any
 from fastapi import APIRouter, Body
 from fastapi.responses import JSONResponse
 from storage.db import (
+    create_session,
     get_chat_history,
     get_last_viewed_tour,
     get_session,
@@ -74,10 +75,11 @@ async def get_last_viewed_tour_endpoint(session_id: str):
 
 @router.put("/sessions/{session_id}/last-viewed")
 async def set_last_viewed_tour_endpoint(session_id: str, tour_id: str = Body(..., embed=True)):
-    """Set/update the last viewed tour for a session."""
+    """Set/update the last viewed tour for a session. Creates session if needed."""
     session = await get_session(session_id)
     if not session:
-        return JSONResponse({"error": "Session not found"}, status_code=404)
+        # Auto-create session if it doesn't exist
+        session = await create_session(session_id=session_id, language="de")
 
     success = await update_last_viewed_tour(session_id, tour_id)
     if not success:
