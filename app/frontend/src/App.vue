@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import ChatInput from "./components/ChatInput.vue";
 import TourContent from "./components/TourContent.vue";
 import TourLibrary from "./components/TourLibrary.vue";
 import TourMap from "./components/TourMap.vue";
 import { useChat } from "./composables/useChat";
-import { type Tour } from "./api";
+import { type Tour, fetchTourDetail } from "./api";
 import { t, type Lang } from "./i18n";
 
 // Chat state from composable
@@ -20,6 +20,7 @@ const {
   sendMessage,
   loadTour,
   clearError,
+  sessionId,
 } = useChat();
 
 // UI state
@@ -27,6 +28,59 @@ const language = ref<Lang>("de");
 const chatInputRef = ref<InstanceType<typeof ChatInput> | null>(null);
 const showMap = ref(false);
 const selectedTourId = ref<string | null>(null);
+
+/**
+ * Generate a unique session ID (UUID v4).
+ */
+function generateSessionId(): string {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+/**
+ * Initialize session and load last viewed tour if available.
+ */
+async function initializeSession() {
+  let sid = sessionStorage.getItem("session_id");
+  if (!sid) {
+    sid = generateSessionId();
+    sessionStorage.setItem("session_id", sid);
+  }
+  sessionId.value = sid;
+
+  // Attempt to load last viewed tour
+  try {
+    const response = await fetch(`/api/sessions/${sid}/last-viewed`);
+    if (!response.ok) return;
+
+    const data = await response.json();
+    if (data.tour) {
+      // Load tour details and display
+      try {
+        const tour = await fetchTourDetail(data.tour.tour_type, data.tour.slug);
+        if (tour) {
+          selectedTourId.value = data.tour.id;
+          await loadTour({
+            id: data.tour.id,
+            tour_type: data.tour.tour_type,
+            slug: data.tour.slug,
+          } as Tour);
+        }
+      } catch {
+        // Silently fail if unable to load tour
+      }
+    }
+  } catch {
+    // Silently fail if unable to fetch last viewed tour
+  }
+}
+
+onMounted(() => {
+  initializeSession();
+});
 
 async function handleSend(message: string) {
   await sendMessage(message, language.value);

@@ -33,6 +33,7 @@ class Session:
     tour_type: str | None  # "bike", "road", or None
     created_at: datetime
     updated_at: datetime
+    last_viewed_tour_id: str | None = None  # Track most recently viewed tour
 
 
 @dataclass
@@ -71,6 +72,7 @@ CREATE TABLE IF NOT EXISTS sessions (
     title TEXT,
     language TEXT NOT NULL DEFAULT 'de',
     tour_type TEXT,
+    last_viewed_tour_id TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
@@ -113,11 +115,23 @@ CREATE INDEX IF NOT EXISTS idx_tours_slug ON tours(slug);
 
 
 async def init_db() -> None:
-    """Initialize database schema. Creates tables if they don't exist."""
+    """Initialize database schema. Creates tables if they don't exist and runs migrations."""
     DB_DIR.mkdir(parents=True, exist_ok=True)
 
     async with aiosqlite.connect(DB_PATH) as db:
         await db.executescript(SCHEMA)
+        
+        # Run migrations for existing databases
+        try:
+            # Add last_viewed_tour_id column if it doesn't exist
+            await db.execute(
+                "ALTER TABLE sessions ADD COLUMN last_viewed_tour_id TEXT"
+            )
+            logger.info("Added last_viewed_tour_id column to sessions table")
+        except Exception:
+            # Column already exists or other error - ignore
+            pass
+        
         await db.commit()
 
     logger.info("Database initialized at %s", DB_PATH)
@@ -159,6 +173,7 @@ async def create_session(
         tour_type=tour_type,
         created_at=datetime.fromisoformat(now),
         updated_at=datetime.fromisoformat(now),
+        last_viewed_tour_id=None,
     )
 
 
@@ -177,6 +192,7 @@ async def get_session(session_id: str) -> Session | None:
                 tour_type=row["tour_type"],
                 created_at=datetime.fromisoformat(row["created_at"]),
                 updated_at=datetime.fromisoformat(row["updated_at"]),
+                last_viewed_tour_id=row.get("last_viewed_tour_id"),
             )
 
 
@@ -233,6 +249,7 @@ async def list_sessions(limit: int = 50) -> list[Session]:
                     tour_type=row["tour_type"],
                     created_at=datetime.fromisoformat(row["created_at"]),
                     updated_at=datetime.fromisoformat(row["updated_at"]),
+                    last_viewed_tour_id=row.get("last_viewed_tour_id"),
                 )
                 for row in rows
             ]
@@ -448,6 +465,48 @@ async def list_tours(tour_type: str | None = None, limit: int = 100) -> list[Tou
                 )
                 for row in rows
             ]
+
+
+# ============================================================================
+# Last Viewed Tour Operations
+# ============================================================================
+
+
+async def update_last_viewed_tour(session_id: str, tour_id: str) -> bool:
+    """Update the last viewed tour for a session. Returns True if successful."""
+    async with aiosqlite.connect(DB_PATH) as db:
+        cursor = await db.execute(
+            "UPDATE sessions SET last_viewed_tour_id = ? WHERE id = ?",
+            (tour_id, session_id),
+        )
+        await db.commit()
+        return cursor.rowcount > 0
+
+
+async def get_last_viewed_tour(session_id: str) -> Tour | None:
+    """Get the last viewed tour for a session."""
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        async with db.execute(
+            """
+            SELECT t.* FROM tours t
+            WHERE t.id = (SELECT last_viewed_tour_id FROM sessions WHERE id = ?)
+            """,
+            (session_id,),
+        ) as cursor:
+            row = await cursor.fetchone()
+            if not row:
+                return None
+            return Tour(
+                id=row["id"],
+                session_id=row["session_id"],
+                title=row["title"],
+                tour_type=row["tour_type"],
+                slug=row["slug"],
+                summary=row["summary"],
+                created_at=datetime.fromisoformat(row["created_at"]),
+                updated_at=datetime.fromisoformat(row["updated_at"]),
+            )
 
 
 # ============================================================================

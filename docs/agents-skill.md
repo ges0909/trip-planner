@@ -1,8 +1,6 @@
 # Konzept: Plattformübergreifende KI-Agenten-Architektur
 
-**STATUS: Konzeptuell.** Dieses Dokument beschreibt das ideale Architektur-Design. Die praktische Implementierung im Projekt nutzt eine vereinfachte Variante mit AGENTS.md Symlinks und der `skills/` + `context/` Struktur — siehe [README.md](../README.md) und [AGENTS.md](../AGENTS.md) für die aktuelle Realität.
-
-Dieses Dokument definiert den standardisierten, werkzeugunabhängigen Umgang mit KI-Instruktionen (`AGENTS.md`, `CLAUDE.md`, etc.), MCP-Servern (`.mcp.json`) und modularen Erweiterungen (`SKILL.md`) im Projekt. Ziel ist eine Architektur, auf allen Betriebssystemen (`Windows`, `macOS`, `Linux`) identisch funktioniert und die Token-Kosten durch intelligentes On-Demand-Loading minimiert.
+Dieses Dokument definiert den standardisierten, werkzeugunabhängigen Umgang mit KI-Instruktionen (`AGENTS.md`, `CLAUDE.md`, etc.), MCP-Servern (`.mcp.json`) und modularen Erweiterungen (`SKILL.md`) im Projekt. Ziel ist eine Architektur, die auf allen Betriebssystemen (`Windows`, `macOS`, `Linux`) identisch funktioniert und die Token-Kosten durch intelligentes On-Demand-Loading minimiert.
 
 ---
 
@@ -11,7 +9,7 @@ Dieses Dokument definiert den standardisierten, werkzeugunabhängigen Umgang mit
 Moderne KI-Entwicklungswerkzeuge wie `Kiro`, `Claude Code`, `Cursor`, `Windsurf` oder `Antigravity` unterstützen den offenen [Agent Skills](https://agentskills.io/home)-Standard und Verzeichniskontexte. Sie fragmentieren das Projekt jedoch oft durch unterschiedliche Anforderungen:
 
 - **Pfad-Konflikte**: Jedes Tool sucht standardmäßig in proprietären Unterverzeichnissen (z. B. `.claude/skills/` vs. `.kiro/skills/`).
-- **Schnittstellen-Konflikte**: Einige Tools erwarten zwingend eine `CLAUDE.md`, andere eine `AGENTS.md` Root-Verzeichnis.
+- **Schnittstellen-Konflikte**: Einige Tools erwarten zwingend eine `CLAUDE.md`, andere eine `AGENTS.md` im Root-Verzeichnis.
 - **Betriebssystem-Barrieren**: Die Verknüpfung dieser Ordner via Symbolische Links (`ln -s`) bricht auf Windows-Systemen ohne Administratorrechte oder den Windows-Entwicklermodus (`core.symlinks = false`).
 - **Kontext-Verschwendung (Token-Kosten)**: Werden alle Anweisungen unbesehen in eine einzige globale Datei kopiert, wird der System-Prompt überladen. Das erhöht Kosten, verlangsamt Antworten und verwirrt die KI.
 
@@ -23,14 +21,14 @@ Wir trennen **statische, globale Anweisungen** (immer im Kontext) von **lokalen 
 
 ```text
 mein-projekt/
-├── skills/                       <-- SINGLE SOURCE OF TRUTH für Workflows (In Git versioniert)
+├── skills/                       <-- SINGLE SOURCE OF TRUTH für Workflows
 │   ├── bike-planner/
 │   │   ├── SKILL.md              <-- Modularer Fahrradtour-Skill mit YAML-Kopf
 │   │   └── references/           <-- Vorlagen & Schema-Referenzen (optional)
 │   └── road-planner/
 │       ├── SKILL.md              <-- Modularer Roadtrip-Skill mit YAML-Kopf
 │       ├── references/           <-- Vorlagen & Schema-Referenzen (optional)
-│       └── tools/               <-- Ausführbare Hilfsskripte & Assets (optional)
+│       └── tools/                <-- Ausführbare Hilfsskripte & Assets (optional)
 ├── context/                      <-- SINGLE SOURCE OF TRUTH für Travel- & Dev-Preferences
 │   ├── dev/
 │   └── travel/
@@ -61,8 +59,8 @@ mein-projekt/
    @AGENTS.md
    ```
 
-3. **Verzeichnis-spezifische Regeln (mit AGENTS.md Symlinks):**
-   In Unterverzeichnissen (z.B. `trips/AGENTS.md`, `app/AGENTS.md`, `mcp/AGENTS.md`) platzieren wir echte Dateien als Symlinks zur Verzeichnis-Ebene (oder echte Dateien), die per `@context/...` auf die kanonischen Preferences verweisen:
+3. **Verzeichnis-spezifische Regeln:**
+   In Unterverzeichnissen platzieren wir echte Dateien (z.B. `trips/AGENTS.md`) , die per `@context/...` auf die kanonischen Preferences verweisen:
 
    ```markdown
    # Web App Architecture & Guidelines

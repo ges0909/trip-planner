@@ -1,7 +1,7 @@
 /**
  * Composable for managing chat state and SSE streaming.
  */
-import { ref, computed, type Ref } from "vue";
+import { computed, ref, type Ref } from "vue";
 import { fetchTourDetail, fetchTourGpx, type Tour } from "../api";
 import { t, type Lang } from "../i18n";
 
@@ -206,6 +206,19 @@ export function useChat(): ChatState {
           }
         } catch {
           // GPX is optional
+        }
+      }
+
+      // Update last viewed tour if session exists
+      if (sessionId.value) {
+        try {
+          await fetch(`/api/sessions/${sessionId.value}/last-viewed`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ tour_id: tour.id }),
+          });
+        } catch {
+          // Silently fail if unable to save last viewed tour
         }
       }
     } catch (error) {
