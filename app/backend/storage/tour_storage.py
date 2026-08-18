@@ -32,6 +32,18 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 TRIPS_DIR = PROJECT_ROOT / "trips"
 TRASH_DIR = TRIPS_DIR / ".trash"
 
+# Fixed namespace UUID for deterministic tour ID generation
+TOUR_NAMESPACE = uuid.UUID("550e8400-e29b-41d4-a716-446655440000")
+
+
+def _generate_tour_id(tour_type: str, slug: str) -> str:
+    """Generate a stable, deterministic UUID for a tour based on tour_type and slug.
+    
+    This ensures the same tour always gets the same ID, even across server restarts.
+    Uses uuid5 (SHA-1 based) for stability.
+    """
+    return str(uuid.uuid5(TOUR_NAMESPACE, f"{tour_type}:{slug}"))
+
 
 def _extract_title_from_markdown(markdown: str) -> str:
     """Extract title from first heading in markdown."""
@@ -136,8 +148,8 @@ async def save_tour(
     maps_dir = tour_dir / "maps"
     maps_dir.mkdir(exist_ok=True)
 
-    # Index in SQLite
-    tour_id = str(uuid.uuid4())
+    # Index in SQLite using deterministic ID
+    tour_id = _generate_tour_id(tour_type, slug)
     tour = await create_tour(
         tour_id=tour_id,
         title=title,
@@ -374,7 +386,7 @@ async def sync_filesystem_to_db() -> int:
             title = _extract_title_from_markdown(markdown)
             summary = _extract_summary_from_markdown(markdown)
 
-            tour_id = str(uuid.uuid4())
+            tour_id = _generate_tour_id(tour_type, slug)
             await create_tour(
                 tour_id=tour_id,
                 title=title,
@@ -461,7 +473,7 @@ async def restore_from_trash(tour_type: str, trash_name: str) -> Tour | None:
     title = _extract_title_from_markdown(markdown)
     summary = _extract_summary_from_markdown(markdown)
 
-    tour_id = str(uuid.uuid4())
+    tour_id = _generate_tour_id(tour_type, original_slug)
     tour = await create_tour(
         tour_id=tour_id,
         title=title,
