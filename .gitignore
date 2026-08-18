@@ -30,3 +30,7 @@ __pycache__/
 !skills/
 !steering/
 !context/
+
+**/*.db
+**/*.sqlite
+**/*.sqlite3
