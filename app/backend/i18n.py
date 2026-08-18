@@ -6,16 +6,16 @@ type Lang = Literal["de", "en"]
 
 MESSAGES: dict[str, dict[Lang, str]] = {
     "quota_exhausted": {
-        "de": "API-Quota erschöpft. Bitte warte einige Minuten oder prüfe dein Gemini-Kontingent.",
-        "en": "API quota exhausted. Please wait a few minutes or check your Gemini quota.",
+        "de": "LLM-Kontingent erschöpft oder Anfrage zu groß. Bitte prüfe dein Guthaben oder versuche eine kleinere Anfrage.",
+        "en": "LLM quota exhausted or request too large. Please check your balance or try a smaller request.",
     },
     "api_error": {
-        "de": "Gemini API-Fehler ({code}): {detail}",
-        "en": "Gemini API error ({code}): {detail}",
+        "de": "API-Fehler ({code}): {detail}",
+        "en": "API error ({code}): {detail}",
     },
     "server_unavailable": {
-        "de": "Gemini-Server nicht erreichbar ({code}). Bitte später erneut versuchen.",
-        "en": "Gemini server unavailable ({code}). Please try again later.",
+        "de": "LLM-Server nicht erreichbar ({code}). Bitte später erneut versuchen.",
+        "en": "LLM server unavailable ({code}). Please try again later.",
     },
     "unexpected_error": {
         "de": "Unerwarteter Fehler: {detail}",
@@ -26,8 +26,8 @@ MESSAGES: dict[str, dict[Lang, str]] = {
         "en": "Maximum iterations reached. Please try a shorter request.",
     },
     "no_api_key": {
-        "de": "GEMINI_API_KEY ist nicht konfiguriert.",
-        "en": "GEMINI_API_KEY is not configured.",
+        "de": "Der API-Schlüssel für das LLM ist nicht konfiguriert.",
+        "en": "The API key for the LLM is not configured.",
     },
     "internal_error": {
         "de": "Interner Fehler: {detail}",

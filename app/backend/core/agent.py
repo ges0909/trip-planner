@@ -13,11 +13,12 @@ import re
 import tempfile
 import xml.etree.ElementTree as ET
 from collections.abc import AsyncGenerator
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from typing import Any
 
 from i18n import Lang
 from i18n import msg as i18n_msg
+from litellm import token_counter
 from pydantic_ai.messages import (
     ModelMessage,
     ModelRequest,
@@ -32,14 +33,132 @@ from pydantic_ai.models import ModelRequestParameters
 from pydantic_ai.settings import ModelSettings
 from pydantic_ai.tools import ToolDefinition
 
+from core.context import _detect_tour_type, build_system_prompt
 from core.mcp_manager import MCPManager
-from core.model_gateway import get_model
-from core.context import build_system_prompt
+from core.model_gateway import get_model, get_model_id
 
 logger = logging.getLogger(__name__)
 
 # Type alias for SSE events
 type SSEEvent = dict[str, Any]
+
+MAX_CHAT_HISTORY_MESSAGES = 6
+MAX_CONTEXT_TOKENS = 12000
+MAX_TOOL_RESULT_CHARS = 4000
+MAX_RESPONSE_TOKENS = 1536
+COMPACTED_TOOL_RESULT = "[Earlier tool result omitted; use the newer results and gathered facts.]"
+
+
+def _estimate_context_tokens(messages: list[ModelMessage], model_id: str) -> int:
+    """Estimate tokens for pydantic-ai messages without sending a request."""
+    serialized = "\n".join(
+        json.dumps(asdict(message), ensure_ascii=False, default=str) for message in messages
+    )
+    try:
+        return token_counter(model=model_id, text=serialized)
+    except Exception:
+        # Keep compaction available for providers without a LiteLLM tokenizer.
+        return max(1, len(serialized) // 4)
+
+
+def _compact_messages(messages: list[ModelMessage], model_id: str) -> list[ModelMessage]:
+    """Replace old tool payloads when the in-memory request gets too large."""
+    if _estimate_context_tokens(messages, model_id) <= MAX_CONTEXT_TOKENS:
+        return messages
+
+    compacted = list(messages)
+    for message_index, message in enumerate(compacted):
+        if message_index == 0:
+            continue
+
+        parts = getattr(message, "parts", [])
+        replacement_parts = []
+        changed = False
+        for part in parts:
+            if isinstance(part, ToolReturnPart) and isinstance(part.content, str):
+                replacement_parts.append(
+                    ToolReturnPart(
+                        tool_name=part.tool_name,
+                        content=COMPACTED_TOOL_RESULT,
+                        tool_call_id=part.tool_call_id,
+                    )
+                )
+                changed = True
+            else:
+                replacement_parts.append(part)
+
+        if changed:
+            compacted[message_index] = ModelRequest(parts=replacement_parts)
+            if _estimate_context_tokens(compacted, model_id) <= MAX_CONTEXT_TOKENS:
+                break
+
+    return compacted
+
+
+def _compact_schema(schema: dict[str, Any]) -> dict[str, Any]:
+    """Keep only fields needed to validate tool arguments."""
+    compacted: dict[str, Any] = {}
+    for key in ("type", "enum", "required"):
+        if key in schema:
+            compacted[key] = schema[key]
+    if "items" in schema and isinstance(schema["items"], dict):
+        compacted["items"] = _compact_schema(schema["items"])
+    if "properties" in schema and isinstance(schema["properties"], dict):
+        compacted["properties"] = {
+            name: _compact_schema(value)
+            for name, value in schema["properties"].items()
+            if isinstance(value, dict)
+        }
+    return compacted
+
+
+def _compact_tool_declarations(declarations: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Remove verbose MCP prose while preserving callable argument schemas."""
+    compacted: list[dict[str, Any]] = []
+    for declaration in declarations:
+        item: dict[str, Any] = {"name": declaration["name"]}
+        if isinstance(declaration.get("parameters"), dict):
+            item["parameters"] = _compact_schema(declaration["parameters"])
+        compacted.append(item)
+    return compacted
+
+
+def _select_tool_declarations(
+    declarations: list[dict[str, Any]], user_message: str
+) -> list[dict[str, Any]]:
+    """Keep only tools relevant to the detected trip type."""
+    tour_type = _detect_tour_type(user_message)
+    if tour_type == "bike":
+        prefixes = (
+            "mcp_brouter_",
+            "mcp_open_meteo_",
+            "mcp_overpass_",
+            "mcp_waymarkedtrails_",
+            "mcp_wikivoyage_",
+            "mcp_tavily_",
+            "mcp_travel_content_",
+        )
+    elif tour_type == "road":
+        prefixes = (
+            "mcp_osrm_",
+            "mcp_openrouteservice_geocode",
+            "mcp_openrouteservice_calculate_route",
+            "mcp_open_meteo_",
+            "mcp_overpass_",
+            "mcp_wikivoyage_",
+            "mcp_tavily_",
+            "mcp_serpapi_flights_",
+        )
+    else:
+        return declarations
+
+    selected = [
+        declaration
+        for declaration in declarations
+        if any(declaration["name"].startswith(prefix) for prefix in prefixes)
+    ]
+    return selected or declarations
+
 
 # Geo-relevant tool detection by name pattern
 GEO_ROUTE_PATTERNS = ("route", "calculate_car", "calculate_bike")
@@ -347,7 +466,10 @@ async def run_agent(
 
     # Get tool declarations from MCP
     mcp_declarations = await mcp.get_tool_declarations()
-    tool_names = [d["name"] for d in mcp_declarations]
+    compact_declarations = _compact_tool_declarations(
+        _select_tool_declarations(mcp_declarations, user_message)
+    )
+    tool_names = [d["name"] for d in compact_declarations]
 
     # Build system prompt
     system_prompt = build_system_prompt(
@@ -359,7 +481,7 @@ async def run_agent(
     logger.debug("System prompt length: %d chars", len(system_prompt))
 
     # Convert MCP declarations to pydantic-ai ToolDefinitions
-    tool_defs = [_gemini_decl_to_tool_def(decl) for decl in mcp_declarations]
+    tool_defs = [_gemini_decl_to_tool_def(decl) for decl in compact_declarations]
 
     # Build initial message history with system prompt first
     messages: list[ModelMessage] = []
@@ -367,8 +489,8 @@ async def run_agent(
     # Add system prompt as first message
     messages.append(ModelRequest(parts=[SystemPromptPart(content=system_prompt)]))
 
-    # Add chat history
-    for msg in chat_history:
+    # Keep recent conversation context; tool traces are compacted separately.
+    for msg in chat_history[-MAX_CHAT_HISTORY_MESSAGES:]:
         if msg["role"] == "user":
             messages.append(ModelRequest(parts=[UserPromptPart(content=msg["content"])]))
         elif msg["role"] in ("model", "assistant"):
@@ -380,7 +502,9 @@ async def run_agent(
     # Model settings
     model_settings = ModelSettings(
         temperature=0.7,
+        max_tokens=MAX_RESPONSE_TOKENS,
     )
+    model_id = get_model_id()
 
     # Agent loop
     max_iterations = 25
@@ -389,6 +513,7 @@ async def run_agent(
 
     for iteration in range(max_iterations):
         logger.info("Iteration %d: calling model", iteration + 1)
+        messages = _compact_messages(messages, model_id)
 
         try:
             # Call model with tools
@@ -403,9 +528,15 @@ async def run_agent(
                 model_request_parameters=request_params,
             )
         except Exception as e:
-            logger.exception("Model request failed")
+            logger.error("Model request failed: %s: %s", type(e).__name__, e)
             error_str = str(e).lower()
-            if "429" in error_str or "quota" in error_str or "rate" in error_str:
+            if (
+                "402" in error_str
+                or "429" in error_str
+                or "quota" in error_str
+                or "credit" in error_str
+                or "rate" in error_str
+            ):
                 yield {"event": "error", "data": {"error": i18n_msg("quota_exhausted", lang)}}
             elif "503" in error_str or "500" in error_str:
                 yield {
@@ -506,11 +637,14 @@ async def run_agent(
                 result_str = json.dumps(result, ensure_ascii=False, default=str)
 
                 # Truncate large results
-                if len(result_str) > 8000:
+                if len(result_str) > MAX_TOOL_RESULT_CHARS:
                     logger.info(
-                        "Truncating %s result from %d to 8000 chars", tool_name, len(result_str)
+                        "Truncating %s result from %d to %d chars",
+                        tool_name,
+                        len(result_str),
+                        MAX_TOOL_RESULT_CHARS,
                     )
-                    result_str = result_str[:8000] + '..."}'
+                    result_str = result_str[:MAX_TOOL_RESULT_CHARS] + '..."}'
 
                 logger.debug("Tool %s result: %s", tool_name, result_str[:200])
 

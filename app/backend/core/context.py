@@ -13,6 +13,7 @@ ROOT: Path = Path(__file__).parent.parent.parent.parent
 # symlinks (.kiro/*, .claude/*, */AGENTS.md), which a Windows checkout breaks.
 CONTEXT_DIR: Path = ROOT / "context" / "travel"
 SKILLS_DIR: Path = ROOT / "skills"
+MAX_CONTEXT_FILE_CHARS = 1800
 
 # Tour type literal for type safety
 TourType = Literal["bike", "road", "general"]
@@ -133,6 +134,12 @@ Follow the chosen template structure strictly.
                 end: int = content.find("---", 3)
                 if end != -1:
                     content = content[end + 3 :].strip()
+            if len(content) > MAX_CONTEXT_FILE_CHARS:
+                content = (
+                    content[: MAX_CONTEXT_FILE_CHARS // 2]
+                    + "\n\n[Middle of context omitted to reduce request size.]\n\n"
+                    + content[-MAX_CONTEXT_FILE_CHARS // 2 :]
+                )
             parts.append(content)
             loaded_count += 1
             logger.debug("Loaded context file: %s", path.name)
