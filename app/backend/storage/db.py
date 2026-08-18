@@ -185,14 +185,16 @@ async def get_session(session_id: str) -> Session | None:
             row = await cursor.fetchone()
             if not row:
                 return None
+            # Convert to dict to safely access fields that might not exist
+            row_dict = dict(row)
             return Session(
-                id=row["id"],
-                title=row["title"],
-                language=row["language"],
-                tour_type=row["tour_type"],
-                created_at=datetime.fromisoformat(row["created_at"]),
-                updated_at=datetime.fromisoformat(row["updated_at"]),
-                last_viewed_tour_id=row.get("last_viewed_tour_id"),
+                id=row_dict["id"],
+                title=row_dict["title"],
+                language=row_dict["language"],
+                tour_type=row_dict["tour_type"],
+                created_at=datetime.fromisoformat(row_dict["created_at"]),
+                updated_at=datetime.fromisoformat(row_dict["updated_at"]),
+                last_viewed_tour_id=row_dict.get("last_viewed_tour_id"),
             )
 
 
@@ -241,18 +243,21 @@ async def list_sessions(limit: int = 50) -> list[Session]:
             "SELECT * FROM sessions ORDER BY updated_at DESC LIMIT ?", (limit,)
         ) as cursor:
             rows = await cursor.fetchall()
-            return [
-                Session(
-                    id=row["id"],
-                    title=row["title"],
-                    language=row["language"],
-                    tour_type=row["tour_type"],
-                    created_at=datetime.fromisoformat(row["created_at"]),
-                    updated_at=datetime.fromisoformat(row["updated_at"]),
-                    last_viewed_tour_id=row.get("last_viewed_tour_id"),
+            sessions = []
+            for row in rows:
+                row_dict = dict(row)
+                sessions.append(
+                    Session(
+                        id=row_dict["id"],
+                        title=row_dict["title"],
+                        language=row_dict["language"],
+                        tour_type=row_dict["tour_type"],
+                        created_at=datetime.fromisoformat(row_dict["created_at"]),
+                        updated_at=datetime.fromisoformat(row_dict["updated_at"]),
+                        last_viewed_tour_id=row_dict.get("last_viewed_tour_id"),
+                    )
                 )
-                for row in rows
-            ]
+            return sessions
 
 
 # ============================================================================
