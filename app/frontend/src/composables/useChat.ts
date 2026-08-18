@@ -212,14 +212,26 @@ export function useChat(): ChatState {
       // Update last viewed tour if session exists
       if (sessionId.value) {
         try {
-          await fetch(`/api/sessions/${sessionId.value}/last-viewed`, {
+          console.log(
+            `💾 Saving last viewed tour: ${tour.slug} (id: ${tour.id}) for session: ${sessionId.value}`,
+          );
+          const response = await fetch(`/api/sessions/${sessionId.value}/last-viewed`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ tour_id: tour.id }),
           });
-        } catch {
-          // Silently fail if unable to save last viewed tour
+          console.log("💾 Save response status:", response.status);
+          if (response.ok) {
+            const result = await response.json();
+            console.log("✅ Successfully saved last viewed tour:", result);
+          } else {
+            console.error("❌ Failed to save last viewed tour");
+          }
+        } catch (e) {
+          console.error("❌ Error saving last viewed tour:", e);
         }
+      } else {
+        console.warn("⚠️ No session ID set, cannot save last viewed tour");
       }
     } catch (error) {
       errorMessage.value =

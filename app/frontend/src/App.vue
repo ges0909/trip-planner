@@ -48,20 +48,33 @@ async function initializeSession() {
   if (!sid) {
     sid = generateSessionId();
     localStorage.setItem("session_id", sid);
+    console.log("🆕 Generated new session ID:", sid);
+  } else {
+    console.log("♻️ Using existing session ID:", sid);
   }
   sessionId.value = sid;
 
   // Attempt to load last viewed tour
   try {
+    console.log(`📡 Fetching last viewed tour for session: ${sid}`);
     const response = await fetch(`/api/sessions/${sid}/last-viewed`);
-    if (!response.ok) return;
+    console.log("Response status:", response.status);
+    
+    if (!response.ok) {
+      console.log("Response not OK, skipping tour load");
+      return;
+    }
 
     const data = await response.json();
+    console.log("Last viewed data:", data);
+    
     if (data.tour) {
+      console.log("🎯 Found last viewed tour:", data.tour);
       // Load tour details and display
       try {
         const tour = await fetchTourDetail(data.tour.tour_type, data.tour.slug);
         if (tour) {
+          console.log("✅ Loaded tour details, displaying:", tour.title);
           selectedTourId.value = data.tour.id;
           await loadTour({
             id: data.tour.id,
@@ -69,12 +82,14 @@ async function initializeSession() {
             slug: data.tour.slug,
           } as Tour);
         }
-      } catch {
-        // Silently fail if unable to load tour
+      } catch (e) {
+        console.error("❌ Failed to load tour details:", e);
       }
+    } else {
+      console.log("ℹ️ No last viewed tour found");
     }
-  } catch {
-    // Silently fail if unable to fetch last viewed tour
+  } catch (e) {
+    console.error("❌ Failed to fetch last viewed tour:", e);
   }
 }
 
@@ -88,6 +103,7 @@ async function handleSend(message: string) {
 }
 
 async function handleSelectTour(tour: Tour) {
+  console.log("🎬 handleSelectTour called:", tour.slug, "id:", tour.id);
   selectedTourId.value = tour.id;
   await loadTour(tour);
 }
