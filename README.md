@@ -28,6 +28,8 @@ Get a complete tour plan:
 - ✅ Public transit connections (bike tours) or driving times (roadtrips)
 - ✅ Markdown document ready to commit
 
+The web app also keeps a session ID in the browser and restores the last viewed tour after reopening, so the user lands on the previously selected trip automatically.
+
 All saved in `trips/bike/` or `trips/road/` with GPX files and map images.
 
 ---
@@ -36,7 +38,7 @@ All saved in `trips/bike/` or `trips/road/` with GPX files and map images.
 
 Type a tour request → MCP servers fetch data (routing, weather, POIs, transit) → LLM plans & writes → Results saved as Markdown + GPX.
 
-For web UI, run `cd app/backend && uv run python -m uvicorn main:app --reload` and `cd app/frontend && npm run dev`, then open http://localhost:5173.
+For the web UI, run `cd app/backend && uv run python -m uvicorn main:app --reload` and `cd app/frontend && npm run dev`, then open http://localhost:5173. For the app-specific setup and feature list, see [app/README.md](app/README.md).
 
 ## Quickstart
 

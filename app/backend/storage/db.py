@@ -120,18 +120,16 @@ async def init_db() -> None:
 
     async with aiosqlite.connect(DB_PATH) as db:
         await db.executescript(SCHEMA)
-        
+
         # Run migrations for existing databases
         try:
             # Add last_viewed_tour_id column if it doesn't exist
-            await db.execute(
-                "ALTER TABLE sessions ADD COLUMN last_viewed_tour_id TEXT"
-            )
+            await db.execute("ALTER TABLE sessions ADD COLUMN last_viewed_tour_id TEXT")
             logger.info("Added last_viewed_tour_id column to sessions table")
         except Exception:
             # Column already exists or other error - ignore
             pass
-        
+
         await db.commit()
 
     logger.info("Database initialized at %s", DB_PATH)

@@ -22,8 +22,7 @@ function initMap() {
   if (!mapContainer.value || map) return;
   map = L.map(mapContainer.value).setView([52.5, 13.4], 7);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     maxZoom: 18,
   }).addTo(map);
   markerLayer = L.layerGroup().addTo(map);
@@ -72,9 +71,7 @@ function addLegend() {
     div.style.cssText =
       "background:rgba(255,255,255,0.92);padding:6px 10px;border-radius:6px;font-size:13px;line-height:1.5;box-shadow:0 1px 4px rgba(0,0,0,0.15);";
 
-    const categories = new Set(
-      props.pois.map((p) => p.category).filter(Boolean),
-    );
+    const categories = new Set(props.pois.map((p) => p.category).filter(Boolean));
     const entries: [string, string, string][] = [];
     if (
       categories.has("museum") ||
@@ -87,14 +84,9 @@ function addLegend() {
       entries.push(["#8b5cf6", "●", "Sehenswürdigkeiten"]);
     if (categories.has("artwork") || categories.has("gallery"))
       entries.push(["#ec4899", "●", "Kunst"]);
-    if (
-      categories.has("beer_garden") ||
-      categories.has("cafe") ||
-      categories.has("restaurant")
-    )
+    if (categories.has("beer_garden") || categories.has("cafe") || categories.has("restaurant"))
       entries.push(["#f59e0b", "●", "Einkehr"]);
-    if (categories.has("swimming"))
-      entries.push(["#06b6d4", "●", "Badestellen"]);
+    if (categories.has("swimming")) entries.push(["#06b6d4", "●", "Badestellen"]);
     if (
       categories.has("bicycle_repair") ||
       categories.has("drinking_water") ||
@@ -160,9 +152,7 @@ function updateMap() {
   // Draw all route polylines
   for (const route of props.routes) {
     if (route.length > 1) {
-      const latLngs = route.map(
-        ([lat, lng]) => [lat, lng] as L.LatLngExpression,
-      );
+      const latLngs = route.map(([lat, lng]) => [lat, lng] as L.LatLngExpression);
       const polyline = L.polyline(latLngs, {
         color: "#2563eb",
         weight: 4,
@@ -178,12 +168,7 @@ function updateMap() {
     props.waypoints.forEach(([lat, lng], i) => {
       const marker = L.circleMarker([lat, lng], {
         radius: 8,
-        fillColor:
-          i === 0
-            ? "#16a34a"
-            : i === props.waypoints.length - 1
-              ? "#dc2626"
-              : "#2563eb",
+        fillColor: i === 0 ? "#16a34a" : i === props.waypoints.length - 1 ? "#dc2626" : "#2563eb",
         color: "#fff",
         weight: 2,
         fillOpacity: 0.9,
@@ -308,14 +293,9 @@ const elevationStats = computed(() => {
 </script>
 
 <template>
-  <div
-    class="bg-white rounded-lg shadow overflow-hidden h-full flex flex-col min-h-[400px]"
-  >
+  <div class="bg-white rounded-lg shadow overflow-hidden h-full flex flex-col min-h-[400px]">
     <div ref="mapContainer" class="flex-1 min-h-[350px]"></div>
-    <div
-      v-if="elevation.length >= 2"
-      class="shrink-0 border-t border-gray-200 px-3 pt-2 pb-3"
-    >
+    <div v-if="elevation.length >= 2" class="shrink-0 border-t border-gray-200 px-3 pt-2 pb-3">
       <div class="flex items-center justify-between text-xs text-gray-500 mb-1">
         <span>{{ elevationStats?.min }} m</span>
         <span class="font-medium text-gray-700">Höhenprofil</span>
@@ -323,12 +303,7 @@ const elevationStats = computed(() => {
       </div>
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" class="w-full h-14">
         <path :d="elevationFill" fill="#dbeafe" />
-        <path
-          :d="elevationPath"
-          fill="none"
-          stroke="#2563eb"
-          stroke-width="0.8"
-        />
+        <path :d="elevationPath" fill="none" stroke="#2563eb" stroke-width="0.8" />
       </svg>
       <div class="flex justify-between text-xs text-gray-400 mt-1">
         <span>0 km</span>

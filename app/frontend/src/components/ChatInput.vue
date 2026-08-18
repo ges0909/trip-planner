@@ -30,10 +30,7 @@ function handleSubmit() {
   emit("send", message);
 
   // Add to history (deduplicate, keep last 20)
-  history.value = [
-    message,
-    ...history.value.filter((h) => h !== message),
-  ].slice(0, 20);
+  history.value = [message, ...history.value.filter((h) => h !== message)].slice(0, 20);
   saveHistory();
 
   showHistory.value = false;
@@ -68,11 +65,7 @@ function handleFocusOut(e: FocusEvent) {
 const componentRef = ref<HTMLElement | null>(null);
 
 function handleClickOutside(e: MouseEvent) {
-  if (
-    showHistory.value &&
-    componentRef.value &&
-    !componentRef.value.contains(e.target as Node)
-  ) {
+  if (showHistory.value && componentRef.value && !componentRef.value.contains(e.target as Node)) {
     showHistory.value = false;
   }
 }

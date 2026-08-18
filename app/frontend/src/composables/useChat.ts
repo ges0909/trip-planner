@@ -2,8 +2,19 @@
  * Composable for managing chat state and SSE streaming.
  */
 import { computed, ref, type Ref } from "vue";
-import { fetchTourDetail, fetchTourGpx, type Tour } from "../api";
+import { fetchTourDetail, fetchTourGpx, saveLastViewedTour, type Tour } from "../api";
 import { t, type Lang } from "../i18n";
+import { parseGpxRoute } from "../utils/gpx";
+
+const EVENT_NAMES = {
+  session: "session",
+  error: "error",
+  tour: "tour",
+  map: "map",
+  elevation: "elevation",
+  gpx: "gpx",
+  status: "status",
+} as const;
 
 export interface MapData {
   waypoints: [number, number][];
@@ -34,6 +45,112 @@ function createEmptyMapData(): MapData {
     pois: [],
     elevation: [],
   };
+}
+
+function applyStreamEvent(
+  eventName: string,
+  payload: any,
+  state: {
+    sessionId: Ref<string | null>;
+    errorMessage: Ref<string>;
+    tourMarkdown: Ref<string>;
+    gpxContent: Ref<string>;
+    mapData: Ref<MapData>;
+    statusMessages: Ref<string[]>;
+  },
+) {
+  if (eventName === EVENT_NAMES.session && payload.session_id) {
+    state.sessionId.value = payload.session_id;
+    return;
+  }
+
+  if (eventName === EVENT_NAMES.error || payload.error) {
+    state.errorMessage.value = payload.error;
+    return;
+  }
+
+  if (eventName === EVENT_NAMES.tour || payload.markdown) {
+    state.tourMarkdown.value = payload.markdown;
+    return;
+  }
+
+  if (eventName === EVENT_NAMES.map) {
+    if (payload.waypoints) {
+      state.mapData.value.waypoints.push(...payload.waypoints);
+    }
+    if (payload.route) {
+      state.mapData.value.routes.push(payload.route);
+    }
+    if (payload.pois) {
+      state.mapData.value.pois.push(...payload.pois);
+    }
+    return;
+  }
+
+  if (eventName === EVENT_NAMES.elevation && payload.profile) {
+    state.mapData.value.elevation = payload.profile;
+    return;
+  }
+
+  if (eventName === EVENT_NAMES.gpx && payload.gpx) {
+    state.gpxContent.value = payload.gpx;
+    return;
+  }
+
+  if (eventName === EVENT_NAMES.status && payload.message) {
+    if (!state.statusMessages.value.includes(payload.message)) {
+      state.statusMessages.value.push(payload.message);
+    }
+  }
+}
+
+function processSseBuffer(
+  buffer: string,
+  state: {
+    sessionId: Ref<string | null>;
+    errorMessage: Ref<string>;
+    tourMarkdown: Ref<string>;
+    gpxContent: Ref<string>;
+    mapData: Ref<MapData>;
+    statusMessages: Ref<string[]>;
+  },
+): { nextBuffer: string; receivedData: boolean } {
+  const lines = buffer.split("\n");
+  let nextBuffer = "";
+  let receivedData = false;
+  let currentEvent = "";
+
+  for (const line of lines) {
+    if (line.startsWith("event:")) {
+      currentEvent = line.slice(6).trim();
+      continue;
+    }
+
+    if (!line.startsWith("data:")) {
+      continue;
+    }
+
+    const data = line.slice(5).trim();
+    if (!data) {
+      continue;
+    }
+
+    try {
+      const parsed = JSON.parse(data);
+      receivedData = true;
+      applyStreamEvent(currentEvent, parsed, state);
+    } catch {
+      // Ignore parse errors.
+    }
+
+    currentEvent = "";
+  }
+
+  if (lines.length > 0) {
+    nextBuffer = lines[lines.length - 1] || "";
+  }
+
+  return { nextBuffer, receivedData };
 }
 
 export function useChat(): ChatState {
@@ -99,65 +216,16 @@ export function useChat(): ChatState {
         if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
-
-        let currentEvent = "";
-        for (const line of lines) {
-          if (line.startsWith("event:")) {
-            currentEvent = line.slice(6).trim();
-          } else if (line.startsWith("data:")) {
-            const data = line.slice(5).trim();
-            if (!data) continue;
-
-            try {
-              const parsed = JSON.parse(data);
-              receivedData = true;
-
-              // Handle session ID (sent first by backend)
-              if (currentEvent === "session" && parsed.session_id) {
-                sessionId.value = parsed.session_id;
-              }
-              // Handle error
-              else if (currentEvent === "error" || parsed.error) {
-                errorMessage.value = parsed.error;
-              }
-              // Handle tour markdown
-              else if (currentEvent === "tour" || parsed.markdown) {
-                tourMarkdown.value = parsed.markdown;
-              }
-              // Handle map data
-              else if (currentEvent === "map") {
-                if (parsed.waypoints) {
-                  mapData.value.waypoints.push(...parsed.waypoints);
-                }
-                if (parsed.route) {
-                  mapData.value.routes.push(parsed.route);
-                }
-                if (parsed.pois) {
-                  mapData.value.pois.push(...parsed.pois);
-                }
-              }
-              // Handle elevation profile
-              else if (currentEvent === "elevation" && parsed.profile) {
-                mapData.value.elevation = parsed.profile;
-              }
-              // Handle GPX content
-              else if (currentEvent === "gpx" && parsed.gpx) {
-                gpxContent.value = parsed.gpx;
-              }
-              // Handle status messages
-              else if (currentEvent === "status" && parsed.message) {
-                if (!statusMessages.value.includes(parsed.message)) {
-                  statusMessages.value.push(parsed.message);
-                }
-              }
-            } catch {
-              // Ignore parse errors
-            }
-            currentEvent = "";
-          }
-        }
+        const parsedStream = processSseBuffer(buffer, {
+          sessionId,
+          errorMessage,
+          tourMarkdown,
+          gpxContent,
+          mapData,
+          statusMessages,
+        });
+        buffer = parsedStream.nextBuffer;
+        receivedData = receivedData || parsedStream.receivedData;
       }
 
       if (!receivedData && !errorMessage.value) {
@@ -192,10 +260,7 @@ export function useChat(): ChatState {
             // Set first point of first route and last point of last route as waypoints
             const firstRoute = routes[0];
             const lastRoute = routes[routes.length - 1];
-            const waypoints: [number, number][] = [
-              firstRoute[0],
-              lastRoute[lastRoute.length - 1],
-            ];
+            const waypoints: [number, number][] = [firstRoute[0], lastRoute[lastRoute.length - 1]];
             // Assign new mapData object to trigger reactivity
             mapData.value = {
               waypoints,
@@ -212,84 +277,16 @@ export function useChat(): ChatState {
       // Update last viewed tour if session exists
       if (sessionId.value) {
         try {
-          console.log(
-            `💾 Saving last viewed tour: ${tour.slug} (id: ${tour.id}) for session: ${sessionId.value}`,
-          );
-          const response = await fetch(`/api/sessions/${sessionId.value}/last-viewed`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ tour_id: tour.id }),
-          });
-          console.log("💾 Save response status:", response.status);
-          if (response.ok) {
-            const result = await response.json();
-            console.log("✅ Successfully saved last viewed tour:", result);
-          } else {
-            console.error("❌ Failed to save last viewed tour");
-          }
-        } catch (e) {
-          console.error("❌ Error saving last viewed tour:", e);
+          await saveLastViewedTour(sessionId.value, tour.id);
+        } catch {
+          // Ignore persistence failures; the tour can still be viewed without it.
         }
-      } else {
-        console.warn("⚠️ No session ID set, cannot save last viewed tour");
       }
     } catch (error) {
-      errorMessage.value =
-        error instanceof Error ? error.message : "Failed to load tour";
+      errorMessage.value = error instanceof Error ? error.message : "Failed to load tour";
     } finally {
       isLoading.value = false;
     }
-  }
-
-  /**
-   * Parse GPX XML to extract track coordinates as [lat, lon] pairs.
-   * Handles multiple tracks (multi-day trips).
-   */
-  function parseGpxRoute(gpx: string): [number, number][][] {
-    const routes: [number, number][][] = [];
-    try {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(gpx, "application/xml");
-
-      // Get all tracks (getElementsByTagName works with namespaced XML)
-      const tracks = doc.getElementsByTagName("trk");
-      for (let i = 0; i < tracks.length; i++) {
-        const trk = tracks[i];
-        const route: [number, number][] = [];
-        const trkpts = trk.getElementsByTagName("trkpt");
-        for (let j = 0; j < trkpts.length; j++) {
-          const pt = trkpts[j];
-          const lat = parseFloat(pt.getAttribute("lat") || "");
-          const lon = parseFloat(pt.getAttribute("lon") || "");
-          if (!isNaN(lat) && !isNaN(lon)) {
-            route.push([lat, lon]);
-          }
-        }
-        if (route.length > 0) {
-          routes.push(route);
-        }
-      }
-
-      // If no tracks found, try route points
-      if (routes.length === 0) {
-        const route: [number, number][] = [];
-        const rtepts = doc.getElementsByTagName("rtept");
-        for (let i = 0; i < rtepts.length; i++) {
-          const pt = rtepts[i];
-          const lat = parseFloat(pt.getAttribute("lat") || "");
-          const lon = parseFloat(pt.getAttribute("lon") || "");
-          if (!isNaN(lat) && !isNaN(lon)) {
-            route.push([lat, lon]);
-          }
-        }
-        if (route.length > 0) {
-          routes.push(route);
-        }
-      }
-    } catch {
-      // Ignore parse errors
-    }
-    return routes;
   }
 
   return {

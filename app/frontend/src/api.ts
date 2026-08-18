@@ -2,6 +2,15 @@
  * API client for the Trip Planner backend.
  */
 
+export interface LastViewedTourResponse {
+  tour: {
+    id: string;
+    title: string;
+    tour_type: "bike" | "road";
+    slug: string;
+  } | null;
+}
+
 export interface Tour {
   id: string;
   title: string;
@@ -45,10 +54,7 @@ export async function fetchTours(tourType?: "bike" | "road"): Promise<Tour[]> {
 /**
  * Fetch tour details including markdown content.
  */
-export async function fetchTourDetail(
-  tourType: string,
-  slug: string,
-): Promise<TourDetail> {
+export async function fetchTourDetail(tourType: string, slug: string): Promise<TourDetail> {
   const response = await fetch(`/api/tours/${tourType}/${slug}`);
   if (!response.ok) {
     throw new Error(`Failed to fetch tour: ${response.status}`);
@@ -59,10 +65,7 @@ export async function fetchTourDetail(
 /**
  * Fetch GPX content for a tour.
  */
-export async function fetchTourGpx(
-  tourType: string,
-  slug: string,
-): Promise<string> {
+export async function fetchTourGpx(tourType: string, slug: string): Promise<string> {
   const response = await fetch(`/api/tours/${tourType}/${slug}/gpx`);
   if (!response.ok) {
     throw new Error(`Failed to fetch GPX: ${response.status}`);
@@ -102,11 +105,35 @@ export async function fetchSessions(limit = 50): Promise<Session[]> {
 }
 
 /**
+ * Fetch the last-viewed tour for a session.
+ */
+export async function fetchLastViewedTour(sessionId: string): Promise<LastViewedTourResponse> {
+  const response = await fetch(`/api/sessions/${sessionId}/last-viewed`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch last viewed tour: ${response.status}`);
+  }
+  return response.json();
+}
+
+/**
+ * Save the last-viewed tour for a session.
+ */
+export async function saveLastViewedTour(sessionId: string, tourId: string): Promise<void> {
+  const response = await fetch(`/api/sessions/${sessionId}/last-viewed`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tour_id: tourId }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to save last viewed tour: ${response.status}`);
+  }
+}
+
+/**
  * Fetch session details including messages.
  */
-export async function fetchSessionDetail(
-  sessionId: string,
-): Promise<SessionDetail> {
+export async function fetchSessionDetail(sessionId: string): Promise<SessionDetail> {
   const response = await fetch(`/api/sessions/${sessionId}`);
   if (!response.ok) {
     throw new Error(`Failed to fetch session: ${response.status}`);
@@ -117,10 +144,7 @@ export async function fetchSessionDetail(
 /**
  * Delete a tour (move to trash).
  */
-export async function deleteTour(
-  tourType: string,
-  slug: string,
-): Promise<void> {
+export async function deleteTour(tourType: string, slug: string): Promise<void> {
   const response = await fetch(`/api/tours/${tourType}/${slug}`, {
     method: "DELETE",
   });
@@ -154,10 +178,7 @@ export async function fetchTrash(): Promise<TrashItem[]> {
 /**
  * Restore a tour from trash.
  */
-export async function restoreFromTrash(
-  tourType: string,
-  trashName: string,
-): Promise<Tour> {
+export async function restoreFromTrash(tourType: string, trashName: string): Promise<Tour> {
   const response = await fetch(`/api/trash/${tourType}/${trashName}/restore`, {
     method: "POST",
   });
@@ -170,10 +191,7 @@ export async function restoreFromTrash(
 /**
  * Permanently delete a tour from trash.
  */
-export async function deleteFromTrash(
-  tourType: string,
-  trashName: string,
-): Promise<void> {
+export async function deleteFromTrash(tourType: string, trashName: string): Promise<void> {
   const response = await fetch(`/api/trash/${tourType}/${trashName}`, {
     method: "DELETE",
   });

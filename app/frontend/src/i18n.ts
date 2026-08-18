@@ -43,11 +43,7 @@ const messages = {
 
 type MessageKey = keyof typeof messages;
 
-export function t(
-  key: MessageKey,
-  lang: Lang,
-  params?: Record<string, string | number>,
-): string {
+export function t(key: MessageKey, lang: Lang, params?: Record<string, string | number>): string {
   let text = messages[key][lang];
   if (params) {
     for (const [k, v] of Object.entries(params)) {

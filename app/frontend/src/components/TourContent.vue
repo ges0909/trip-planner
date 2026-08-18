@@ -42,9 +42,7 @@ const filename = computed(() => {
     <!-- Download buttons -->
     <div class="mt-6 pt-4 border-t flex gap-3">
       <a
-        :href="
-          'data:text/markdown;charset=utf-8,' + encodeURIComponent(markdown)
-        "
+        :href="'data:text/markdown;charset=utf-8,' + encodeURIComponent(markdown)"
         :download="filename + '.md'"
         class="inline-flex items-center justify-center px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition"
       >
@@ -52,9 +50,7 @@ const filename = computed(() => {
       </a>
       <a
         v-if="gpx"
-        :href="
-          'data:application/gpx+xml;charset=utf-8,' + encodeURIComponent(gpx)
-        "
+        :href="'data:application/gpx+xml;charset=utf-8,' + encodeURIComponent(gpx)"
         :download="filename + '.gpx'"
         class="inline-flex items-center justify-center px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition"
       >

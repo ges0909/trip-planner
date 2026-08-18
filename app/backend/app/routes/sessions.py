@@ -58,14 +58,11 @@ async def get_session_detail(session_id: str):
 @router.get("/sessions/{session_id}/last-viewed")
 async def get_last_viewed_tour_endpoint(session_id: str):
     """Get the last viewed tour for a session."""
-    logger.info(f"GET /sessions/{session_id}/last-viewed")
     session = await get_session(session_id)
     if not session:
-        logger.warning(f"Session not found: {session_id}")
         return JSONResponse({"error": "Session not found"}, status_code=404)
 
     tour = await get_last_viewed_tour(session_id)
-    logger.info(f"Last viewed tour for {session_id}: {tour}")
     if not tour:
         return {"tour": None}
 
@@ -82,21 +79,12 @@ async def get_last_viewed_tour_endpoint(session_id: str):
 @router.put("/sessions/{session_id}/last-viewed")
 async def set_last_viewed_tour_endpoint(session_id: str, tour_id: str = Body(..., embed=True)):
     """Set/update the last viewed tour for a session. Creates session if needed."""
-    logger.info(f"PUT /sessions/{session_id}/last-viewed with tour_id={tour_id}")
-    
     session = await get_session(session_id)
     if not session:
-        logger.info(f"Creating new session: {session_id}")
-        # Auto-create session if it doesn't exist
-        session = await create_session(session_id=session_id, language="de")
+        await create_session(session_id=session_id, language="de")
 
-    logger.info(f"Updating last_viewed_tour: session={session_id}, tour={tour_id}")
     success = await update_last_viewed_tour(session_id, tour_id)
     if not success:
-        logger.error(f"Failed to update last_viewed_tour: {session_id} -> {tour_id}")
-        return JSONResponse(
-            {"error": "Failed to update last viewed tour"}, status_code=500
-        )
+        return JSONResponse({"error": "Failed to update last viewed tour"}, status_code=500)
 
-    logger.info(f"✅ Successfully updated last_viewed_tour: {session_id} -> {tour_id}")
     return {"status": "ok"}

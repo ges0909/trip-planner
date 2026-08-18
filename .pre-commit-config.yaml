@@ -1,6 +1,18 @@
 repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.0
+    hooks:
+      - id: ruff-format
+
   - repo: local
     hooks:
+      - id: prettier
+        name: prettier
+        entry: bash -lc 'npm --prefix app/frontend run format:check'
+        language: system
+        pass_filenames: false
+        files: ^app/frontend/.*\.(vue|ts|js|json|css|md)$
+
       - id: check-unused-assets
         name: Check for unused trip assets
         entry: python3 tools/check_unused_assets.py

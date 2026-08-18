@@ -5,7 +5,8 @@ import TourContent from "./components/TourContent.vue";
 import TourLibrary from "./components/TourLibrary.vue";
 import TourMap from "./components/TourMap.vue";
 import { useChat } from "./composables/useChat";
-import { type Tour, fetchTourDetail } from "./api";
+import { useSession } from "./composables/useSession";
+import { type Tour } from "./api";
 import { t, type Lang } from "./i18n";
 
 // Chat state from composable
@@ -29,68 +30,18 @@ const chatInputRef = ref<InstanceType<typeof ChatInput> | null>(null);
 const showMap = ref(false);
 const selectedTourId = ref<string | null>(null);
 
-/**
- * Generate a unique session ID (UUID v4).
- */
-function generateSessionId(): string {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === "x" ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-}
+const { sessionId: appSessionId, restoreLastViewedTour } = useSession();
 
 /**
  * Initialize session and load last viewed tour if available.
  */
 async function initializeSession() {
-  let sid = localStorage.getItem("session_id");
-  if (!sid) {
-    sid = generateSessionId();
-    localStorage.setItem("session_id", sid);
-    console.log("🆕 Generated new session ID:", sid);
-  } else {
-    console.log("♻️ Using existing session ID:", sid);
-  }
-  sessionId.value = sid;
+  await restoreLastViewedTour(async (tour) => {
+    selectedTourId.value = tour.id;
+    await loadTour(tour);
+  });
 
-  // Attempt to load last viewed tour
-  try {
-    console.log(`📡 Fetching last viewed tour for session: ${sid}`);
-    const response = await fetch(`/api/sessions/${sid}/last-viewed`);
-    console.log("Response status:", response.status);
-    
-    if (!response.ok) {
-      console.log("Response not OK, skipping tour load");
-      return;
-    }
-
-    const data = await response.json();
-    console.log("Last viewed data:", data);
-    
-    if (data.tour) {
-      console.log("🎯 Found last viewed tour:", data.tour);
-      // Load tour details and display
-      try {
-        const tour = await fetchTourDetail(data.tour.tour_type, data.tour.slug);
-        if (tour) {
-          console.log("✅ Loaded tour details, displaying:", tour.title);
-          selectedTourId.value = data.tour.id;
-          await loadTour({
-            id: data.tour.id,
-            tour_type: data.tour.tour_type,
-            slug: data.tour.slug,
-          } as Tour);
-        }
-      } catch (e) {
-        console.error("❌ Failed to load tour details:", e);
-      }
-    } else {
-      console.log("ℹ️ No last viewed tour found");
-    }
-  } catch (e) {
-    console.error("❌ Failed to fetch last viewed tour:", e);
-  }
+  sessionId.value = appSessionId.value;
 }
 
 onMounted(() => {
@@ -103,7 +54,6 @@ async function handleSend(message: string) {
 }
 
 async function handleSelectTour(tour: Tour) {
-  console.log("🎬 handleSelectTour called:", tour.slug, "id:", tour.id);
   selectedTourId.value = tour.id;
   await loadTour(tour);
 }
@@ -192,9 +142,7 @@ function handleTourDeleted() {
             v-if="errorMessage"
             class="mt-3 px-4 py-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3"
           >
-            <span class="text-red-500 text-lg leading-none"
-              >&#9888;&#65039;</span
-            >
+            <span class="text-red-500 text-lg leading-none">&#9888;&#65039;</span>
             <div class="flex-1">
               <p class="text-sm text-red-800">{{ errorMessage }}</p>
             </div>

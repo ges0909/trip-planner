@@ -36,12 +36,8 @@ const filteredTours = computed(() => {
   return tours.value.filter((t) => t.tour_type === filterType.value);
 });
 
-const bikeTours = computed(() =>
-  tours.value.filter((t) => t.tour_type === "bike"),
-);
-const roadTours = computed(() =>
-  tours.value.filter((t) => t.tour_type === "road"),
-);
+const bikeTours = computed(() => tours.value.filter((t) => t.tour_type === "bike"));
+const roadTours = computed(() => tours.value.filter((t) => t.tour_type === "road"));
 
 async function loadTours(autoSelectLatest = false) {
   isLoading.value = true;
@@ -50,8 +46,7 @@ async function loadTours(autoSelectLatest = false) {
     tours.value = await fetchTours();
     if (autoSelectLatest && tours.value.length > 0) {
       const sorted = [...tours.value].sort(
-        (a, b) =>
-          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
+        (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
       );
       emit("select", sorted[0]);
     }
@@ -172,10 +167,7 @@ onMounted(() => loadTours(true));
         :title="isCollapsed ? 'Expand' : 'Collapse'"
       >
         <svg
-          :class="[
-            'w-4 h-4 transition-transform',
-            isCollapsed ? 'rotate-180' : '',
-          ]"
+          :class="['w-4 h-4 transition-transform', isCollapsed ? 'rotate-180' : '']"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -191,10 +183,7 @@ onMounted(() => loadTours(true));
     </div>
 
     <!-- Collapsed state -->
-    <div
-      v-if="isCollapsed"
-      class="flex-1 flex flex-col items-center py-4 gap-4"
-    >
+    <div v-if="isCollapsed" class="flex-1 flex flex-col items-center py-4 gap-4">
       <button
         @click="
           filterType = 'bike';
@@ -253,12 +242,8 @@ onMounted(() => loadTours(true));
           @click="filterType = filter"
         >
           <template v-if="filter === 'all'">{{ t("all", language) }}</template>
-          <template v-else-if="filter === 'bike'"
-            ><span class="text-lg">🚴</span></template
-          >
-          <template v-else-if="filter === 'road'"
-            ><span class="text-lg">🚗</span></template
-          >
+          <template v-else-if="filter === 'bike'"><span class="text-lg">🚴</span></template>
+          <template v-else-if="filter === 'road'"><span class="text-lg">🚗</span></template>
           <template v-else><span class="text-lg">🗑️</span></template>
         </button>
       </div>
@@ -273,9 +258,7 @@ onMounted(() => loadTours(true));
       <!-- Error state -->
       <div v-else-if="error" class="p-4 text-red-600 text-sm">
         {{ error }}
-        <button @click="() => loadTours(false)" class="ml-2 underline">
-          Retry
-        </button>
+        <button @click="() => loadTours(false)" class="ml-2 underline">Retry</button>
       </div>
 
       <!-- Trash view -->
@@ -293,9 +276,7 @@ onMounted(() => loadTours(true));
             class="p-3 border-b border-gray-100"
           >
             <div class="flex items-start gap-2">
-              <span class="text-lg opacity-50">{{
-                item.tour_type === "bike" ? "🚴" : "🚗"
-              }}</span>
+              <span class="text-lg opacity-50">{{ item.tour_type === "bike" ? "🚴" : "🚗" }}</span>
               <div class="flex-1 min-w-0">
                 <h3 class="font-medium text-gray-600 text-sm truncate">
                   {{ item.title }}
@@ -345,17 +326,12 @@ onMounted(() => loadTours(true));
           ]"
         >
           <div class="flex items-start gap-2">
-            <span class="text-lg">{{
-              tour.tour_type === "bike" ? "🚴" : "🚗"
-            }}</span>
+            <span class="text-lg">{{ tour.tour_type === "bike" ? "🚴" : "🚗" }}</span>
             <div class="flex-1 min-w-0">
               <h3 class="font-medium text-gray-800 text-sm truncate">
                 {{ tour.title }}
               </h3>
-              <p
-                v-if="tour.summary"
-                class="text-xs text-gray-500 mt-0.5 line-clamp-2"
-              >
+              <p v-if="tour.summary" class="text-xs text-gray-500 mt-0.5 line-clamp-2">
                 {{ tour.summary }}
               </p>
               <p class="text-xs text-gray-400 mt-1">
@@ -367,12 +343,7 @@ onMounted(() => loadTours(true));
               class="p-1 opacity-0 group-hover:opacity-100 hover:bg-red-100 rounded text-red-500 transition"
               title="Löschen"
             >
-              <svg
-                class="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -388,18 +359,11 @@ onMounted(() => loadTours(true));
       <!-- Refresh button -->
       <div class="p-2 border-t border-gray-200">
         <button
-          @click="
-            () => (filterType === 'trash' ? loadTrash() : loadTours(false))
-          "
+          @click="() => (filterType === 'trash' ? loadTrash() : loadTours(false))"
           :disabled="isLoading"
           class="w-full py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded transition flex items-center justify-center gap-1"
         >
-          <svg
-            class="w-3 h-3"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"

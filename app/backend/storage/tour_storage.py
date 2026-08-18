@@ -38,7 +38,7 @@ TOUR_NAMESPACE = uuid.UUID("550e8400-e29b-41d4-a716-446655440000")
 
 def _generate_tour_id(tour_type: str, slug: str) -> str:
     """Generate a stable, deterministic UUID for a tour based on tour_type and slug.
-    
+
     This ensures the same tour always gets the same ID, even across server restarts.
     Uses uuid5 (SHA-1 based) for stability.
     """
