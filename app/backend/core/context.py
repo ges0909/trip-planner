@@ -1,0 +1,172 @@
+import logging
+from datetime import datetime
+from pathlib import Path
+from typing import Literal
+
+from core.config import CONTEXT_DIR, PROJECT_ROOT, SKILLS_DIR
+
+logger = logging.getLogger(__name__)
+
+ROOT: Path = PROJECT_ROOT
+MAX_CONTEXT_FILE_CHARS = 6000
+
+# Tour type literal for type safety
+TourType = Literal["bike", "road", "general"]
+
+
+def _detect_tour_type(message: str) -> TourType:
+    """Detect tour type from user message. Returns 'bike', 'road', or 'general'."""
+    msg = message.lower()
+    bike_words = (
+        "radtour",
+        "fahrrad",
+        "bike",
+        "cycling",
+        "radweg",
+        "radfahren",
+        "e-bike",
+        "ebike",
+        "gravel",
+        "rennrad",
+        "bikepacking",
+    )
+    road_words = (
+        "roadtrip",
+        "road trip",
+        "road-trip",
+        "autoreise",
+        "autotour",
+        "mietwagen",
+        "rental car",
+        "driving",
+        "auto",
+        "rundreise",
+        "pkw",
+        "etappen",
+    )
+
+    if any(w in msg for w in bike_words):
+        return "bike"
+    if any(w in msg for w in road_words):
+        return "road"
+    return "general"
+
+
+def get_context_for_tour_type(tour_type: TourType) -> list[Path]:
+    """Get list of context file paths for a given tour type.
+
+    Args:
+        tour_type: One of "bike", "road", or "general".
+
+    Returns:
+        List of Path objects to context files that exist.
+    """
+    paths: list[Path] = []
+
+    # Always include universal travel preferences
+    candidates = [CONTEXT_DIR / "user-preferences.md"]
+
+    if tour_type in ("bike", "road"):
+        skill_dir = SKILLS_DIR / f"{tour_type}-planner"
+        candidates += [
+            CONTEXT_DIR / tour_type / f"{tour_type}-preferences.md",  # tour-type preferences
+            skill_dir / "SKILL.md",  # workflow + tool usage
+            skill_dir / "references" / "output-template.md",  # output format
+        ]
+    # "general" → only universal preferences, keep prompt small
+
+    for path in candidates:
+        if path.exists():
+            paths.append(path)
+
+    return paths
+
+
+def _select_files(user_message: str) -> list[Path]:
+    """Select context file paths based on detected tour type."""
+    detected = _detect_tour_type(user_message) if user_message else "general"
+    return get_context_for_tour_type(detected)
+
+
+def build_system_prompt(
+    tool_names: list[str],
+    language: str = "de",
+    user_message: str = "",
+) -> str:
+    """Assemble system prompt. Tool names come from MCP manager.
+
+    Args:
+        tool_names: List of available tool names from MCPManager.
+        language: Output language code ("de" or "en").
+        user_message: The user's input, used to detect tour type.
+
+    Returns:
+        Combined context content as a single string.
+    """
+    lang_name = "German" if language == "de" else "English"
+    tool_list_str = ", ".join(f"`{name}`" for name in tool_names)
+    today_str = datetime.now().strftime("%Y-%m-%d")
+
+    base_prompt = f"""You are a travel planning assistant. You help plan cycling tours, hikes, and road trips.
+Today's date is: {today_str}.
+
+## Critical Behavior Rules
+
+- Today's date is {today_str}. When adding verification dates (`ℹ️ Zuletzt geprüft: YYYY-MM-DD`), ALWAYS use today's date ({today_str}).
+- NEVER apologize for tool failures or mention technical problems to the user.
+- If a tool returns an error, use a different verified source when available. Otherwise clearly mark the affected information as unverified; never invent route, schedule, price, or opening-hour data.
+- NEVER describe your internal steps ("I will now...", "The search failed..."). Deliver the result directly.
+- If geocoding or route search fails, describe the missing verification and omit exact coordinates, distance, and duration.
+- Structure results clearly with Markdown.
+- CRITICAL: Your response MUST contain proper newlines between all Markdown elements (headings, table rows, list items, paragraphs). Each table row MUST be on its own line. Without newlines, the Markdown cannot be rendered correctly.
+- Respond ONLY in {lang_name}.
+- For cycling tours, ALWAYS calculate the route using `mcp_brouter_calculate_route` with `waypoints` as `[[lon, lat], ...]` to generate route geometry and GPX data.
+- Multimedia: You can enrich tour descriptions by including high-quality public POI images (`![POIName](https://...)`) or video embeds (e.g. `https://www.youtube.com/watch?v=VIDEO_ID`) for scenic highlights.
+## Tool Efficiency Rules — CRITICAL
+
+- ALWAYS batch multiple independent tool calls in a SINGLE response. For example, geocode ALL waypoints at once, not one per turn.
+- You have a HARD LIMIT of 25 tool-calling turns. Plan efficiently.
+- Use `mcp_tavily_web_search` SPARINGLY — max 2-3 searches total per request. Prefer your training knowledge for general travel info.
+- Do NOT search for hotels, restaurants, beaches, museums separately per city. Use ONE broad search or your own knowledge.
+- For a multi-stop road trip: geocode all stops → calculate all driving times → get 1-2 wikivoyage articles → produce the final answer. That's 4-5 turns, not 25.
+- NEVER call the same tool with the same arguments twice.
+
+## Available Tools
+{tool_list_str}
+
+## Template Selection
+
+Detect the tour type from the user input and use the matching template:
+- Cycling tour → "Bike Tour Output Template"
+- Road trip → "Roadtrip Output Template"
+- Hiking → Use a sensible Markdown structure (no dedicated template available)
+
+Follow the chosen template structure strictly.
+"""
+
+    # Load context files (no sanitization needed)
+    parts: list[str] = [base_prompt]
+    loaded_count = 0
+    for path in _select_files(user_message):
+        if path.exists():
+            content: str = path.read_text(encoding="utf-8")
+            # Strip YAML front matter
+            if content.startswith("---"):
+                end: int = content.find("---", 3)
+                if end != -1:
+                    content = content[end + 3 :].strip()
+            if len(content) > MAX_CONTEXT_FILE_CHARS:
+                content = (
+                    content[: MAX_CONTEXT_FILE_CHARS // 2]
+                    + "\n\n[Middle of context omitted to reduce request size.]\n\n"
+                    + content[-MAX_CONTEXT_FILE_CHARS // 2 :]
+                )
+            parts.append(content)
+            loaded_count += 1
+            logger.debug("Loaded context file: %s", path.name)
+        else:
+            logger.debug("Steering file not found: %s", path)
+
+    prompt = "\n\n---\n\n".join(parts)
+    logger.info("System prompt built: %d files loaded, %d chars total", loaded_count, len(prompt))
+    return prompt

@@ -1,0 +1,43 @@
+# List available frontend development commands.
+[private]
+default:
+    @just --list
+
+# Install npm dependencies.
+install:
+    npm install 2>&1 | (grep -v EBADENGINE || true)
+
+# Kill running Vite dev server.
+kill:
+    @pkill -f vite && echo "Vite stopped." || echo "Vite not running."
+
+# Start Vite dev server.
+dev *args:
+    npm run dev -- {{ args }}
+
+# Format frontend source files with Prettier.
+format:
+    npm run format
+
+# Check formatting and TypeScript types.
+lint:
+    npm run typecheck && npm run format:check
+
+# Run Vitest test suite (accepts vitest arguments, e.g. `just frontend test ChatInput`).
+test *args:
+    npm run test -- {{ args }}
+
+# Run full frontend checks (lint + test).
+check: lint test
+
+# Build production bundle.
+build:
+    npm run build
+
+# Run security audit for frontend packages.
+audit *args:
+    npm audit {{ args }} 2>&1 | (grep -v EBADENGINE || true)
+
+# Automatically fix security vulnerabilities in frontend packages.
+audit-fix *args:
+    npm audit fix {{ args }} 2>&1 | (grep -v EBADENGINE || true)

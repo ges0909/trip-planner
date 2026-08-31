@@ -1,0 +1,38 @@
+HOST := "127.0.0.1"
+PORT := "8000"
+
+# List available backend development commands.
+[private]
+default:
+    @just --list
+
+# Kill running uvicorn dev server.
+kill:
+    @pkill -f uvicorn && echo "uvicorn stopped." || echo "uvicorn not running."
+
+# Start FastAPI server with reload.
+dev *args:
+    uv run python -m uvicorn main:app --reload --host {{ HOST }} --port {{ PORT }} {{ args }}
+
+# Format backend source files with Ruff.
+format:
+    uv run ruff format .
+
+# Check Ruff linter and formatting.
+lint:
+    uv run ruff check . && uv run ruff format --check .
+
+# Run pytest test suite (accepts pytest arguments, e.g. `just backend test -k geo`).
+test *args:
+    uv run pytest tests/ -v {{ args }}
+
+# Run pytest with terminal coverage report.
+coverage *args:
+    uv run pytest --cov=app --cov=core --cov=storage --cov=i18n --cov-report=term-missing {{ args }}
+
+# Run pytest with HTML coverage report.
+coverage-html:
+    uv run pytest --cov=app --cov=core --cov=storage --cov=i18n --cov-report=html
+
+# Run full backend checks (lint + coverage).
+check: lint coverage

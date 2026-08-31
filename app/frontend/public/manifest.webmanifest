@@ -1,0 +1,26 @@
+{
+  "name": "Tour Pilot",
+  "short_name": "Tour Pilot",
+  "description": "Plan bike tours and road trips with AI assistance, route maps, and GPX export.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#272822",
+  "theme_color": "#272822",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["travel", "navigation", "sports"],
+  "lang": "de"
+}

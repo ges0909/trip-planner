@@ -1,0 +1,43 @@
+# Virtual environments
+.venv/
+
+# Python
+__pycache__/
+*.pyc
+
+# Environment variables (secrets)
+.env
+
+# Hypothesis test database
+.hypothesis/
+
+# Pytest cache & coverage
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Lokale KI-Tool-Verzeichnisse und Caches ignorieren
+.claude/
+.kiro/
+.cursor/
+.windsurf/
+.agents/
+
+# Ausnahmen für globale Konfigurationsdateien
+!.mcp.json
+!.vscode/settings.json
+
+# Single Source of Truth explizit einschließen
+!skills/
+!steering/
+!context/
+
+**/*.db
+**/*.sqlite
+**/*.sqlite3
+
+# Trashed tours
+.trash/
+trips/.trash/
+

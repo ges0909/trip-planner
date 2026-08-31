@@ -1,0 +1,70 @@
+{
+  "mcpServers": {
+    "gitlab": {
+      "type": "http",
+      "url": "https://gitlab.fra.syrocon.net/api/v4/mcp",
+      "disabled": true
+    },
+    "jira": {
+      "command": "uvx",
+      "args": ["mcp-atlassian"],
+      "env": {
+        "JIRA_URL": "https://vsti.atlassian.net",
+        "JIRA_USERNAME": "${JIRA_USERNAME}",
+        "JIRA_API_TOKEN": "${JIRA_API_TOKEN}"
+      },
+      "disabled": true
+    },
+    "sonarqube": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--init",
+        "--pull=always",
+        "-i",
+        "--rm",
+        "-e",
+        "SONARQUBE_TOKEN",
+        "-e",
+        "SONARQUBE_URL",
+        "sonarsource/sonarqube-mcp"
+      ],
+      "env": {
+        "SONARQUBE_TOKEN": "${SONAR_TOKEN}",
+        "SONARQUBE_URL": "https://sonarqube.fra.syrocon.net"
+      },
+      "disabled": true
+    },
+    "context7": {
+      "url": "https://mcp.context7.com/mcp"
+    },
+    "logfile": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/home/gerrit.schrader/projekte/electora/electora-image-storage/logs/"
+      ],
+      "disabled": true
+    },
+    "postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://imagestorage:imagestorage@localhost:5432/imagestorage"
+      ],
+      "disabled": true
+    },
+    "docker": {
+      "command": "npx",
+      "args": ["@rog0x/mcp-docker-tools"],
+      "disabled": true
+    },
+    "kubernetes": {
+      "command": "npx",
+      "args": ["mcp-server-kubernetes"],
+      "disabled": true
+    }
+  }
+}
