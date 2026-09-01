@@ -26,7 +26,35 @@ let currentBounds: L.LatLngBounds | null = null;
 const tileMode = ref<"standard" | "topo" | "dark">(props.isDark ? "dark" : "standard");
 const hoveredPoint = ref<{ dist: number; ele: number; x: number; svgY: number } | null>(null);
 
-function focusPoi(lat: number, lon: number, name?: string) {
+function fitRouteBounds() {
+  if (map && currentBounds) {
+    map.fitBounds(currentBounds, { padding: [30, 30] });
+  }
+}
+
+function getTileUrl(mode: "standard" | "topo" | "dark") {
+  if (mode === "dark") return "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+  if (mode === "topo") return "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png";
+  return "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+}
+
+function getAttribution(mode: "standard" | "topo" | "dark") {
+  if (mode === "dark") {
+    return '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
+  }
+  if (mode === "topo") {
+    return '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://opentopomap.org">OpenTopoMap</a>';
+  }
+  return '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+}
+
+function setTileMode(mode: "standard" | "topo" | "dark") {
+  tileMode.value = mode;
+  if (!tileLayer) return;
+  tileLayer.setUrl(getTileUrl(mode));
+}
+
+function focusCoordinate(lat: number, lon: number, name?: string) {
   if (!map) return;
   map.flyTo([lat, lon], 14, { duration: 1.2 });
   if (hoverMarker) {
@@ -39,10 +67,20 @@ function focusPoi(lat: number, lon: number, name?: string) {
     fillOpacity: 0.8,
     weight: 3,
   }).addTo(map);
+
   if (name) {
     hoverMarker.bindPopup(`<b>${name}</b>`).openPopup();
   }
+
+  setTimeout(() => {
+    if (map && hoverMarker) {
+      map.removeLayer(hoverMarker);
+      hoverMarker = null;
+    }
+  }, 4000);
 }
+
+const focusPoi = focusCoordinate;
 
 const weatherTimeline = computed(() => {
   if (props.elevation.length < 2) return [];
@@ -58,42 +96,12 @@ const weatherTimeline = computed(() => {
   });
 });
 
-function fitRouteBounds() {
-  if (map && currentBounds) {
-    map.fitBounds(currentBounds, { padding: [30, 30] });
-  }
-}
-
-function setTileMode(mode: "standard" | "topo" | "dark") {
-  tileMode.value = mode;
-  if (!tileLayer) return;
-  let url = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-  if (mode === "dark") {
-    url = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
-  } else if (mode === "topo") {
-    url = "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png";
-  }
-  tileLayer.setUrl(url);
-}
-
-function getTileUrl(dark = false) {
-  return dark
-    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-    : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-}
-
-function getAttribution(dark = false) {
-  return dark
-    ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-    : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
-}
-
 function initMap() {
   if (!mapContainer.value || map) return;
   map = L.map(mapContainer.value).setView([52.5, 13.4], 7);
 
-  tileLayer = L.tileLayer(getTileUrl(props.isDark), {
-    attribution: getAttribution(props.isDark),
+  tileLayer = L.tileLayer(getTileUrl(tileMode.value), {
+    attribution: getAttribution(tileMode.value),
     maxZoom: 18,
   }).addTo(map);
 
@@ -109,29 +117,7 @@ function initMap() {
 
 function updateTileLayer() {
   if (!map || !tileLayer) return;
-  tileLayer.setUrl(getTileUrl(props.isDark));
-}
-
-function focusCoordinate(lat: number, lon: number, name?: string) {
-  if (!map) return;
-  map.flyTo([lat, lon], 15, { duration: 1.2 });
-
-  // Highlight POI marker momentarily
-  const highlight = L.circleMarker([lat, lon], {
-    radius: 14,
-    fillColor: "#3b82f6",
-    color: "#ffffff",
-    weight: 3,
-    fillOpacity: 0.8,
-  }).addTo(map);
-
-  if (name) {
-    highlight.bindTooltip(name, { permanent: true, direction: "top" }).openTooltip();
-  }
-
-  setTimeout(() => {
-    map?.removeLayer(highlight);
-  }, 3500);
+  tileLayer.setUrl(getTileUrl(tileMode.value));
 }
 
 function handlePoiFocusEvent(e: Event) {

@@ -5,24 +5,18 @@ import {
   ChevronDown,
   ChevronRight,
   Columns,
-  Compass,
   FileText,
   Map,
-  Menu,
-  Moon,
   Save,
-  Search,
   Sparkles,
-  Sun,
   WifiOff,
   X,
 } from "@lucide/vue";
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { type Tour } from "./api";
+import AppHeader from "./components/AppHeader.vue";
 import ChatInput from "./components/ChatInput.vue";
 import CommandPalette from "./components/CommandPalette.vue";
-import LanguageSelector from "./components/LanguageSelector.vue";
-import SessionHistory from "./components/SessionHistory.vue";
 import TourContent from "./components/TourContent.vue";
 import TourLibrary from "./components/TourLibrary.vue";
 import TourMap from "./components/TourMap.vue";
@@ -54,11 +48,40 @@ const {
 
 const { toasts, removeToast } = useToast();
 
-const viewMode = ref<"split" | "content" | "map">("split");
 const tourMapRef = ref<InstanceType<typeof TourMap> | null>(null);
 
 function handleFocusPoi(poi: { lat: number; lon: number; name: string }) {
   tourMapRef.value?.focusPoi(poi.lat, poi.lon, poi.name);
+}
+
+const isMapVisible = ref(true);
+const splitRatio = ref(50);
+const isDraggingSplitter = ref(false);
+const splitContainerRef = ref<HTMLElement | null>(null);
+
+function startDragging(e: MouseEvent | TouchEvent) {
+  isDraggingSplitter.value = true;
+  window.addEventListener("mousemove", onDragging);
+  window.addEventListener("mouseup", stopDragging);
+  window.addEventListener("touchmove", onDragging);
+  window.addEventListener("touchend", stopDragging);
+}
+
+function onDragging(e: MouseEvent | TouchEvent) {
+  if (!isDraggingSplitter.value || !splitContainerRef.value) return;
+  const rect = splitContainerRef.value.getBoundingClientRect();
+  const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+  const offsetX = clientX - rect.left;
+  const percentage = (offsetX / rect.width) * 100;
+  splitRatio.value = Math.min(80, Math.max(20, percentage));
+}
+
+function stopDragging() {
+  isDraggingSplitter.value = false;
+  window.removeEventListener("mousemove", onDragging);
+  window.removeEventListener("mouseup", stopDragging);
+  window.removeEventListener("touchmove", onDragging);
+  window.removeEventListener("touchend", stopDragging);
 }
 
 // ── UI state ────────────────────────────────────────────────────────────────
@@ -171,16 +194,38 @@ async function initializeSession() {
   sessionId.value = appSessionId.value;
 }
 
+function resetSplitRatio() {
+  splitRatio.value = 50;
+  localStorage.setItem("tourpilot_split_ratio", "50");
+}
+
+function handleGlobalKeydown(e: KeyboardEvent) {
+  const target = e.target as HTMLElement | null;
+  const isInput =
+    target &&
+    (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
+  if (isInput) return;
+
+  if (e.key === "m" || e.key === "M") {
+    if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault();
+      isMapVisible.value = !isMapVisible.value;
+    }
+  }
+}
+
 onMounted(() => {
   updateDarkClass();
   initializeSession();
   window.addEventListener("online", handleOnline);
   window.addEventListener("offline", handleOffline);
+  window.addEventListener("keydown", handleGlobalKeydown);
 });
 
 onUnmounted(() => {
   window.removeEventListener("online", handleOnline);
   window.removeEventListener("offline", handleOffline);
+  window.removeEventListener("keydown", handleGlobalKeydown);
 });
 
 // ── Event handlers ───────────────────────────────────────────────────────────
@@ -293,89 +338,26 @@ function handleSessionsCleared() {
         aria-label="Verbindung wiederhergestellt"
       />
 
-      <!-- Fixed Header + Chat Input (Glassmorphic) -->
+      <AppHeader
+        :language="language"
+        :is-dark="isDark"
+        :is-loading="isLoading"
+        :active-session-id="sessionId"
+        :has-map-data="hasMapData"
+        :is-map-visible="isMapVisible"
+        @reset-session="resetSessionState"
+        @open-search="isCommandPaletteOpen = true"
+        @update:language="setLanguage"
+        @toggle-theme="toggleTheme"
+        @toggle-map="isMapVisible = !isMapVisible"
+        @select-session="handleSelectSession"
+        @sessions-cleared="handleSessionsCleared"
+      />
+
       <div
         class="shrink-0 bg-monokai-light-card/90 dark:bg-monokai-panel/90 backdrop-blur-md border-b border-monokai-light-border dark:border-monokai-border z-10 shadow-xs"
       >
         <div class="max-w-7xl mx-auto px-4 py-3">
-          <!-- Header -->
-          <header class="mb-3 flex items-center justify-between gap-2">
-            <div class="flex items-center gap-2">
-              <!-- #7 Mobile sidebar toggle -->
-              <button
-                type="button"
-                class="sm:hidden inline-flex h-9 w-9 items-center justify-center rounded-xl border border-monokai-light-border dark:border-monokai-border bg-monokai-light-card dark:bg-monokai-card text-monokai-light-fg dark:text-monokai-fg transition shadow-xs"
-                :aria-label="language === 'de' ? 'Bibliothek öffnen' : 'Open library'"
-                @click="isMobileSidebarOpen = !isMobileSidebarOpen"
-              >
-                <Menu :size="17" aria-hidden="true" />
-              </button>
-
-              <button
-                type="button"
-                class="flex items-center gap-3 text-left group cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 rounded-lg"
-                title="Zur Startseite"
-                aria-label="Zur Startseite"
-                @click="resetSessionState"
-              >
-                <div
-                  class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-xs group-hover:scale-105 transition-transform"
-                >
-                  <Compass :size="22" aria-hidden="true" />
-                </div>
-                <div>
-                  <h1
-                    class="text-xl font-bold text-monokai-light-fg dark:text-monokai-fg tracking-tight group-hover:text-blue-600 dark:group-hover:text-monokai-cyan transition"
-                  >
-                    Tour Pilot
-                  </h1>
-                  <p
-                    class="text-xs text-monokai-light-muted dark:text-monokai-muted hidden sm:block"
-                  >
-                    {{ t("subtitle", language) }}
-                  </p>
-                </div>
-              </button>
-            </div>
-
-            <div class="flex items-center gap-2">
-              <button
-                type="button"
-                class="hidden sm:inline-flex items-center gap-2 h-9 px-3 text-xs font-medium rounded-xl border border-monokai-light-border dark:border-monokai-border bg-monokai-light-card dark:bg-monokai-card text-monokai-light-muted dark:text-monokai-muted hover:text-monokai-light-fg dark:hover:text-monokai-fg hover:bg-monokai-light-panel dark:hover:bg-monokai-border/50 transition cursor-pointer shadow-xs"
-                title="Schnellsuche (Strg+K)"
-                @click="isCommandPaletteOpen = true"
-              >
-                <Search :size="14" aria-hidden="true" />
-                <span>{{ language === "de" ? "Suchen..." : "Search..." }}</span>
-                <kbd
-                  class="px-1.5 py-0.5 text-[10px] font-mono rounded-md bg-monokai-light-panel dark:bg-monokai-panel border border-monokai-light-border dark:border-monokai-border"
-                >
-                  ⌘K
-                </kbd>
-              </button>
-              <SessionHistory
-                :language="language"
-                :is-loading="isLoading"
-                :active-session-id="sessionId"
-                @select="handleSelectSession"
-                @deleted="handleSessionDeleted"
-                @cleared="handleSessionsCleared"
-              />
-              <!-- #11 Language selector persists choice -->
-              <LanguageSelector :model-value="language" @update:model-value="setLanguage" />
-              <button
-                type="button"
-                class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-monokai-light-border dark:border-monokai-border bg-monokai-light-card dark:bg-monokai-card text-monokai-light-fg dark:text-monokai-yellow hover:bg-monokai-light-panel dark:hover:bg-monokai-border/50 transition cursor-pointer shadow-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
-                :title="isDark ? 'Light Mode' : 'Dark Mode'"
-                :aria-label="isDark ? 'Light Mode' : 'Dark Mode'"
-                @click="toggleTheme"
-              >
-                <Sun v-if="isDark" :size="17" aria-hidden="true" />
-                <Moon v-else :size="17" aria-hidden="true" />
-              </button>
-            </div>
-          </header>
-
           <!-- Chat Input -->
           <ChatInput
             ref="chatInputRef"
@@ -385,12 +367,16 @@ function handleSessionsCleared() {
             @cancel="cancelRequest"
           />
 
-          <!-- Activity Feed -->
+          <!-- Activity Feed with Expand/Collapse Toggle -->
           <div
             v-if="activityEvents.length > 0"
-            class="mt-3 px-3.5 py-2 bg-blue-50/80 dark:bg-monokai-card/90 border border-blue-100 dark:border-monokai-border rounded-xl"
+            class="mt-3 bg-blue-50/80 dark:bg-monokai-card/90 border border-blue-100 dark:border-monokai-border rounded-xl overflow-hidden transition-all shadow-xs"
           >
-            <div class="flex items-center justify-between">
+            <button
+              type="button"
+              class="w-full px-3.5 py-2.5 flex items-center justify-between gap-3 text-left hover:bg-blue-100/50 dark:hover:bg-monokai-panel/50 transition cursor-pointer"
+              @click="activityFeedExpanded = !activityFeedExpanded"
+            >
               <div class="flex items-center gap-2">
                 <span class="flex h-2 w-2 relative">
                   <span
@@ -399,58 +385,66 @@ function handleSessionsCleared() {
                   ></span>
                   <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
                 </span>
-                <p class="text-xs font-semibold text-blue-900 dark:text-monokai-yellow">
-                  {{ t("activityFeedTitle", language, { count: activityEvents.length }) }}
-                </p>
+                <span class="text-xs font-semibold text-blue-900 dark:text-monokai-fg">
+                  {{
+                    isLoading
+                      ? language === "de"
+                        ? "KI erstellt deine Route..."
+                        : "AI is crafting your tour..."
+                      : language === "de"
+                        ? `Aktivitätsverlauf (${activityEvents.length})`
+                        : `Activity History (${activityEvents.length})`
+                  }}
+                </span>
               </div>
-              <button
-                :aria-expanded="activityFeedExpanded"
-                :aria-label="
-                  t(activityFeedExpanded ? 'collapseActivityFeed' : 'expandActivityFeed', language)
-                "
-                :title="
-                  t(activityFeedExpanded ? 'collapseActivityFeed' : 'expandActivityFeed', language)
-                "
-                class="flex h-6 w-6 items-center justify-center rounded-lg border border-blue-200/60 dark:border-monokai-border bg-white dark:bg-monokai-panel text-blue-700 dark:text-monokai-cyan transition hover:bg-blue-100 dark:hover:bg-monokai-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
-                @click="activityFeedExpanded = !activityFeedExpanded"
-              >
-                <ChevronDown
-                  aria-hidden="true"
-                  :size="14"
-                  :class="{ 'rotate-180': activityFeedExpanded }"
+
+              <div class="flex items-center gap-2">
+                <span
+                  v-if="isLoading"
+                  class="text-[11px] text-blue-600 dark:text-monokai-yellow animate-pulse font-medium"
+                >
+                  {{ language === "de" ? "Wird verarbeitet..." : "Processing..." }}
+                </span>
+                <component
+                  :is="activityFeedExpanded ? ChevronDown : ChevronRight"
+                  :size="15"
+                  class="text-blue-500 dark:text-monokai-muted"
                 />
-              </button>
-            </div>
-            <!-- #2 aria-live so screen readers announce streaming progress -->
+              </div>
+            </button>
+
+            <!-- Expanded Event Stream List -->
             <div
-              v-if="activityFeedExpanded"
-              aria-live="polite"
-              aria-atomic="false"
-              class="mt-1.5 space-y-1"
+              v-show="activityFeedExpanded"
+              class="px-3.5 pb-3 pt-1 border-t border-blue-100/60 dark:border-monokai-border space-y-1.5 max-h-64 overflow-y-auto scrollbar-thin"
             >
               <p
                 v-for="(event, index) in activityEvents"
                 :key="index"
-                class="text-xs text-blue-800 dark:text-monokai-cyan font-mono truncate flex items-center gap-1.5"
+                class="text-xs text-blue-800 dark:text-monokai-cyan font-mono flex items-start gap-2"
               >
-                <span class="inline-block w-1 h-1 rounded-full bg-monokai-yellow"></span>
-                <template v-if="event.type === 'model'">
-                  {{
-                    t("modelCall", language, {
-                      iteration: event.iteration,
-                      modelId: event.modelId,
-                    })
-                  }}
-                </template>
-                <template v-else-if="event.type === 'tool'">
-                  {{ t("toolCall", language, { name: event.name }) }}
-                </template>
-                <template v-else>{{ event.message }}</template>
+                <span
+                  class="inline-block w-1.5 h-1.5 rounded-full bg-monokai-yellow shrink-0 mt-1.5"
+                ></span>
+                <span class="break-words">
+                  <template v-if="event.type === 'model'">
+                    {{
+                      t("modelCall", language, {
+                        iteration: event.iteration,
+                        modelId: event.modelId,
+                      })
+                    }}
+                  </template>
+                  <template v-else-if="event.type === 'tool'">
+                    {{ t("toolCall", language, { name: event.name }) }}
+                  </template>
+                  <template v-else>{{ event.message }}</template>
+                </span>
               </p>
             </div>
           </div>
 
-          <!-- #2 Error Display — role="alert" for immediate screen reader announcement -->
+          <!-- Error Display -->
           <div
             v-if="errorMessage"
             role="alert"
@@ -484,87 +478,17 @@ function handleSessionsCleared() {
           <Transition name="fade" mode="out-in">
             <!-- Tour Result + Map -->
             <div v-if="tourMarkdown || hasMapData">
-              <!-- View Mode Controls (Desktop) -->
-              <div v-if="hasMapData" class="mb-4 flex items-center justify-between gap-3">
-                <div
-                  class="flex items-center gap-1.5 p-1 bg-white dark:bg-monokai-card border border-monokai-light-border dark:border-monokai-border rounded-xl shadow-xs text-xs"
-                >
-                  <button
-                    type="button"
-                    class="px-3 py-1.5 rounded-lg font-medium transition cursor-pointer flex items-center gap-1.5"
-                    :class="
-                      viewMode === 'split'
-                        ? 'bg-blue-600 text-white shadow-xs'
-                        : 'text-monokai-light-fg dark:text-monokai-fg hover:bg-slate-100 dark:hover:bg-monokai-border/40'
-                    "
-                    @click="viewMode = 'split'"
-                  >
-                    <Columns :size="14" />
-                    <span>Split View</span>
-                  </button>
-                  <button
-                    type="button"
-                    class="px-3 py-1.5 rounded-lg font-medium transition cursor-pointer flex items-center gap-1.5"
-                    :class="
-                      viewMode === 'content'
-                        ? 'bg-blue-600 text-white shadow-xs'
-                        : 'text-monokai-light-fg dark:text-monokai-fg hover:bg-slate-100 dark:hover:bg-monokai-border/40'
-                    "
-                    @click="viewMode = 'content'"
-                  >
-                    <FileText :size="14" />
-                    <span>Nur Tour</span>
-                  </button>
-                  <button
-                    type="button"
-                    class="px-3 py-1.5 rounded-lg font-medium transition cursor-pointer flex items-center gap-1.5"
-                    :class="
-                      viewMode === 'map'
-                        ? 'bg-blue-600 text-white shadow-xs'
-                        : 'text-monokai-light-fg dark:text-monokai-fg hover:bg-slate-100 dark:hover:bg-monokai-border/40'
-                    "
-                    @click="viewMode = 'map'"
-                  >
-                    <Map :size="14" />
-                    <span>Nur Karte</span>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Content + Map Layout Grid -->
+              <!-- Content + Map Resizable Layout -->
               <div
-                :class="[
-                  'gap-6',
-                  viewMode === 'split' ? 'grid grid-cols-1 lg:grid-cols-2' : '',
-                  viewMode === 'map' ? 'block' : '',
-                  viewMode === 'content' ? 'block' : '',
-                ]"
+                ref="splitContainerRef"
+                class="flex flex-col lg:flex-row gap-4 items-stretch select-none"
               >
-                <!-- Map Panel -->
-                <div
-                  v-if="hasMapData && (viewMode === 'split' || viewMode === 'map')"
-                  :class="[
-                    'rounded-2xl overflow-hidden shadow-md border border-slate-200/80 dark:border-monokai-border mb-6 lg:mb-0',
-                    viewMode === 'map'
-                      ? 'h-[650px]'
-                      : 'h-[500px] lg:h-[calc(100vh-280px)] lg:sticky lg:top-4',
-                  ]"
-                >
-                  <TourMap
-                    ref="tourMapRef"
-                    :waypoints="mapData.waypoints"
-                    :routes="mapData.routes"
-                    :pois="mapData.pois"
-                    :elevation="mapData.elevation"
-                    :is-dark="isDark"
-                  />
-                </div>
-
                 <!-- Markdown Content Panel -->
                 <div
-                  v-if="tourMarkdown && (viewMode === 'split' || viewMode === 'content')"
-                  :class="
-                    viewMode === 'split' ? 'lg:max-h-[calc(100vh-280px)] lg:overflow-y-auto' : ''
+                  v-if="tourMarkdown"
+                  class="flex-1 min-w-0 h-[600px] lg:h-[calc(100vh-260px)]"
+                  :style="
+                    isMapVisible && hasMapData ? { flex: `0 0 ${splitRatio}%` } : { width: '100%' }
                   "
                 >
                   <TourContent
@@ -601,75 +525,53 @@ function handleSessionsCleared() {
                     </template>
                   </TourContent>
                 </div>
-              </div>
-            </div>
 
-            <!-- Welcome Hero Cards (Empty State) -->
-            <div v-else-if="!isLoading" class="py-10 px-4 max-w-4xl mx-auto text-center">
-              <div
-                class="inline-flex items-center justify-center p-3.5 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-monokai-card dark:to-monokai-panel text-blue-600 dark:text-monokai-yellow rounded-2xl mb-4 shadow-xs border border-blue-100 dark:border-monokai-border"
-              >
-                <Sparkles :size="28" aria-hidden="true" />
-              </div>
-              <h2
-                class="text-2xl font-bold text-slate-800 dark:text-monokai-fg sm:text-3xl tracking-tight"
-              >
-                {{
-                  language === "de"
-                    ? "Wohin führt dein nächstes Abenteuer?"
-                    : "Where is your next adventure?"
-                }}
-              </h2>
-              <p class="mt-2 text-slate-500 dark:text-monokai-muted text-sm max-w-lg mx-auto">
-                {{
-                  language === "de"
-                    ? "Erstelle maßgeschneiderte Radtouren und Roadtrips mit KI-Unterstützung, Routenkarten und GPX-Export."
-                    : "Create tailored bike tours and road trips with AI assistance, route maps, and GPX export."
-                }}
-              </p>
-
-              <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
-                <button
-                  v-for="suggestion in promptSuggestions"
-                  :key="suggestion.title"
-                  type="button"
-                  class="group p-4 bg-white dark:bg-monokai-card border border-monokai-light-border dark:border-monokai-border rounded-2xl hover:border-blue-500 dark:hover:border-monokai-yellow hover:shadow-md transition-all text-left flex flex-col justify-between focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
-                  @click="handleSend(suggestion.prompt)"
+                <!-- Draggable Splitter Divider Bar (Desktop) -->
+                <div
+                  v-if="isMapVisible && hasMapData && tourMarkdown"
+                  class="hidden lg:flex w-2 shrink-0 cursor-col-resize items-center justify-center rounded-full bg-monokai-light-border/60 dark:bg-monokai-border/60 hover:bg-blue-500 dark:hover:bg-monokai-yellow transition-colors group select-none py-12"
+                  :title="
+                    language === 'de'
+                      ? 'Gedrückt halten zum Verschieben, Doppelklick für 50:50'
+                      : 'Hold to drag, double click for 50:50'
+                  "
+                  @mousedown="startDragging"
+                  @touchstart.passive="startDragging"
+                  @dblclick="resetSplitRatio"
                 >
-                  <div>
-                    <div class="flex items-center justify-between">
-                      <span class="text-2xl">{{ suggestion.emoji }}</span>
-                      <span
-                        class="text-xs font-semibold px-2 py-0.5 rounded-full"
-                        :class="suggestion.badgeClass"
-                      >
-                        {{ suggestion.tag }}
-                      </span>
-                    </div>
-                    <h3
-                      class="mt-3 font-semibold text-slate-800 dark:text-monokai-fg text-sm group-hover:text-blue-600 dark:group-hover:text-monokai-cyan transition"
-                    >
-                      {{ suggestion.title }}
-                    </h3>
-                    <p class="mt-1 text-xs text-slate-500 dark:text-monokai-muted line-clamp-2">
-                      {{ suggestion.prompt }}
-                    </p>
-                  </div>
                   <div
-                    class="mt-4 flex items-center text-xs font-semibold text-blue-600 dark:text-monokai-cyan opacity-0 group-hover:opacity-100 transition"
-                  >
-                    <span>{{ language === "de" ? "Tour planen" : "Plan tour" }}</span>
-                    <ChevronRight :size="14" class="ml-1" />
-                  </div>
-                </button>
+                    class="w-1 h-8 rounded-full bg-slate-400 dark:bg-monokai-muted group-hover:bg-white transition-colors"
+                  />
+                </div>
+
+                <!-- Map Panel -->
+                <div
+                  v-if="hasMapData && isMapVisible"
+                  class="flex-1 min-w-0 rounded-2xl overflow-hidden shadow-md border border-slate-200/80 dark:border-monokai-border h-[500px] lg:h-[calc(100vh-260px)] lg:sticky lg:top-4"
+                >
+                  <TourMap
+                    ref="tourMapRef"
+                    :waypoints="mapData.waypoints"
+                    :routes="mapData.routes"
+                    :pois="mapData.pois"
+                    :elevation="mapData.elevation"
+                    :is-dark="isDark"
+                  />
+                </div>
               </div>
             </div>
+            <Welcome
+              v-else
+              :language="language"
+              :is-loading="isLoading"
+              @select-prompt="handleSend"
+            />
           </Transition>
         </div>
       </div>
     </div>
 
-    <!-- #9 Toast Notification Overlay (Bottom Right) — click to dismiss -->
+    <!-- Toast Notification Overlay (Bottom Right) — click to dismiss -->
     <div
       v-if="toasts.length > 0"
       class="fixed bottom-6 right-6 z-50 flex flex-col gap-2.5 pointer-events-none"

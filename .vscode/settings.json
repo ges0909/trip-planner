@@ -2,5 +2,8 @@
   "python.defaultInterpreterPath": "${workspaceFolder}/app/backend/.venv/bin/python",
   "evenBetterToml.schema.associations": {
     "^.*/pyproject\\.toml$": "https://json.schemastore.org/pyproject.json"
-  }
+  },
+  "python.testing.pytestArgs": ["app"],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true
 }

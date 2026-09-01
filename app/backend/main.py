@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 import logfire
-from app.routes import chat, health, sessions, tours, trash
+from app.api.v1.router import api_v1_router
 from core.config import FRONTEND_DIST, PROJECT_ROOT
 from core.mcp_manager import MCPManager, build_server_configs
 from dotenv import load_dotenv
@@ -79,12 +79,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Register routers
-app.include_router(chat.router)
-app.include_router(sessions.router)
-app.include_router(tours.router)
-app.include_router(trash.router)
-app.include_router(health.router)
+# Register API v1 router
+app.include_router(api_v1_router)
 
 # Serve frontend static files (production)
 if FRONTEND_DIST.exists():

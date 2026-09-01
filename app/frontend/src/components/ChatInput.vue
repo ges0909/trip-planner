@@ -35,7 +35,7 @@ defineExpose({ clear });
           :disabled="isLoading"
           :placeholder="t('placeholder', props.language)"
           rows="2"
-          class="w-full px-4 py-3 pr-24 border-0 rounded-2xl focus:outline-none bg-transparent disabled:opacity-50 resize-none text-base text-monokai-light-fg dark:text-monokai-fg placeholder-monokai-light-muted dark:placeholder-monokai-muted"
+          class="w-full px-4 py-3 pr-24 border-0 rounded-2xl focus:outline-none bg-transparent disabled:opacity-50 resize-none text-sm text-monokai-light-fg dark:text-monokai-fg placeholder:text-xs placeholder:text-monokai-light-muted/70 dark:placeholder:text-monokai-muted/60 placeholder:leading-relaxed"
           @keydown.enter.exact.prevent="handleSubmit"
         />
         <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">

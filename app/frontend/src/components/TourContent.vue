@@ -180,18 +180,18 @@ const filename = computed(() => {
 
 <template>
   <div
-    class="bg-white dark:bg-monokai-card text-monokai-lightFg dark:text-monokai-fg rounded-2xl shadow-xs border border-monokai-lightBorder dark:border-monokai-border p-6 sm:p-8 overflow-y-auto h-full"
+    class="bg-white dark:bg-monokai-card text-monokai-light-fg dark:text-monokai-fg rounded-2xl shadow-xs border border-monokai-light-border dark:border-monokai-border flex flex-col h-full overflow-hidden"
   >
-    <!-- Header Bar: Hero Metric Cards (left) + Actions (right) -->
+    <!-- Fixed Header Bar: Hero Metric Cards (left) + Actions (right) -->
     <div
       v-if="
         (metrics && (metrics.distance_km || metrics.elevation_gain_m || metrics.duration_hours)) ||
         weatherInfo ||
         $slots.actions
       "
-      class="mb-6 flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-monokai-lightBorder/60 dark:border-monokai-border"
+      class="shrink-0 p-4 sm:p-5 border-b border-monokai-light-border/60 dark:border-monokai-border bg-white/95 dark:bg-monokai-card/95 backdrop-blur-md z-10 flex flex-wrap items-center justify-between gap-3"
     >
-      <div class="flex flex-wrap items-center gap-3">
+      <div class="flex flex-wrap items-center gap-2.5">
         <div
           v-if="metrics?.distance_km"
           class="inline-flex items-center gap-2 px-3.5 py-1.5 bg-blue-50/70 dark:bg-monokai-panel border border-blue-100 dark:border-monokai-border text-blue-800 dark:text-monokai-cyan rounded-xl text-xs font-semibold"
@@ -252,107 +252,110 @@ const filename = computed(() => {
       </div>
     </div>
 
-    <div
-      class="prose prose-slate dark:prose-invert max-w-none leading-relaxed prose-headings:font-bold prose-headings:tracking-tight prose-a:text-blue-600 dark:prose-a:text-monokai-cyan hover:prose-a:underline"
-      v-html="renderedHtml"
-      @click="handleContentClick"
-      @error.capture="handleImageError"
-    ></div>
-
-    <!-- Unified Export & Share Dropdown -->
-    <div
-      class="mt-8 pt-5 border-t border-monokai-light-border/60 dark:border-monokai-border flex items-center justify-between gap-3 relative"
-    >
+    <!-- Scrollable Markdown Content Area -->
+    <div class="flex-1 overflow-y-auto p-6 sm:p-8">
       <div
-        class="text-xs text-monokai-light-muted dark:text-monokai-muted flex items-center gap-1.5"
+        class="prose prose-slate dark:prose-invert max-w-none leading-relaxed prose-headings:font-bold prose-headings:tracking-tight prose-a:text-blue-600 dark:prose-a:text-monokai-cyan hover:prose-a:underline"
+        v-html="renderedHtml"
+        @click="handleContentClick"
+        @error.capture="handleImageError"
+      ></div>
+
+      <!-- Unified Export & Share Dropdown -->
+      <div
+        class="mt-8 pt-5 border-t border-monokai-light-border/60 dark:border-monokai-border flex items-center justify-between gap-3 relative"
       >
-        <Share2 :size="14" aria-hidden="true" />
-        <span>Exportieren & Teilen</span>
-      </div>
-
-      <div class="relative">
-        <button
-          type="button"
-          class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-monokai-light-fg dark:text-monokai-fg bg-blue-50/80 dark:bg-monokai-panel hover:bg-blue-100 dark:hover:bg-monokai-border border border-blue-200 dark:border-monokai-border rounded-xl transition shadow-xs cursor-pointer"
-          @click="isExportOpen = !isExportOpen"
-        >
-          <Download :size="15" class="text-blue-600 dark:text-monokai-cyan" aria-hidden="true" />
-          <span>Export ▾</span>
-        </button>
-
         <div
-          v-if="isExportOpen"
-          class="absolute right-0 bottom-full mb-2 z-30 w-56 overflow-hidden rounded-xl border border-monokai-light-border dark:border-monokai-border bg-monokai-light-panel dark:bg-monokai-panel shadow-xl py-1 text-monokai-light-fg dark:text-monokai-fg text-xs"
+          class="text-xs text-monokai-light-muted dark:text-monokai-muted flex items-center gap-1.5"
         >
-          <a
-            v-if="gpx"
-            :href="'data:application/gpx+xml;charset=utf-8,' + encodeURIComponent(gpx)"
-            :download="filename + '.gpx'"
-            class="flex items-center gap-2.5 px-3.5 py-2.5 hover:bg-monokai-light-card dark:hover:bg-monokai-card transition font-medium text-blue-600 dark:text-monokai-cyan"
-            @click="
-              handleGpxDownload();
-              isExportOpen = false;
-            "
-          >
-            <Map :size="15" aria-hidden="true" />
-            <span>GPX Track herunterladen</span>
-          </a>
+          <Share2 :size="14" aria-hidden="true" />
+          <span>Exportieren & Teilen</span>
+        </div>
 
+        <div class="relative">
           <button
             type="button"
-            class="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left hover:bg-monokai-light-card dark:hover:bg-monokai-card transition font-medium"
-            @click="
-              copyMarkdown();
-              isExportOpen = false;
-            "
+            class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-monokai-light-fg dark:text-monokai-fg bg-blue-50/80 dark:bg-monokai-panel hover:bg-blue-100 dark:hover:bg-monokai-border border border-blue-200 dark:border-monokai-border rounded-xl transition shadow-xs cursor-pointer"
+            @click="isExportOpen = !isExportOpen"
           >
-            <Check
-              v-if="isCopied"
-              :size="15"
-              class="text-emerald-600 dark:text-monokai-green"
-              aria-hidden="true"
-            />
-            <Copy
-              v-else
-              :size="15"
-              class="text-purple-600 dark:text-monokai-purple"
-              aria-hidden="true"
-            />
-            <span>{{ isCopied ? "Markdown Kopiert!" : "Markdown Kopieren" }}</span>
+            <Download :size="15" class="text-blue-600 dark:text-monokai-cyan" aria-hidden="true" />
+            <span>Export ▾</span>
           </button>
 
-          <a
-            :href="'data:text/markdown;charset=utf-8,' + encodeURIComponent(markdown)"
-            :download="filename + '.md'"
-            class="flex items-center gap-2.5 px-3.5 py-2.5 hover:bg-monokai-light-card dark:hover:bg-monokai-card transition font-medium"
-            @click="
-              handleMdDownload();
-              isExportOpen = false;
-            "
+          <div
+            v-if="isExportOpen"
+            class="absolute right-0 bottom-full mb-2 z-30 w-56 overflow-hidden rounded-xl border border-monokai-light-border dark:border-monokai-border bg-monokai-light-panel dark:bg-monokai-panel shadow-xl py-1 text-monokai-light-fg dark:text-monokai-fg text-xs"
           >
-            <FileText
-              :size="15"
-              class="text-emerald-600 dark:text-monokai-green"
-              aria-hidden="true"
-            />
-            <span>Markdown Datei (.md)</span>
-          </a>
+            <a
+              v-if="gpx"
+              :href="'data:application/gpx+xml;charset=utf-8,' + encodeURIComponent(gpx)"
+              :download="filename + '.gpx'"
+              class="flex items-center gap-2.5 px-3.5 py-2.5 hover:bg-monokai-light-card dark:hover:bg-monokai-card transition font-medium text-blue-600 dark:text-monokai-cyan"
+              @click="
+                handleGpxDownload();
+                isExportOpen = false;
+              "
+            >
+              <Map :size="15" aria-hidden="true" />
+              <span>GPX Track herunterladen</span>
+            </a>
 
-          <button
-            type="button"
-            class="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left hover:bg-monokai-light-card dark:hover:bg-monokai-card transition font-medium"
-            @click="
-              printTour();
-              isExportOpen = false;
-            "
-          >
-            <Printer
-              :size="15"
-              class="text-amber-600 dark:text-monokai-yellow"
-              aria-hidden="true"
-            />
-            <span>Drucken / Als PDF</span>
-          </button>
+            <button
+              type="button"
+              class="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left hover:bg-monokai-light-card dark:hover:bg-monokai-card transition font-medium"
+              @click="
+                copyMarkdown();
+                isExportOpen = false;
+              "
+            >
+              <Check
+                v-if="isCopied"
+                :size="15"
+                class="text-emerald-600 dark:text-monokai-green"
+                aria-hidden="true"
+              />
+              <Copy
+                v-else
+                :size="15"
+                class="text-purple-600 dark:text-monokai-purple"
+                aria-hidden="true"
+              />
+              <span>{{ isCopied ? "Markdown Kopiert!" : "Markdown Kopieren" }}</span>
+            </button>
+
+            <a
+              :href="'data:text/markdown;charset=utf-8,' + encodeURIComponent(markdown)"
+              :download="filename + '.md'"
+              class="flex items-center gap-2.5 px-3.5 py-2.5 hover:bg-monokai-light-card dark:hover:bg-monokai-card transition font-medium"
+              @click="
+                handleMdDownload();
+                isExportOpen = false;
+              "
+            >
+              <FileText
+                :size="15"
+                class="text-emerald-600 dark:text-monokai-green"
+                aria-hidden="true"
+              />
+              <span>Markdown Datei (.md)</span>
+            </a>
+
+            <button
+              type="button"
+              class="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left hover:bg-monokai-light-card dark:hover:bg-monokai-card transition font-medium"
+              @click="
+                printTour();
+                isExportOpen = false;
+              "
+            >
+              <Printer
+                :size="15"
+                class="text-amber-600 dark:text-monokai-yellow"
+                aria-hidden="true"
+              />
+              <span>Drucken / Als PDF</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
