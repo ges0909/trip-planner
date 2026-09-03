@@ -64,6 +64,7 @@ const messages = {
     de: "Möchtest du alle gespeicherten Chats wirklich unwiderruflich löschen?",
     en: "Do you really want to permanently delete all saved chats?",
   },
+  trash: { de: "Papierkorb", en: "Trash" },
   trashEmpty: { de: "Papierkorb ist leer", en: "Trash is empty" },
   deletedOn: { de: "Gelöscht: {date}", en: "Deleted: {date}" },
   restore: { de: "Wiederherstellen", en: "Restore" },

@@ -1,16 +1,10 @@
 <script setup lang="ts">
-import { AlertTriangle, Bike, Car, ChevronLeft, RefreshCw, Trash2 } from "@lucide/vue";
-import { computed, nextTick, onMounted, ref, watch } from "vue";
-import {
-  deleteFromTrash,
-  deleteTour,
-  fetchTours,
-  fetchTrash,
-  restoreFromTrash,
-  type Tour,
-  type TrashItem,
-} from "../api";
+import { Bike, Car, ChevronLeft, RefreshCw, Trash2 } from "@lucide/vue";
+import { computed, onMounted, ref, watch } from "vue";
+import type { Tour, TrashItem } from "../api";
+import { useTourLibrary } from "../composables/useTourLibrary";
 import { t, type Lang } from "../i18n";
+import ConfirmDialog from "./ConfirmDialog.vue";
 
 const props = defineProps<{
   language: Lang;
@@ -26,11 +20,22 @@ const emit = defineEmits<{
   (e: "update:isCollapsed", val: boolean): void;
 }>();
 
-const tours = ref<Tour[]>([]);
-const trashItems = ref<TrashItem[]>([]);
-const isLoading = ref(false);
-const error = ref("");
-const filterType = ref<"all" | "bike" | "road" | "trash">("all");
+const {
+  tours,
+  trashItems,
+  isLoading,
+  error,
+  filterType,
+  filteredTours,
+  bikeTours,
+  roadTours,
+  loadTours,
+  loadTrash,
+  removeTour,
+  restoreItem,
+  deleteTrashPermanently,
+} = useTourLibrary();
+
 function getStoredLibraryCollapsed(): boolean {
   try {
     return localStorage.getItem("tourpilot_library_collapsed") === "true";
@@ -52,12 +57,9 @@ const isCollapsed = computed({
     }
   },
 });
+
 const sidebarWidth = ref(288);
 const isResizing = ref(false);
-
-// #3 Focus-trap refs
-const dialogRef = ref<HTMLElement | null>(null);
-const cancelBtnRef = ref<HTMLButtonElement | null>(null);
 
 const confirmDialog = ref<{
   open: boolean;
@@ -66,122 +68,55 @@ const confirmDialog = ref<{
   trashItem?: TrashItem;
 }>({ open: false, type: "deleteTour" });
 
-const filteredTours = computed(() => {
-  if (filterType.value === "all") return tours.value;
-  if (filterType.value === "trash") return [];
-  return tours.value.filter((t) => t.tour_type === filterType.value);
+const confirmDialogTitle = computed(() => {
+  return confirmDialog.value.type === "deleteTour"
+    ? t("deleteTourConfirmTitle", props.language)
+    : t("deletePermanentlyConfirmTitle", props.language);
 });
 
-const bikeTours = computed(() => tours.value.filter((t) => t.tour_type === "bike"));
-const roadTours = computed(() => tours.value.filter((t) => t.tour_type === "road"));
-
-async function loadTours(autoSelectLatest = false) {
-  isLoading.value = true;
-  error.value = "";
-  try {
-    tours.value = await fetchTours();
-    if (autoSelectLatest && tours.value.length > 0) {
-      const sorted = [...tours.value].sort(
-        (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
-      );
-      emit("select", sorted[0]);
-    }
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : "Failed to load tours";
-  } finally {
-    isLoading.value = false;
+const confirmDialogMessage = computed(() => {
+  if (confirmDialog.value.type === "deleteTour" && confirmDialog.value.tour) {
+    return t("deleteTourConfirm", props.language, { title: confirmDialog.value.tour.title });
   }
-}
-
-async function loadTrash() {
-  isLoading.value = true;
-  error.value = "";
-  try {
-    trashItems.value = await fetchTrash();
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : "Failed to load trash";
-  } finally {
-    isLoading.value = false;
+  if (confirmDialog.value.type === "deletePermanently" && confirmDialog.value.trashItem) {
+    return t("deletePermanentlyConfirm", props.language, {
+      title: confirmDialog.value.trashItem.title,
+    });
   }
-}
+  return "";
+});
 
 async function handleDelete(tour: Tour, event: Event) {
   event.stopPropagation();
   confirmDialog.value = { open: true, type: "deleteTour", tour };
-  await nextTick();
-  cancelBtnRef.value?.focus();
 }
 
 async function handleRestore(item: TrashItem) {
-  try {
-    const restored = await restoreFromTrash(item.tour_type, item.trash_name);
-    await loadTours(false);
-    await loadTrash();
-    emit("select", restored as Tour);
-    filterType.value = "all";
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : "Failed to restore";
+  const restored = await restoreItem(item.tour_type, item.trash_name);
+  if (restored) {
+    emit("select", restored);
   }
 }
 
 async function handlePermanentDelete(item: TrashItem) {
   confirmDialog.value = { open: true, type: "deletePermanently", trashItem: item };
-  await nextTick();
-  cancelBtnRef.value?.focus();
 }
 
 async function handleConfirmDialog() {
   const dialog = confirmDialog.value;
   confirmDialog.value = { ...confirmDialog.value, open: false };
+
   if (dialog.type === "deleteTour" && dialog.tour) {
-    try {
-      await deleteTour(dialog.tour.tour_type, dialog.tour.slug);
-      await loadTours(false);
+    const success = await removeTour(dialog.tour.tour_type, dialog.tour.slug);
+    if (success) {
       emit("deleted");
-    } catch (e) {
-      error.value = e instanceof Error ? e.message : "Failed to delete";
     }
   } else if (dialog.type === "deletePermanently" && dialog.trashItem) {
-    try {
-      await deleteFromTrash(dialog.trashItem.tour_type, dialog.trashItem.trash_name);
-      await loadTrash();
-    } catch (e) {
-      error.value = e instanceof Error ? e.message : "Failed to delete";
-    }
+    await deleteTrashPermanently(dialog.trashItem.tour_type, dialog.trashItem.trash_name);
   }
 }
 
-// #3 Focus-trap: keep Tab/Shift+Tab inside the dialog, Escape closes it
-function handleDialogKeydown(e: KeyboardEvent) {
-  if (e.key === "Escape") {
-    confirmDialog.value.open = false;
-    return;
-  }
-  if (e.key !== "Tab") return;
-  const dialog = dialogRef.value;
-  if (!dialog) return;
-  const focusable = Array.from(
-    dialog.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-    ),
-  ).filter((el) => !el.hasAttribute("disabled"));
-  if (focusable.length === 0) return;
-  const first = focusable[0];
-  const last = focusable[focusable.length - 1];
-  if (e.shiftKey) {
-    if (document.activeElement === first) {
-      e.preventDefault();
-      last.focus();
-    }
-  } else {
-    if (document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
-    }
-  }
-}
-
-// #5 Touch + Mouse resize
+// Touch + Mouse resize
 function startResize(clientX: number) {
   isResizing.value = true;
   document.body.style.cursor = "col-resize";
@@ -236,7 +171,12 @@ watch(
   () => loadTours(false),
 );
 
-onMounted(() => loadTours(true));
+onMounted(async () => {
+  const latest = await loadTours(true);
+  if (latest) {
+    emit("select", latest);
+  }
+});
 </script>
 
 <template>
@@ -340,191 +280,192 @@ onMounted(() => loadTours(true));
     <template v-else>
       <!-- Filter tabs (Segmented Control) -->
       <div
-        class="mx-2 my-2 p-1 bg-monokai-lightBorder/60 dark:bg-monokai-card rounded-xl flex gap-1 text-xs font-medium"
-        role="tablist"
+        class="p-2 border-b border-monokai-lightBorder dark:border-monokai-border bg-monokai-lightPanel/50 dark:bg-monokai-panel/50"
       >
-        <button
-          v-for="filter in ['all', 'bike', 'road', 'trash'] as const"
-          :key="filter"
-          role="tab"
-          :aria-selected="filterType === filter"
-          :class="[
-            'flex-1 py-1.5 px-2 text-center rounded-lg transition-all flex items-center justify-center gap-1',
-            filterType === filter
-              ? 'bg-white dark:bg-monokai-bg text-monokai-lightCyan dark:text-monokai-yellow shadow-xs font-semibold'
-              : 'text-monokai-lightMuted dark:text-monokai-muted hover:text-monokai-lightFg dark:hover:text-monokai-fg hover:bg-white/50 dark:hover:bg-monokai-border/40',
-          ]"
-          @click="filterType = filter"
+        <div
+          class="flex rounded-lg bg-monokai-lightBorder/40 dark:bg-monokai-card p-0.5 text-xs font-medium"
         >
-          <template v-if="filter === 'all'">{{ t("all", language) }}</template>
-          <template v-else-if="filter === 'bike'">
+          <button
+            @click="filterType = 'all'"
+            :class="[
+              'flex-1 py-1 rounded-md transition text-center',
+              filterType === 'all'
+                ? 'bg-white dark:bg-monokai-panel text-monokai-lightFg dark:text-monokai-fg shadow-xs font-semibold'
+                : 'text-monokai-lightMuted dark:text-monokai-muted hover:text-monokai-lightFg dark:hover:text-monokai-fg',
+            ]"
+          >
+            {{ t("all", language) }} ({{ tours.length }})
+          </button>
+          <button
+            @click="filterType = 'bike'"
+            :class="[
+              'flex-1 py-1 rounded-md transition text-center flex items-center justify-center gap-1',
+              filterType === 'bike'
+                ? 'bg-white dark:bg-monokai-panel text-monokai-lightFg dark:text-monokai-fg shadow-xs font-semibold'
+                : 'text-monokai-lightMuted dark:text-monokai-muted hover:text-monokai-lightFg dark:hover:text-monokai-fg',
+            ]"
+          >
             <Bike :size="13" aria-hidden="true" />
-            <span>{{ language === "de" ? "Rad" : "Bike" }}</span>
-          </template>
-          <template v-else-if="filter === 'road'">
+            <span>{{ bikeTours.length }}</span>
+          </button>
+          <button
+            @click="filterType = 'road'"
+            :class="[
+              'flex-1 py-1 rounded-md transition text-center flex items-center justify-center gap-1',
+              filterType === 'road'
+                ? 'bg-white dark:bg-monokai-panel text-monokai-lightFg dark:text-monokai-fg shadow-xs font-semibold'
+                : 'text-monokai-lightMuted dark:text-monokai-muted hover:text-monokai-lightFg dark:hover:text-monokai-fg',
+            ]"
+          >
             <Car :size="13" aria-hidden="true" />
-            <span>{{ language === "de" ? "Auto" : "Road" }}</span>
-          </template>
-          <template v-else>
+            <span>{{ roadTours.length }}</span>
+          </button>
+          <button
+            @click="filterType = 'trash'"
+            :class="[
+              'p-1.5 rounded-md transition flex items-center justify-center',
+              filterType === 'trash'
+                ? 'bg-white dark:bg-monokai-panel text-rose-500 shadow-xs'
+                : 'text-monokai-lightMuted dark:text-monokai-muted hover:text-rose-400',
+            ]"
+            :title="t('trash', language)"
+            :aria-label="t('trash', language)"
+          >
             <Trash2 :size="13" aria-hidden="true" />
-            <span>{{ language === "de" ? "Papierkorb" : "Trash" }}</span>
-          </template>
-        </button>
-      </div>
-
-      <!-- Loading state -->
-      <div v-if="isLoading" class="flex-1 flex items-center justify-center">
-        <div
-          class="animate-spin w-6 h-6 border-2 border-monokai-lightCyan dark:border-monokai-cyan border-t-transparent rounded-full"
-          role="status"
-          :aria-label="language === 'de' ? 'Wird geladen…' : 'Loading…'"
-        ></div>
-      </div>
-
-      <!-- Error state -->
-      <div
-        v-else-if="error"
-        role="alert"
-        class="p-4 text-monokai-lightPink dark:text-monokai-pink text-sm"
-      >
-        {{ error }}
-        <button @click="() => loadTours(false)" class="ml-2 underline">
-          {{ language === "de" ? "Erneut versuchen" : "Retry" }}
-        </button>
-      </div>
-
-      <!-- Trash view -->
-      <template v-else-if="filterType === 'trash'">
-        <div
-          v-if="trashItems.length === 0"
-          class="flex-1 flex items-center justify-center p-4 text-monokai-lightMuted text-sm text-center font-medium"
-        >
-          {{ t("trashEmpty", language) }}
+          </button>
         </div>
-        <div v-else class="flex-1 overflow-y-auto px-2 space-y-1.5 py-1">
+      </div>
+
+      <!-- Error message -->
+      <div
+        v-if="error"
+        role="alert"
+        class="p-3 bg-rose-500/10 border-b border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs flex justify-between items-center"
+      >
+        <span>{{ error }}</span>
+        <button
+          @click="error = ''"
+          class="text-rose-400 hover:text-rose-600 font-bold focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-red-500"
+          :aria-label="t('close', language)"
+        >
+          ✕
+        </button>
+      </div>
+
+      <!-- Tour list -->
+      <div class="flex-1 overflow-y-auto p-2 space-y-1.5 scrollbar-thin">
+        <!-- Trash view -->
+        <template v-if="filterType === 'trash'">
+          <div
+            v-if="trashItems.length === 0"
+            class="text-center py-8 text-monokai-lightMuted dark:text-monokai-muted text-xs"
+          >
+            {{ t("trashEmpty", language) }}
+          </div>
           <div
             v-for="item in trashItems"
             :key="item.trash_name"
-            class="p-2.5 bg-white dark:bg-monokai-card border border-monokai-lightBorder dark:border-monokai-border rounded-xl hover:border-monokai-lightCyan dark:hover:border-monokai-border transition"
+            class="p-2.5 rounded-xl border border-monokai-lightBorder/60 dark:border-monokai-border bg-monokai-lightPanel dark:bg-monokai-card/40 space-y-2 group text-xs"
           >
-            <div class="flex items-start gap-2">
-              <div
-                class="p-1.5 rounded-lg shrink-0"
+            <div class="flex items-start justify-between gap-1">
+              <span class="font-medium text-monokai-lightFg dark:text-monokai-fg line-clamp-1">
+                {{ item.title }}
+              </span>
+              <span
+                class="px-1.5 py-0.5 rounded text-[10px] uppercase font-bold shrink-0"
                 :class="
                   item.tour_type === 'bike'
-                    ? 'bg-emerald-50 dark:bg-monokai-bg text-emerald-600 dark:text-monokai-green'
-                    : 'bg-indigo-50 dark:bg-monokai-bg text-indigo-600 dark:text-monokai-purple'
+                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400'
+                    : 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400'
                 "
               >
-                <Bike v-if="item.tour_type === 'bike'" :size="15" aria-hidden="true" />
-                <Car v-else :size="15" aria-hidden="true" />
-              </div>
-              <div class="flex-1 min-w-0">
-                <h3 class="font-medium text-monokai-lightFg dark:text-monokai-fg text-sm truncate">
-                  {{ item.title }}
-                </h3>
-                <p
-                  v-if="item.deleted_at"
-                  class="text-xs text-monokai-lightMuted dark:text-monokai-muted mt-0.5"
-                >
-                  {{ t("deletedOn", language, { date: formatDate(item.deleted_at) }) }}
-                </p>
-                <div class="flex gap-3 mt-2 font-medium text-xs">
-                  <button
-                    @click="handleRestore(item)"
-                    class="text-monokai-lightCyan dark:text-monokai-cyan hover:underline transition focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500 rounded"
-                  >
-                    {{ t("restore", language) }}
-                  </button>
-                  <button
-                    @click="handlePermanentDelete(item)"
-                    class="text-monokai-lightPink dark:text-monokai-pink hover:underline transition focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-red-500 rounded"
-                  >
-                    {{ t("deletePermanently", language) }}
-                  </button>
-                </div>
-              </div>
+                {{ item.tour_type }}
+              </span>
+            </div>
+            <div class="flex items-center justify-between text-[11px]">
+              <button
+                @click="handleRestore(item)"
+                class="text-monokai-lightCyan dark:text-monokai-cyan hover:underline font-medium focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500"
+              >
+                {{ t("restore", language) }}
+              </button>
+              <button
+                @click="handlePermanentDelete(item)"
+                class="text-rose-500 hover:text-rose-700 font-medium focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-red-500"
+              >
+                {{ t("deletePermanently", language) }}
+              </button>
             </div>
           </div>
-        </div>
-      </template>
+        </template>
 
-      <!-- Empty state (tours) -->
-      <div
-        v-else-if="filteredTours.length === 0"
-        class="flex-1 flex items-center justify-center p-4 text-monokai-lightMuted text-sm text-center font-medium"
-      >
-        {{ t("noTours", language) }}
-      </div>
+        <!-- Active tours view -->
+        <template v-else>
+          <div
+            v-if="filteredTours.length === 0 && !isLoading"
+            class="text-center py-8 text-monokai-lightMuted dark:text-monokai-muted text-xs"
+          >
+            {{ t("noTours", language) }}
+          </div>
 
-      <!-- #4 Tour list — <button> elements for keyboard accessibility -->
-      <div v-else class="flex-1 overflow-y-auto px-2 space-y-1.5 py-1">
-        <div v-for="tour in filteredTours" :key="tour.id" class="relative group">
-          <button
-            type="button"
-            :aria-pressed="tour.id === selectedTourId"
-            :aria-label="
-              tour.title +
-              ' — ' +
-              (tour.tour_type === 'bike'
-                ? language === 'de'
-                  ? 'Radtour'
-                  : 'Bike tour'
-                : language === 'de'
-                  ? 'Roadtrip'
-                  : 'Road trip')
-            "
+          <div
+            v-for="tour in filteredTours"
+            :key="tour.id"
+            class="group relative rounded-xl border transition flex items-stretch"
             :class="[
-              'w-full text-left p-3 rounded-xl border transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500',
-              tour.id === selectedTourId
-                ? 'bg-amber-50/60 dark:bg-monokai-card border-monokai-lightYellow/50 dark:border-monokai-yellow shadow-xs'
-                : 'bg-white dark:bg-monokai-card/90 border-monokai-lightBorder dark:border-monokai-border hover:border-monokai-lightCyan dark:hover:border-monokai-yellow hover:shadow-xs hover:-translate-y-0.5',
+              selectedTourId === tour.id
+                ? 'bg-blue-50/80 dark:bg-monokai-card border-blue-200 dark:border-monokai-cyan/40 shadow-xs'
+                : 'bg-white dark:bg-monokai-card/50 border-monokai-lightBorder/40 dark:border-monokai-border hover:border-blue-200 dark:hover:border-monokai-cyan/30 hover:bg-slate-50/80 dark:hover:bg-monokai-card',
             ]"
-            @click="emit('select', tour)"
           >
-            <div class="flex items-start gap-2.5">
-              <div
-                class="p-1.5 rounded-lg shrink-0 mt-0.5"
-                :class="
-                  tour.tour_type === 'bike'
-                    ? 'bg-emerald-50 dark:bg-monokai-bg text-emerald-700 dark:text-monokai-green'
-                    : 'bg-indigo-50 dark:bg-monokai-bg text-indigo-700 dark:text-monokai-purple'
-                "
-              >
-                <Bike v-if="tour.tour_type === 'bike'" :size="16" aria-hidden="true" />
-                <Car v-else :size="16" aria-hidden="true" />
+            <button
+              type="button"
+              class="w-full text-left p-3 pr-9 cursor-pointer rounded-xl focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500"
+              @click="emit('select', tour)"
+            >
+              <div class="flex items-start gap-2.5">
+                <div
+                  class="p-1.5 rounded-lg shrink-0 mt-0.5"
+                  :class="
+                    tour.tour_type === 'bike'
+                      ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400'
+                      : 'bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400'
+                  "
+                >
+                  <Bike v-if="tour.tour_type === 'bike'" :size="15" aria-hidden="true" />
+                  <Car v-else :size="15" aria-hidden="true" />
+                </div>
+                <div class="min-w-0 flex-1">
+                  <h3
+                    class="text-xs font-semibold text-monokai-lightFg dark:text-monokai-fg line-clamp-1 leading-snug"
+                  >
+                    {{ tour.title }}
+                  </h3>
+                  <p
+                    v-if="tour.summary"
+                    class="text-xs text-monokai-lightMuted dark:text-monokai-muted mt-0.5 line-clamp-2 leading-relaxed"
+                  >
+                    {{ tour.summary }}
+                  </p>
+                  <p
+                    class="text-[11px] font-medium text-monokai-lightMuted/80 dark:text-monokai-muted/80 mt-1.5"
+                  >
+                    {{ formatDate(tour.created_at) }}
+                  </p>
+                </div>
               </div>
-              <div class="flex-1 min-w-0 pr-8">
-                <h3
-                  class="font-semibold text-monokai-lightFg dark:text-monokai-fg text-sm truncate group-hover:text-monokai-lightCyan dark:group-hover:text-monokai-cyan transition"
-                >
-                  {{ tour.title }}
-                </h3>
-                <p
-                  v-if="tour.summary"
-                  class="text-xs text-monokai-lightMuted dark:text-monokai-muted mt-0.5 line-clamp-2 leading-relaxed"
-                >
-                  {{ tour.summary }}
-                </p>
-                <p
-                  class="text-[11px] font-medium text-monokai-lightMuted/80 dark:text-monokai-muted/80 mt-1.5"
-                >
-                  {{ formatDate(tour.created_at) }}
-                </p>
-              </div>
-            </div>
-          </button>
-          <!-- Delete button overlaid absolutely so it doesn't nest inside the tour button -->
-          <button
-            type="button"
-            :aria-label="(language === 'de' ? 'Tour löschen: ' : 'Delete tour: ') + tour.title"
-            :title="t('deleteTourConfirmTitle', language)"
-            class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 opacity-0 group-hover:opacity-100 focus:opacity-100 focus-visible:opacity-100 hover:bg-rose-50 dark:hover:bg-monokai-bg rounded-lg text-monokai-lightMuted hover:text-monokai-lightPink dark:hover:text-monokai-pink transition focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-red-500"
-            @click.stop="handleDelete(tour, $event)"
-          >
-            <Trash2 :size="15" aria-hidden="true" />
-          </button>
-        </div>
+            </button>
+            <button
+              type="button"
+              :aria-label="(language === 'de' ? 'Tour löschen: ' : 'Delete tour: ') + tour.title"
+              :title="t('deleteTourConfirmTitle', language)"
+              class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 opacity-0 group-hover:opacity-100 focus:opacity-100 focus-visible:opacity-100 hover:bg-rose-50 dark:hover:bg-monokai-bg rounded-lg text-monokai-lightMuted hover:text-monokai-lightPink dark:hover:text-monokai-pink transition focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-red-500"
+              @click.stop="handleDelete(tour, $event)"
+            >
+              <Trash2 :size="15" aria-hidden="true" />
+            </button>
+          </div>
+        </template>
       </div>
 
       <!-- Refresh button -->
@@ -542,7 +483,7 @@ onMounted(() => loadTours(true));
       </div>
     </template>
 
-    <!-- #5 Resize handle — Mouse + Touch -->
+    <!-- Resize handle — Mouse + Touch -->
     <div
       v-if="!isCollapsed"
       class="absolute top-0 right-0 w-2 h-full cursor-col-resize group flex items-center justify-center touch-none"
@@ -562,67 +503,13 @@ onMounted(() => loadTours(true));
     </div>
   </aside>
 
-  <!-- #3 Confirmation Dialog with focus-trap -->
-  <Teleport to="body">
-    <div
-      v-if="confirmDialog.open"
-      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
-      @click.self="confirmDialog.open = false"
-    >
-      <div
-        ref="dialogRef"
-        class="relative w-full max-w-sm overflow-hidden rounded-2xl bg-white p-6 shadow-2xl border border-gray-100 animate-in fade-in zoom-in-95 duration-150"
-        role="dialog"
-        aria-modal="true"
-        :aria-labelledby="'dialog-title-library'"
-        @keydown="handleDialogKeydown"
-      >
-        <div class="flex items-start gap-4">
-          <div
-            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600"
-          >
-            <AlertTriangle :size="20" aria-hidden="true" />
-          </div>
-          <div class="flex-1 min-w-0">
-            <h3 id="dialog-title-library" class="text-base font-semibold text-gray-900">
-              {{
-                confirmDialog.type === "deleteTour"
-                  ? t("deleteTourConfirmTitle", language)
-                  : t("deletePermanentlyConfirmTitle", language)
-              }}
-            </h3>
-            <p class="mt-1.5 text-sm text-gray-600 leading-relaxed break-words">
-              <template v-if="confirmDialog.type === 'deleteTour' && confirmDialog.tour">
-                {{ t("deleteTourConfirm", language, { title: confirmDialog.tour.title }) }}
-              </template>
-              <template
-                v-else-if="confirmDialog.type === 'deletePermanently' && confirmDialog.trashItem"
-              >
-                {{
-                  t("deletePermanentlyConfirm", language, { title: confirmDialog.trashItem.title })
-                }}
-              </template>
-            </p>
-          </div>
-        </div>
-        <div class="mt-6 flex justify-end gap-2.5">
-          <button
-            ref="cancelBtnRef"
-            type="button"
-            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-400"
-            @click="confirmDialog.open = false"
-          >
-            {{ t("cancel", language) }}
-          </button>
-          <button
-            type="button"
-            class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition shadow-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
-            @click="handleConfirmDialog"
-          >
-            {{ t("delete", language) }}
-          </button>
-        </div>
-      </div>
-    </div>
-  </Teleport>
+  <!-- Reusable Confirmation Dialog -->
+  <ConfirmDialog
+    v-model:open="confirmDialog.open"
+    :title="confirmDialogTitle"
+    :message="confirmDialogMessage"
+    :confirm-text="t('delete', language)"
+    :cancel-text="t('cancel', language)"
+    @confirm="handleConfirmDialog"
+  />
 </template>
