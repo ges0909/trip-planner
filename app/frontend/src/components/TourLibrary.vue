@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Bike, Car, ChevronLeft, Pencil, RefreshCw, Trash2 } from "@lucide/vue";
+import { Bike, Car, ChevronsLeft, Pencil, RefreshCw, Trash2 } from "@lucide/vue";
 import { computed, onMounted, ref, watch } from "vue";
 import type { Tour, TrashItem } from "../api";
 import { useTourLibrary } from "../composables/useTourLibrary";
@@ -247,7 +247,7 @@ onMounted(async () => {
         "
         :aria-expanded="!isCollapsed"
       >
-        <ChevronLeft :size="16" :class="{ 'rotate-180': isCollapsed }" aria-hidden="true" />
+        <ChevronsLeft :size="16" :class="{ 'rotate-180': isCollapsed }" aria-hidden="true" />
       </button>
     </div>
 
