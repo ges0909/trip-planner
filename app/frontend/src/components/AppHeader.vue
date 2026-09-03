@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Compass, Map, Moon, Search, Sun } from "@lucide/vue";
+import { Compass, Moon, Search, Sun } from "@lucide/vue";
 import type { Lang } from "../i18n";
 import LanguageSelector from "./LanguageSelector.vue";
 import SessionHistory from "./SessionHistory.vue";
@@ -9,8 +9,6 @@ defineProps<{
   isDark: boolean;
   isLoading: boolean;
   activeSessionId: string | null;
-  hasMapData?: boolean;
-  isMapVisible?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -18,7 +16,6 @@ const emit = defineEmits<{
   (e: "openSearch"): void;
   (e: "update:language", val: Lang): void;
   (e: "toggleTheme"): void;
-  (e: "toggleMap"): void;
   (e: "selectSession", sessionId: string): void;
   (e: "sessionsCleared"): void;
 }>();
@@ -55,33 +52,6 @@ const emit = defineEmits<{
 
       <!-- Right: Search, Chat History, Language & Theme Controls -->
       <div class="flex items-center gap-2">
-        <button
-          v-if="hasMapData"
-          type="button"
-          class="h-9 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-monokai-light-fg dark:text-monokai-fg bg-monokai-light-card dark:bg-monokai-card hover:bg-monokai-light-panel dark:hover:bg-monokai-panel border border-monokai-light-border dark:border-monokai-border rounded-xl shadow-xs transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
-          :title="
-            isMapVisible
-              ? language === 'de'
-                ? 'Karte ausblenden (M)'
-                : 'Hide map (M)'
-              : language === 'de'
-                ? 'Karte anzeigen (M)'
-                : 'Show map (M)'
-          "
-          @click="emit('toggleMap')"
-        >
-          <Map :size="14" aria-hidden="true" />
-          <span class="hidden sm:inline">{{
-            isMapVisible
-              ? language === "de"
-                ? "Karte ausblenden"
-                : "Hide Map"
-              : language === "de"
-                ? "Karte anzeigen"
-                : "Show Map"
-          }}</span>
-        </button>
-
         <button
           type="button"
           class="h-9 inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-monokai-light-fg dark:text-monokai-fg bg-monokai-light-card dark:bg-monokai-card hover:bg-monokai-light-panel dark:hover:bg-monokai-panel border border-monokai-light-border dark:border-monokai-border rounded-xl shadow-xs transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"

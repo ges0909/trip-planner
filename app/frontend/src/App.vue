@@ -4,6 +4,7 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
+  Map,
   Save,
   Sparkles,
   WifiOff,
@@ -25,6 +26,7 @@ import { useSession } from "./composables/useSession";
 import { useToast } from "./composables/useToast";
 import { useTourSession } from "./composables/useTourSession";
 import { t } from "./i18n";
+import { buildTourMetaItems } from "./utils/tourMeta";
 
 // Chat state from composable
 const {
@@ -55,22 +57,14 @@ function handleFocusPoi(poi: { lat: number; lon: number; name: string }) {
   tourMapRef.value?.focusPoi(poi.lat, poi.lon, poi.name);
 }
 
-const {
-  isMapVisible,
-  splitRatio,
-  isDraggingSplitter,
-  splitContainerRef,
-  startDragging,
-  stopDragging,
-  resetSplitRatio,
-} = useAppLayout();
+const { isMapVisible, splitRatio, splitContainerRef, startDragging, resetSplitRatio } =
+  useAppLayout();
 
 // ── UI state ────────────────────────────────────────────────────────────────
 
 const { language, isDark, setLanguage, toggleTheme, updateDarkClass } = useAppPreferences();
 
 const chatInputRef = ref<InstanceType<typeof ChatInput> | null>(null);
-const showMap = ref(false);
 const {
   activityFeedExpanded,
   selectedTourId,
@@ -89,41 +83,9 @@ const {
 
 const { sessionId: appSessionId, restoreLastViewedTour } = useSession();
 
-const promptSuggestions = computed(() => [
-  {
-    emoji: "🚴",
-    tag: language.value === "de" ? "Radtour" : "Bike Tour",
-    badgeClass:
-      "bg-emerald-50 dark:bg-monokai-panel text-emerald-700 dark:text-monokai-green border border-emerald-100 dark:border-monokai-border",
-    title: language.value === "de" ? "Wannsee & Potsdam" : "Wannsee & Potsdam",
-    prompt:
-      language.value === "de"
-        ? "1-Tages-Radtour am Wannsee und Potsdam mit schattigen Waldwegen und Ausflugslokalen"
-        : "1-day bike tour around Wannsee and Potsdam with shaded forest trails and cozy cafes",
-  },
-  {
-    emoji: "🚘",
-    tag: language.value === "de" ? "Roadtrip" : "Roadtrip",
-    badgeClass:
-      "bg-indigo-50 dark:bg-monokai-panel text-indigo-700 dark:text-monokai-cyan border border-indigo-100 dark:border-monokai-border",
-    title: language.value === "de" ? "Schwarzwald Panoramastraße" : "Black Forest Highway",
-    prompt:
-      language.value === "de"
-        ? "3-Tage-Roadtrip durch den Schwarzwald mit Aussichtspunkten und Etappen"
-        : "3-day road trip through the Black Forest with scenic viewpoints and daily stops",
-  },
-  {
-    emoji: "⛰️",
-    tag: language.value === "de" ? "Alpen" : "Alps",
-    badgeClass:
-      "bg-amber-50 dark:bg-monokai-panel text-amber-700 dark:text-monokai-yellow border border-amber-100 dark:border-monokai-border",
-    title: language.value === "de" ? "Alpenpass-Erlebnis" : "Alpine Pass Experience",
-    prompt:
-      language.value === "de"
-        ? "Anspruchsvolle Tages-Radtour in den Voralpen mit Panoramablick und Berg-Pass"
-        : "Challenging day bike tour in the Alpine foothills with panoramic views and mountain passes",
-  },
-]);
+const tourMetaItems = computed(() =>
+  buildTourMetaItems(tourMetrics.value, tourMarkdown.value || ""),
+);
 
 async function initializeSession() {
   await restoreLastViewedTour(async (tour) => {
@@ -286,13 +248,10 @@ function handleSessionsCleared() {
         :is-dark="isDark"
         :is-loading="isLoading"
         :active-session-id="sessionId"
-        :has-map-data="hasMapData"
-        :is-map-visible="isMapVisible"
         @reset-session="resetSessionState"
         @open-search="openCommandPalette()"
         @update:language="setLanguage"
         @toggle-theme="toggleTheme"
-        @toggle-map="isMapVisible = !isMapVisible"
         @select-session="handleSelectSession"
         @sessions-cleared="handleSessionsCleared"
       />
@@ -421,6 +380,118 @@ function handleSessionsCleared() {
           <Transition name="fade" mode="out-in">
             <!-- Tour Result + Map -->
             <div v-if="tourMarkdown || hasMapData">
+              <div
+                class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/90 bg-white/80 p-2 dark:border-monokai-border dark:bg-monokai-card/80 shadow-sm backdrop-blur-sm"
+              >
+                <div class="flex flex-wrap items-center gap-2.5">
+                  <div
+                    v-for="item in tourMetaItems"
+                    :key="item.label"
+                    class="inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-semibold"
+                    :class="{
+                      'bg-blue-50/90 dark:bg-monokai-panel/90 border-blue-100 dark:border-monokai-border text-blue-800 dark:text-monokai-cyan':
+                        item.type === 'default',
+                      'bg-emerald-50/90 dark:bg-monokai-panel/90 border-emerald-100 dark:border-monokai-border text-emerald-800 dark:text-monokai-green':
+                        item.type === 'success',
+                      'bg-amber-50/90 dark:bg-monokai-panel/90 border-amber-100 dark:border-monokai-border text-amber-800 dark:text-monokai-yellow':
+                        item.type === 'warning',
+                      'bg-rose-50/90 dark:bg-monokai-panel/90 border-rose-100 dark:border-monokai-border text-rose-800 dark:text-monokai-pink':
+                        item.type === 'danger',
+                      'bg-purple-50/90 dark:bg-monokai-panel/90 border-purple-100 dark:border-monokai-border text-purple-800 dark:text-monokai-purple':
+                        item.type === 'purple',
+                      'bg-sky-50/90 dark:bg-monokai-panel/90 border-sky-100 dark:border-monokai-border text-sky-800 dark:text-monokai-yellow':
+                        item.type === 'sky',
+                    }"
+                  >
+                    <span
+                      class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-current/25 bg-white/85 text-[10px] shadow-inner dark:bg-monokai-card/80"
+                    >
+                      <span
+                        v-if="item.type === 'default'"
+                        class="text-blue-600 dark:text-monokai-cyan"
+                        >↗</span
+                      >
+                      <span
+                        v-else-if="item.type === 'success'"
+                        class="text-emerald-600 dark:text-monokai-green"
+                        >↗</span
+                      >
+                      <span
+                        v-else-if="item.type === 'warning'"
+                        class="text-amber-600 dark:text-monokai-yellow"
+                        >◔</span
+                      >
+                      <span
+                        v-else-if="item.type === 'danger'"
+                        class="text-rose-600 dark:text-monokai-pink"
+                        >!</span
+                      >
+                      <span
+                        v-else-if="item.type === 'purple'"
+                        class="text-purple-600 dark:text-monokai-purple"
+                        >◎</span
+                      >
+                      <span v-else class="text-sky-600 dark:text-monokai-yellow">☀</span>
+                    </span>
+                    <span>{{ item.label }}</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <button
+                    v-if="hasMapData"
+                    type="button"
+                    class="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition shadow-sm cursor-pointer border bg-monokai-light-card dark:bg-monokai-card text-monokai-light-fg dark:text-monokai-fg border-monokai-light-border dark:border-monokai-border hover:bg-monokai-light-panel dark:hover:bg-monokai-panel"
+                    :title="
+                      isMapVisible
+                        ? language === 'de'
+                          ? 'Karte ausblenden'
+                          : 'Hide map'
+                        : language === 'de'
+                          ? 'Karte anzeigen'
+                          : 'Show map'
+                    "
+                    @click="isMapVisible = !isMapVisible"
+                  >
+                    <Map :size="15" aria-hidden="true" />
+                    <span>{{
+                      isMapVisible
+                        ? language === "de"
+                          ? "Karte ausblenden"
+                          : "Hide Map"
+                        : language === "de"
+                          ? "Karte anzeigen"
+                          : "Show Map"
+                    }}</span>
+                  </button>
+
+                  <button
+                    v-if="generatedTourType"
+                    type="button"
+                    :disabled="isTourSaved || isLoading"
+                    class="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition shadow-xs cursor-pointer"
+                    :class="
+                      isTourSaved
+                        ? 'bg-emerald-50 dark:bg-monokai-card text-emerald-700 dark:text-monokai-green border border-emerald-200 dark:border-monokai-green/40'
+                        : 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50'
+                    "
+                    @click="handleSaveTour"
+                  >
+                    <Check v-if="isTourSaved" :size="16" aria-hidden="true" />
+                    <Save v-else :size="16" aria-hidden="true" />
+                    <span>{{
+                      isTourSaved
+                        ? language === "de"
+                          ? "Gespeichert"
+                          : "Saved"
+                        : language === "de"
+                          ? "Tour speichern"
+                          : "Save Tour"
+                    }}</span>
+                  </button>
+                </div>
+              </div>
+
               <!-- Content + Map Resizable Layout -->
               <div
                 ref="splitContainerRef"
@@ -439,34 +510,7 @@ function handleSessionsCleared() {
                     :gpx="gpxContent"
                     :metrics="tourMetrics"
                     @focus-poi="handleFocusPoi"
-                  >
-                    <template #actions>
-                      <button
-                        v-if="generatedTourType"
-                        type="button"
-                        :disabled="isTourSaved || isLoading"
-                        class="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition shadow-xs cursor-pointer"
-                        :class="
-                          isTourSaved
-                            ? 'bg-emerald-50 dark:bg-monokai-card text-emerald-700 dark:text-monokai-green border border-emerald-200 dark:border-monokai-green/40'
-                            : 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50'
-                        "
-                        @click="handleSaveTour"
-                      >
-                        <Check v-if="isTourSaved" :size="16" aria-hidden="true" />
-                        <Save v-else :size="16" aria-hidden="true" />
-                        <span>{{
-                          isTourSaved
-                            ? language === "de"
-                              ? "Gespeichert"
-                              : "Saved"
-                            : language === "de"
-                              ? "Tour speichern"
-                              : "Save Tour"
-                        }}</span>
-                      </button>
-                    </template>
-                  </TourContent>
+                  />
                 </div>
 
                 <!-- Draggable Splitter Divider Bar (Desktop) -->

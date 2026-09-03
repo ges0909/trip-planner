@@ -3,11 +3,9 @@ import { ref } from "vue";
 export function useAppLayout() {
   const isMapVisible = ref(true);
   const splitRatio = ref(50);
-  const isDraggingSplitter = ref(false);
   const splitContainerRef = ref<HTMLElement | null>(null);
 
   function startDragging(e: MouseEvent | TouchEvent) {
-    isDraggingSplitter.value = true;
     window.addEventListener("mousemove", onDragging);
     window.addEventListener("mouseup", stopDragging);
     window.addEventListener("touchmove", onDragging);
@@ -19,7 +17,7 @@ export function useAppLayout() {
   }
 
   function onDragging(e: MouseEvent | TouchEvent) {
-    if (!isDraggingSplitter.value || !splitContainerRef.value) return;
+    if (!splitContainerRef.value) return;
 
     const rect = splitContainerRef.value.getBoundingClientRect();
     const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
@@ -30,7 +28,6 @@ export function useAppLayout() {
   }
 
   function stopDragging() {
-    isDraggingSplitter.value = false;
     window.removeEventListener("mousemove", onDragging);
     window.removeEventListener("mouseup", stopDragging);
     window.removeEventListener("touchmove", onDragging);
@@ -45,11 +42,8 @@ export function useAppLayout() {
   return {
     isMapVisible,
     splitRatio,
-    isDraggingSplitter,
     splitContainerRef,
     startDragging,
-    onDragging,
-    stopDragging,
     resetSplitRatio,
   };
 }

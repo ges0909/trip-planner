@@ -1,18 +1,5 @@
 <script setup lang="ts">
-import {
-  Activity,
-  Check,
-  Clock,
-  Compass,
-  Copy,
-  Download,
-  FileText,
-  Map,
-  Mountain,
-  Printer,
-  Share2,
-  Sun,
-} from "@lucide/vue";
+import { Check, Copy, Download, FileText, Map, Printer, Share2 } from "@lucide/vue";
 import DOMPurify from "dompurify";
 import { marked } from "marked";
 import { computed, ref } from "vue";
@@ -146,7 +133,6 @@ const emit = defineEmits<{
   (e: "focusPoi", poi: { lat: number; lon: number; name: string }): void;
 }>();
 
-const weatherInfo = computed(() => parseWeatherInfo(props.markdown));
 const renderedHtml = computed(() => sanitizeTourMarkdown(props.markdown));
 
 function handleContentClick(event: MouseEvent) {
@@ -192,76 +178,6 @@ const filename = computed(() => {
   <div
     class="bg-white dark:bg-monokai-card text-monokai-light-fg dark:text-monokai-fg rounded-2xl shadow-xs border border-monokai-light-border dark:border-monokai-border flex flex-col h-full overflow-hidden"
   >
-    <!-- Fixed Header Bar: Hero Metric Cards (left) + Actions (right) -->
-    <div
-      v-if="
-        (metrics && (metrics.distance_km || metrics.elevation_gain_m || metrics.duration_hours)) ||
-        weatherInfo ||
-        $slots.actions
-      "
-      class="shrink-0 p-4 sm:p-5 border-b border-monokai-light-border/60 dark:border-monokai-border bg-white/95 dark:bg-monokai-card/95 backdrop-blur-md z-10 flex flex-wrap items-center justify-between gap-3"
-    >
-      <div class="flex flex-wrap items-center gap-2.5">
-        <div
-          v-if="metrics?.distance_km"
-          class="inline-flex items-center gap-2 px-3.5 py-1.5 bg-blue-50/70 dark:bg-monokai-panel border border-blue-100 dark:border-monokai-border text-blue-800 dark:text-monokai-cyan rounded-xl text-xs font-semibold"
-        >
-          <Activity :size="15" class="text-blue-600 dark:text-monokai-cyan" aria-hidden="true" />
-          <span>{{ metrics.distance_km }} km</span>
-        </div>
-        <div
-          v-if="metrics?.elevation_gain_m"
-          class="inline-flex items-center gap-2 px-3.5 py-1.5 bg-emerald-50/70 dark:bg-monokai-panel border border-emerald-100 dark:border-monokai-border text-emerald-800 dark:text-monokai-green rounded-xl text-xs font-semibold"
-        >
-          <Mountain
-            :size="15"
-            class="text-emerald-600 dark:text-monokai-green"
-            aria-hidden="true"
-          />
-          <span>{{ metrics.elevation_gain_m }} hm</span>
-        </div>
-        <div
-          v-if="metrics?.duration_hours"
-          class="inline-flex items-center gap-2 px-3.5 py-1.5 bg-amber-50/70 dark:bg-monokai-panel border border-amber-100 dark:border-monokai-border text-amber-800 dark:text-monokai-yellow rounded-xl text-xs font-semibold"
-        >
-          <Clock :size="15" class="text-amber-600 dark:text-monokai-yellow" aria-hidden="true" />
-          <span>{{ metrics.duration_hours }} Std.</span>
-        </div>
-        <div
-          v-if="weatherInfo"
-          class="inline-flex items-center gap-2 px-3.5 py-1.5 bg-sky-50/70 dark:bg-monokai-panel border border-sky-100 dark:border-monokai-border text-sky-800 dark:text-monokai-yellow rounded-xl text-xs font-semibold"
-        >
-          <Sun :size="15" class="text-amber-500 dark:text-monokai-yellow" aria-hidden="true" />
-          <span>{{ weatherInfo }}</span>
-        </div>
-        <div
-          v-if="metrics?.route_type"
-          class="inline-flex items-center gap-2 px-3.5 py-1.5 bg-purple-50/70 dark:bg-monokai-panel border border-purple-100 dark:border-monokai-border text-purple-800 dark:text-monokai-purple rounded-xl text-xs font-semibold"
-        >
-          <Compass :size="15" class="text-purple-600 dark:text-monokai-purple" aria-hidden="true" />
-          <span>{{ metrics.route_type }}</span>
-        </div>
-        <div
-          v-if="metrics?.difficulty"
-          class="inline-flex items-center gap-2 px-3.5 py-1.5 border rounded-xl text-xs font-semibold capitalize"
-          :class="{
-            'bg-emerald-50/70 dark:bg-monokai-panel text-emerald-800 dark:text-monokai-green border-emerald-100 dark:border-monokai-green/40':
-              metrics.difficulty === 'easy',
-            'bg-amber-50/70 dark:bg-monokai-panel text-amber-800 dark:text-monokai-yellow border-amber-100 dark:border-monokai-yellow/40':
-              metrics.difficulty === 'moderate',
-            'bg-rose-50/70 dark:bg-monokai-panel text-rose-800 dark:text-monokai-pink border-rose-100 dark:border-monokai-pink/40':
-              metrics.difficulty === 'challenging',
-          }"
-        >
-          <span>{{ metrics.difficulty }}</span>
-        </div>
-      </div>
-
-      <div v-if="$slots.actions" class="shrink-0">
-        <slot name="actions" />
-      </div>
-    </div>
-
     <!-- Scrollable Markdown Content Area -->
     <div class="flex-1 overflow-y-auto p-6 sm:p-8">
       <div
