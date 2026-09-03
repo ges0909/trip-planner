@@ -109,10 +109,12 @@ function initMap() {
   poiLayer = L.layerGroup().addTo(map);
 
   // Invalidate map size when container resizes
-  resizeObserver = new ResizeObserver(() => {
-    map?.invalidateSize();
-  });
-  resizeObserver.observe(mapContainer.value);
+  if (typeof ResizeObserver !== "undefined") {
+    resizeObserver = new ResizeObserver(() => {
+      map?.invalidateSize();
+    });
+    resizeObserver.observe(mapContainer.value);
+  }
 }
 
 function updateTileLayer() {
@@ -197,6 +199,87 @@ function addLegend() {
   legend.addTo(map);
 }
 
+const POI_GROUPS = [
+  {
+    id: "sightseeing",
+    label: "Sehenswürdigkeiten",
+    icon: "🏰",
+    color: "#8b5cf6",
+    rawCategories: ["museum", "castle", "memorial", "ruins", "church", "viewpoint"],
+  },
+  {
+    id: "food",
+    label: "Einkehr",
+    icon: "☕",
+    color: "#f59e0b",
+    rawCategories: ["beer_garden", "cafe", "restaurant"],
+  },
+  {
+    id: "art",
+    label: "Kunst",
+    icon: "🎨",
+    color: "#ec4899",
+    rawCategories: ["artwork", "gallery"],
+  },
+  {
+    id: "water",
+    label: "Baden",
+    icon: "🏊",
+    color: "#06b6d4",
+    rawCategories: ["swimming"],
+  },
+  {
+    id: "service",
+    label: "Service",
+    icon: "🔧",
+    color: "#10b981",
+    rawCategories: ["bicycle_repair", "drinking_water", "picnic"],
+  },
+];
+
+function getPoiGroupId(category?: string): string {
+  if (!category) return "food";
+  for (const group of POI_GROUPS) {
+    if (group.rawCategories.includes(category)) return group.id;
+  }
+  return "food";
+}
+
+const availablePoiGroups = computed(() => {
+  if (props.pois.length === 0) return [];
+  const counts: Record<string, number> = {};
+  for (const poi of props.pois) {
+    const gid = getPoiGroupId(poi.category);
+    counts[gid] = (counts[gid] || 0) + 1;
+  }
+  return POI_GROUPS.filter((g) => counts[g.id] > 0).map((g) => ({
+    ...g,
+    count: counts[g.id],
+  }));
+});
+
+const selectedPoiGroupIds = ref<Set<string>>(new Set(["all"]));
+
+function togglePoiGroup(groupId: string) {
+  if (groupId === "all") {
+    selectedPoiGroupIds.value = new Set(["all"]);
+    renderPois();
+    return;
+  }
+  const current = new Set(selectedPoiGroupIds.value);
+  current.delete("all");
+  if (current.has(groupId)) {
+    current.delete(groupId);
+    if (current.size === 0) {
+      current.add("all");
+    }
+  } else {
+    current.add(groupId);
+  }
+  selectedPoiGroupIds.value = current;
+  renderPois();
+}
+
 function poiColor(category?: string): string {
   switch (category) {
     case "beer_garden":
@@ -222,6 +305,37 @@ function poiColor(category?: string): string {
     default:
       return "#f59e0b";
   }
+}
+
+function renderPois() {
+  if (!poiLayer) return;
+  poiLayer.clearLayers();
+  if (props.pois.length === 0) return;
+
+  const showAll = selectedPoiGroupIds.value.has("all");
+  const filtered = props.pois.filter((poi) => {
+    if (showAll) return true;
+    const gid = getPoiGroupId(poi.category);
+    return selectedPoiGroupIds.value.has(gid);
+  });
+
+  filtered.forEach((poi) => {
+    const color = poiColor(poi.category);
+    const marker = L.circleMarker([poi.lat, poi.lon], {
+      radius: 7,
+      fillColor: color,
+      color: "#fff",
+      weight: 1.5,
+      fillOpacity: 0.9,
+    });
+    if (poi.name) {
+      marker.bindTooltip(poi.name, {
+        direction: "top",
+        offset: [0, -6],
+      });
+    }
+    poiLayer?.addLayer(marker);
+  });
 }
 
 function updateMap() {
@@ -261,23 +375,9 @@ function updateMap() {
     });
   }
 
+  renderPois();
   if (props.pois.length > 0) {
     props.pois.forEach((poi) => {
-      const color = poiColor(poi.category);
-      const marker = L.circleMarker([poi.lat, poi.lon], {
-        radius: 7,
-        fillColor: color,
-        color: "#fff",
-        weight: 1.5,
-        fillOpacity: 0.9,
-      });
-      if (poi.name) {
-        marker.bindTooltip(poi.name, {
-          direction: "top",
-          offset: [0, -6],
-        });
-      }
-      poiLayer?.addLayer(marker);
       bounds.push([poi.lat, poi.lon]);
     });
   }
@@ -449,6 +549,48 @@ const elevationStats = computed(() => {
     class="bg-monokai-light-card dark:bg-monokai-panel rounded-2xl shadow-xs border border-monokai-light-border dark:border-monokai-border overflow-hidden h-full flex flex-col min-h-[400px] relative"
   >
     <div ref="mapContainer" class="flex-1 min-h-[350px]"></div>
+
+    <!-- Floating POI Category Filter Chips -->
+    <div
+      v-if="availablePoiGroups.length > 0"
+      class="absolute top-3 left-3 z-[400] flex flex-wrap items-center gap-1.5 bg-monokai-light-card/90 dark:bg-monokai-panel/90 backdrop-blur-md p-1.5 rounded-xl border border-monokai-light-border dark:border-monokai-border shadow-md text-xs max-w-[calc(100%-230px)]"
+    >
+      <button
+        type="button"
+        class="px-2 py-1 rounded-lg font-medium transition cursor-pointer flex items-center gap-1"
+        :class="
+          selectedPoiGroupIds.has('all')
+            ? 'bg-blue-600 text-white shadow-xs'
+            : 'text-monokai-light-fg dark:text-monokai-fg hover:bg-monokai-light-panel dark:hover:bg-monokai-border/60'
+        "
+        @click="togglePoiGroup('all')"
+      >
+        <span>Alle ({{ pois.length }})</span>
+      </button>
+
+      <button
+        v-for="group in availablePoiGroups"
+        :key="group.id"
+        type="button"
+        class="px-2 py-1 rounded-lg font-medium transition cursor-pointer flex items-center gap-1"
+        :class="
+          !selectedPoiGroupIds.has('all') && selectedPoiGroupIds.has(group.id)
+            ? 'text-white shadow-xs'
+            : 'text-monokai-light-fg dark:text-monokai-fg hover:bg-monokai-light-panel dark:hover:bg-monokai-border/60'
+        "
+        :style="
+          !selectedPoiGroupIds.has('all') && selectedPoiGroupIds.has(group.id)
+            ? { backgroundColor: group.color }
+            : {}
+        "
+        :title="group.label"
+        @click="togglePoiGroup(group.id)"
+      >
+        <span>{{ group.icon }}</span>
+        <span class="inline">{{ group.label }}</span>
+        <span class="text-[10px] opacity-80">({{ group.count }})</span>
+      </button>
+    </div>
 
     <!-- Floating Map Toolbar -->
     <div
