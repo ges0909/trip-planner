@@ -1,9 +1,47 @@
-import { ref } from "vue";
+import { ref, watch } from "vue";
+
+function getStoredMapVisible(): boolean {
+  try {
+    const val = localStorage.getItem("tourpilot_map_visible");
+    return val !== null ? val === "true" : true;
+  } catch {
+    return true;
+  }
+}
+
+function getStoredSplitRatio(): number {
+  try {
+    const val = localStorage.getItem("tourpilot_split_ratio");
+    if (val) {
+      const num = Number(val);
+      if (!isNaN(num) && num >= 20 && num <= 80) return num;
+    }
+  } catch {
+    // ignore
+  }
+  return 50;
+}
 
 export function useAppLayout() {
-  const isMapVisible = ref(true);
-  const splitRatio = ref(50);
+  const isMapVisible = ref(getStoredMapVisible());
+  const splitRatio = ref(getStoredSplitRatio());
   const splitContainerRef = ref<HTMLElement | null>(null);
+
+  watch(isMapVisible, (val) => {
+    try {
+      localStorage.setItem("tourpilot_map_visible", String(val));
+    } catch {
+      // ignore
+    }
+  });
+
+  watch(splitRatio, (val) => {
+    try {
+      localStorage.setItem("tourpilot_split_ratio", String(val));
+    } catch {
+      // ignore
+    }
+  });
 
   function startDragging(e: MouseEvent | TouchEvent) {
     window.addEventListener("mousemove", onDragging);
@@ -36,7 +74,6 @@ export function useAppLayout() {
 
   function resetSplitRatio() {
     splitRatio.value = 50;
-    localStorage.setItem("tourpilot_split_ratio", "50");
   }
 
   return {

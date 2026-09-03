@@ -20,6 +20,22 @@ export function extractWeatherInfo(markdown: string): string | null {
   return tempMatch ? tempMatch[1].trim() : null;
 }
 
+export function extractDistanceInfo(markdown: string): string | null {
+  const md = markdown || "";
+  const match = md.match(
+    /(?:Gesamtdistanz|Distanz|Strecke|Gesamtlänge|Länge|Distance|Length)[:\s]+(?:ca\.\s*)?([0-9.,]+\s*(?:km|Kilometer))/i,
+  );
+  return match ? match[1].trim() : null;
+}
+
+export function extractDurationInfo(markdown: string): string | null {
+  const md = markdown || "";
+  const match = md.match(
+    /(?:Gesamtdauer|Reisedauer|Dauer|Fahrzeit|Duration|Time)[:\s]+(?:ca\.\s*)?([0-9.,]+\s*(?:Std\.?|Stunden|Tage|Days|h))/i,
+  );
+  return match ? match[1].trim() : null;
+}
+
 export function buildTourMetaItems(
   metrics: TourMetrics | undefined,
   markdown: string,
@@ -29,6 +45,9 @@ export function buildTourMetaItems(
 
   if (metrics?.distance_km) {
     items.push({ label: `${metrics.distance_km} km`, type: "default" });
+  } else {
+    const parsedDist = extractDistanceInfo(markdown);
+    if (parsedDist) items.push({ label: parsedDist, type: "default" });
   }
 
   if (metrics?.elevation_gain_m) {
@@ -37,6 +56,9 @@ export function buildTourMetaItems(
 
   if (metrics?.duration_hours) {
     items.push({ label: `${metrics.duration_hours} Std.`, type: "warning" });
+  } else {
+    const parsedDur = extractDurationInfo(markdown);
+    if (parsedDur) items.push({ label: parsedDur, type: "warning" });
   }
 
   if (weatherInfo) {

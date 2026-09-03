@@ -158,15 +158,11 @@ function handleImageError(event: Event) {
 }
 
 const filename = computed(() => {
-  // Extract first heading as filename basis
-  const match = props.markdown.match(/^#{1,3}\s+(.+)$/m);
-  if (!match) return "tour";
-  return match[1]
-    .trim()
+  const match = props.markdown.match(/^#\s+(.+)$/m);
+  const title = match ? match[1] : "tour";
+  return title
     .toLowerCase()
-    .replace(/[äÄ]/g, "ae")
-    .replace(/[öÖ]/g, "oe")
-    .replace(/[üÜ]/g, "ue")
+    .replace(/[äöü]/g, (c) => ({ ä: "ae", ö: "oe", ü: "ue" })[c] || c)
     .replace(/ß/g, "ss")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "")

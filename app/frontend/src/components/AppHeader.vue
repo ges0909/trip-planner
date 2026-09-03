@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Compass, Moon, Search, Sun } from "@lucide/vue";
+import { Compass, FolderHeart, Moon, Search, Sun } from "@lucide/vue";
 import type { Lang } from "../i18n";
 import LanguageSelector from "./LanguageSelector.vue";
 import SessionHistory from "./SessionHistory.vue";
@@ -9,6 +9,7 @@ defineProps<{
   isDark: boolean;
   isLoading: boolean;
   activeSessionId: string | null;
+  isLibraryOpen?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -18,6 +19,7 @@ const emit = defineEmits<{
   (e: "toggleTheme"): void;
   (e: "selectSession", sessionId: string): void;
   (e: "sessionsCleared"): void;
+  (e: "toggleLibrary"): void;
 }>();
 </script>
 
@@ -50,8 +52,35 @@ const emit = defineEmits<{
         </div>
       </button>
 
-      <!-- Right: Search, Chat History, Language & Theme Controls -->
+      <!-- Right: Library, Search, Chat History, Language & Theme Controls -->
       <div class="flex items-center gap-2">
+        <button
+          type="button"
+          class="h-9 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-monokai-light-fg dark:text-monokai-fg bg-monokai-light-card dark:bg-monokai-card hover:bg-monokai-light-panel dark:hover:bg-monokai-panel border border-monokai-light-border dark:border-monokai-border rounded-xl shadow-xs transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+          :class="
+            isLibraryOpen
+              ? 'border-blue-300 dark:border-monokai-purple/50 bg-blue-50/50 dark:bg-monokai-panel'
+              : ''
+          "
+          :title="
+            isLibraryOpen
+              ? language === 'de'
+                ? 'Bibliothek einklappen'
+                : 'Collapse library'
+              : language === 'de'
+                ? 'Bibliothek öffnen'
+                : 'Open library'
+          "
+          @click="emit('toggleLibrary')"
+        >
+          <FolderHeart
+            :size="15"
+            class="text-blue-600 dark:text-monokai-purple"
+            aria-hidden="true"
+          />
+          <span class="hidden sm:inline">{{ language === "de" ? "Bibliothek" : "Library" }}</span>
+        </button>
+
         <button
           type="button"
           class="h-9 inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-monokai-light-fg dark:text-monokai-fg bg-monokai-light-card dark:bg-monokai-card hover:bg-monokai-light-panel dark:hover:bg-monokai-panel border border-monokai-light-border dark:border-monokai-border rounded-xl shadow-xs transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"

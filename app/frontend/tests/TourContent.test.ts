@@ -1,6 +1,7 @@
 import { mount } from "@vue/test-utils";
 import { describe, expect, it } from "vitest";
 import TourContent from "../src/components/TourContent.vue";
+import { buildTourMetaItems } from "../src/utils/tourMeta";
 
 describe("TourContent Component", () => {
   it("renders sanitized markdown content and headings", () => {
@@ -40,26 +41,24 @@ describe("TourContent Component", () => {
     expect(mdLink.attributes("download")).toBe("spreewald-tour.md");
   });
 
-  it("renders structured metric badges when metrics are provided", () => {
-    const wrapper = mount(TourContent, {
-      props: {
-        markdown: "# Tour",
-        gpx: "",
-        metrics: {
-          distance_km: 42.5,
-          elevation_gain_m: 350,
-          duration_hours: 2.5,
-          difficulty: "moderate",
-          route_type: "Rundtour",
-        },
+  it("builds structured metric badges when metrics are provided", () => {
+    const items = buildTourMetaItems(
+      {
+        distance_km: 42.5,
+        elevation_gain_m: 350,
+        duration_hours: 2.5,
+        difficulty: "moderate",
+        route_type: "Rundtour",
       },
-    });
+      "# Tour",
+    );
 
-    expect(wrapper.text()).toContain("42.5 km");
-    expect(wrapper.text()).toContain("350 hm");
-    expect(wrapper.text()).toContain("2.5 Std.");
-    expect(wrapper.text()).toContain("Rundtour");
-    expect(wrapper.text()).toContain("moderate");
+    const labels = items.map((i) => i.label);
+    expect(labels).toContain("42.5 km");
+    expect(labels).toContain("350 hm");
+    expect(labels).toContain("2.5 Std.");
+    expect(labels).toContain("Rundtour");
+    expect(labels).toContain("moderate");
   });
 
   it("filters out unrendered relative image references and broken bullets", () => {

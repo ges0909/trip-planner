@@ -74,10 +74,28 @@ const {
   setSelectedTourId,
   refreshLibrary,
   setActivityFeedExpanded,
+  openSidebar,
   closeSidebar,
   openCommandPalette,
   closeCommandPalette,
 } = useTourSession();
+
+const isLibraryCollapsed = ref(localStorage.getItem("tourpilot_library_collapsed") === "true");
+
+function handleToggleLibrary() {
+  if (isMobileSidebarOpen.value) {
+    closeSidebar();
+  } else if (typeof window !== "undefined" && window.innerWidth < 640) {
+    openSidebar();
+  } else {
+    isLibraryCollapsed.value = !isLibraryCollapsed.value;
+    try {
+      localStorage.setItem("tourpilot_library_collapsed", String(isLibraryCollapsed.value));
+    } catch {
+      // ignore
+    }
+  }
+}
 
 // ── Session / init ───────────────────────────────────────────────────────────
 
@@ -214,6 +232,7 @@ function handleSessionsCleared() {
       ]"
     >
       <TourLibrary
+        v-model:is-collapsed="isLibraryCollapsed"
         :language="language"
         :selected-tour-id="selectedTourId"
         :refresh-key="libraryRefreshKey"
@@ -248,12 +267,14 @@ function handleSessionsCleared() {
         :is-dark="isDark"
         :is-loading="isLoading"
         :active-session-id="sessionId"
+        :is-library-open="!isLibraryCollapsed"
         @reset-session="resetSessionState"
         @open-search="openCommandPalette()"
         @update:language="setLanguage"
         @toggle-theme="toggleTheme"
         @select-session="handleSelectSession"
         @sessions-cleared="handleSessionsCleared"
+        @toggle-library="handleToggleLibrary"
       />
 
       <div
@@ -374,20 +395,22 @@ function handleSessionsCleared() {
         </div>
       </div>
 
-      <!-- Scrollable Tour Content or Welcome Hero Card -->
-      <div class="flex-1 overflow-auto bg-slate-50/60 dark:bg-monokai-bg">
-        <div class="max-w-7xl mx-auto px-4 py-6">
+      <!-- Tour Content or Welcome Hero Card -->
+      <div class="flex-1 min-h-0 flex flex-col bg-slate-50/60 dark:bg-monokai-bg overflow-hidden">
+        <div class="max-w-7xl w-full mx-auto px-4 py-3 flex-1 min-h-0 flex flex-col">
           <Transition name="fade" mode="out-in">
             <!-- Tour Result + Map -->
-            <div v-if="tourMarkdown || hasMapData">
+            <div v-if="tourMarkdown || hasMapData" class="flex-1 min-h-0 flex flex-col">
+              <!-- Action & Metrics Bar -->
               <div
-                class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/90 bg-white/80 p-2 dark:border-monokai-border dark:bg-monokai-card/80 shadow-sm backdrop-blur-sm"
+                v-if="tourMetaItems.length > 0 || hasMapData || generatedTourType"
+                class="shrink-0 mb-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/90 bg-white/80 p-2.5 dark:border-monokai-border dark:bg-monokai-card/80 shadow-xs backdrop-blur-sm"
               >
-                <div class="flex flex-wrap items-center gap-2.5">
+                <div class="flex flex-wrap items-center gap-2">
                   <div
                     v-for="item in tourMetaItems"
                     :key="item.label"
-                    class="inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-semibold"
+                    class="inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-semibold"
                     :class="{
                       'bg-blue-50/90 dark:bg-monokai-panel/90 border-blue-100 dark:border-monokai-border text-blue-800 dark:text-monokai-cyan':
                         item.type === 'default',
@@ -403,36 +426,6 @@ function handleSessionsCleared() {
                         item.type === 'sky',
                     }"
                   >
-                    <span
-                      class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-current/25 bg-white/85 text-[10px] shadow-inner dark:bg-monokai-card/80"
-                    >
-                      <span
-                        v-if="item.type === 'default'"
-                        class="text-blue-600 dark:text-monokai-cyan"
-                        >↗</span
-                      >
-                      <span
-                        v-else-if="item.type === 'success'"
-                        class="text-emerald-600 dark:text-monokai-green"
-                        >↗</span
-                      >
-                      <span
-                        v-else-if="item.type === 'warning'"
-                        class="text-amber-600 dark:text-monokai-yellow"
-                        >◔</span
-                      >
-                      <span
-                        v-else-if="item.type === 'danger'"
-                        class="text-rose-600 dark:text-monokai-pink"
-                        >!</span
-                      >
-                      <span
-                        v-else-if="item.type === 'purple'"
-                        class="text-purple-600 dark:text-monokai-purple"
-                        >◎</span
-                      >
-                      <span v-else class="text-sky-600 dark:text-monokai-yellow">☀</span>
-                    </span>
                     <span>{{ item.label }}</span>
                   </div>
                 </div>
@@ -441,7 +434,7 @@ function handleSessionsCleared() {
                   <button
                     v-if="hasMapData"
                     type="button"
-                    class="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition shadow-sm cursor-pointer border bg-monokai-light-card dark:bg-monokai-card text-monokai-light-fg dark:text-monokai-fg border-monokai-light-border dark:border-monokai-border hover:bg-monokai-light-panel dark:hover:bg-monokai-panel"
+                    class="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition shadow-xs cursor-pointer border bg-monokai-light-card dark:bg-monokai-card text-monokai-light-fg dark:text-monokai-fg border-monokai-light-border dark:border-monokai-border hover:bg-monokai-light-panel dark:hover:bg-monokai-panel"
                     :title="
                       isMapVisible
                         ? language === 'de'
@@ -495,12 +488,12 @@ function handleSessionsCleared() {
               <!-- Content + Map Resizable Layout -->
               <div
                 ref="splitContainerRef"
-                class="flex flex-col lg:flex-row gap-4 items-stretch select-none"
+                class="flex-1 min-h-0 flex flex-col lg:flex-row gap-4 items-stretch select-none"
               >
                 <!-- Markdown Content Panel -->
                 <div
                   v-if="tourMarkdown"
-                  class="flex-1 min-w-0 h-[600px] lg:h-[calc(100vh-260px)]"
+                  class="flex-1 min-w-0 h-full min-h-0 flex flex-col"
                   :style="
                     isMapVisible && hasMapData ? { flex: `0 0 ${splitRatio}%` } : { width: '100%' }
                   "
@@ -538,7 +531,7 @@ function handleSessionsCleared() {
                 <!-- Map Panel -->
                 <div
                   v-if="hasMapData && isMapVisible"
-                  class="flex-1 min-w-0 rounded-2xl overflow-hidden shadow-md border border-slate-200/80 dark:border-monokai-border h-[500px] lg:h-[calc(100vh-260px)] lg:sticky lg:top-4"
+                  class="flex-1 min-w-0 rounded-2xl overflow-hidden shadow-md border border-slate-200/80 dark:border-monokai-border h-full min-h-0"
                 >
                   <TourMap
                     ref="tourMapRef"
@@ -551,12 +544,10 @@ function handleSessionsCleared() {
                 </div>
               </div>
             </div>
-            <Welcome
-              v-else
-              :language="language"
-              :is-loading="isLoading"
-              @select-prompt="handleSend"
-            />
+
+            <div v-else class="flex-1 overflow-y-auto">
+              <Welcome :language="language" :is-loading="isLoading" @select-prompt="handleSend" />
+            </div>
           </Transition>
         </div>
       </div>

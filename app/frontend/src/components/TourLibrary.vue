@@ -16,12 +16,14 @@ const props = defineProps<{
   language: Lang;
   selectedTourId?: string | null;
   refreshKey?: number;
+  isCollapsed?: boolean;
 }>();
 
 const emit = defineEmits<{
   (e: "select", tour: Tour): void;
   (e: "deleted"): void;
   (e: "close"): void;
+  (e: "update:isCollapsed", val: boolean): void;
 }>();
 
 const tours = ref<Tour[]>([]);
@@ -29,7 +31,27 @@ const trashItems = ref<TrashItem[]>([]);
 const isLoading = ref(false);
 const error = ref("");
 const filterType = ref<"all" | "bike" | "road" | "trash">("all");
-const isCollapsed = ref(false);
+function getStoredLibraryCollapsed(): boolean {
+  try {
+    return localStorage.getItem("tourpilot_library_collapsed") === "true";
+  } catch {
+    return false;
+  }
+}
+
+const isCollapsedInternal = ref(getStoredLibraryCollapsed());
+const isCollapsed = computed({
+  get: () => (props.isCollapsed !== undefined ? props.isCollapsed : isCollapsedInternal.value),
+  set: (val: boolean) => {
+    isCollapsedInternal.value = val;
+    emit("update:isCollapsed", val);
+    try {
+      localStorage.setItem("tourpilot_library_collapsed", String(val));
+    } catch {
+      // ignore
+    }
+  },
+});
 const sidebarWidth = ref(288);
 const isResizing = ref(false);
 
