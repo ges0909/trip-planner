@@ -4,7 +4,7 @@ import json
 import logging
 import uuid
 from collections.abc import AsyncGenerator
-from typing import Annotated
+from typing import Annotated, Any
 
 import fastapi
 from core.agent import run_agent
@@ -27,6 +27,14 @@ from app.schemas import ChatRequest
 logger = logging.getLogger(__name__)
 
 router = fastapi.APIRouter(prefix="/api", tags=["chat"])
+
+
+def format_sse_event(event_name: str, payload: dict[str, Any]) -> dict[str, str]:
+    """Format an event dictionary for SSE transmission."""
+    return {
+        "event": event_name,
+        "data": json.dumps(payload, ensure_ascii=False),
+    }
 
 
 def get_mcp_manager(request: fastapi.Request) -> MCPManager:
@@ -115,10 +123,7 @@ async def chat(
         lang = language if language in ("de", "en") else "de"
 
         # First, send session_id to client (for new sessions)
-        yield {
-            "event": "session",
-            "data": json.dumps({"session_id": session_id}, ensure_ascii=False),
-        }
+        yield format_sse_event("session", {"session_id": session_id})
 
         assistant_response: str = ""
         has_error: bool = False
@@ -151,20 +156,11 @@ async def chat(
                 elif event["event"] == "elevation":
                     elevation_data = event["data"].get("profile", [])
 
-                yield {
-                    "event": event["event"],
-                    "data": json.dumps(event["data"], ensure_ascii=False),
-                }
+                yield format_sse_event(event["event"], event["data"])
         except Exception as e:
             logger.exception("Unhandled exception in event generator")
             has_error = True
-            yield {
-                "event": "error",
-                "data": json.dumps(
-                    {"error": msg("internal_error", lang, detail=str(e))},
-                    ensure_ascii=False,
-                ),
-            }
+            yield format_sse_event("error", {"error": msg("internal_error", lang, detail=str(e))})
             return
 
         # Save messages to database and generate concise session title (only on success)

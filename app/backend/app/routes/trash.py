@@ -5,14 +5,24 @@ from fastapi.responses import JSONResponse
 from storage.tour_storage import (
     delete_from_trash,
     empty_trash,
-    is_valid_slug,
     is_valid_trash_name,
     list_trash,
     move_to_trash,
     restore_from_trash,
 )
 
+from app.routes.tours import validate_tour_params
+
 router = APIRouter(prefix="/api", tags=["trash"])
+
+
+def validate_trash_params(tour_type: str, trash_name: str) -> JSONResponse | None:
+    """Validate tour_type and trash_name parameters."""
+    if tour_type not in ("bike", "road"):
+        return JSONResponse({"error": "Invalid tour_type"}, status_code=400)
+    if not is_valid_trash_name(trash_name):
+        return JSONResponse({"error": "Invalid trash_name"}, status_code=400)
+    return None
 
 
 @router.delete("/tours/{tour_type}/{slug}")
@@ -22,10 +32,8 @@ async def delete_tour_endpoint(tour_type: str, slug: str):
     Tours are not permanently deleted but moved to trips/.trash/
     for potential recovery.
     """
-    if tour_type not in ("bike", "road"):
-        return JSONResponse({"error": "Invalid tour_type"}, status_code=400)
-    if not is_valid_slug(slug):
-        return JSONResponse({"error": "Invalid slug"}, status_code=400)
+    if err := validate_tour_params(tour_type, slug):
+        return err
 
     success = await move_to_trash(tour_type, slug)
     if not success:
@@ -43,10 +51,8 @@ async def list_trash_endpoint():
 @router.post("/trash/{tour_type}/{trash_name}/restore")
 async def restore_tour_endpoint(tour_type: str, trash_name: str):
     """Restore a tour from trash."""
-    if tour_type not in ("bike", "road"):
-        return JSONResponse({"error": "Invalid tour_type"}, status_code=400)
-    if not is_valid_trash_name(trash_name):
-        return JSONResponse({"error": "Invalid trash_name"}, status_code=400)
+    if err := validate_trash_params(tour_type, trash_name):
+        return err
 
     tour = await restore_from_trash(tour_type, trash_name)
     if not tour:
@@ -64,10 +70,8 @@ async def restore_tour_endpoint(tour_type: str, trash_name: str):
 @router.delete("/trash/{tour_type}/{trash_name}")
 async def delete_from_trash_endpoint(tour_type: str, trash_name: str):
     """Permanently delete a tour from trash."""
-    if tour_type not in ("bike", "road"):
-        return JSONResponse({"error": "Invalid tour_type"}, status_code=400)
-    if not is_valid_trash_name(trash_name):
-        return JSONResponse({"error": "Invalid trash_name"}, status_code=400)
+    if err := validate_trash_params(tour_type, trash_name):
+        return err
 
     success = await delete_from_trash(tour_type, trash_name)
     if not success:

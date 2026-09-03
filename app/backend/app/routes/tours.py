@@ -49,6 +49,15 @@ async def get_tours(tour_type: str | None = None, limit: int = 100) -> list[dict
     ]
 
 
+def validate_tour_params(tour_type: str, slug: str) -> JSONResponse | None:
+    """Validate tour_type and slug path parameters."""
+    if tour_type not in ("bike", "road"):
+        return JSONResponse({"error": "Invalid tour_type"}, status_code=400)
+    if not is_valid_slug(slug):
+        return JSONResponse({"error": "Invalid slug"}, status_code=400)
+    return None
+
+
 @router.get("/{tour_type}/{slug}")
 async def get_tour(tour_type: str, slug: str):
     """Get tour details including markdown content.
@@ -57,10 +66,8 @@ async def get_tour(tour_type: str, slug: str):
         - tour_type: "bike" or "road"
         - slug: Tour slug (URL-safe name)
     """
-    if tour_type not in ("bike", "road"):
-        return JSONResponse({"error": "Invalid tour_type"}, status_code=400)
-    if not is_valid_slug(slug):
-        return JSONResponse({"error": "Invalid slug"}, status_code=400)
+    if err := validate_tour_params(tour_type, slug):
+        return err
 
     detail = await get_tour_detail(tour_type, slug)
     if not detail:
@@ -75,10 +82,8 @@ async def get_tour_gpx_file(tour_type: str, slug: str):
 
     Returns the GPX file as plain text with appropriate content type.
     """
-    if tour_type not in ("bike", "road"):
-        return JSONResponse({"error": "Invalid tour_type"}, status_code=400)
-    if not is_valid_slug(slug):
-        return JSONResponse({"error": "Invalid slug"}, status_code=400)
+    if err := validate_tour_params(tour_type, slug):
+        return err
 
     gpx = get_tour_gpx(tour_type, slug)
     if not gpx:
@@ -97,10 +102,8 @@ async def get_tour_geojson_endpoint(tour_type: str, slug: str):
 
     Returns track LineString and waypoints.
     """
-    if tour_type not in ("bike", "road"):
-        return JSONResponse({"error": "Invalid tour_type"}, status_code=400)
-    if not is_valid_slug(slug):
-        return JSONResponse({"error": "Invalid slug"}, status_code=400)
+    if err := validate_tour_params(tour_type, slug):
+        return err
 
     geojson_data = get_tour_geojson(tour_type, slug)
     if not geojson_data:
@@ -115,10 +118,8 @@ async def get_tour_map_image(tour_type: str, slug: str, filename: str):
 
     Returns PNG images from the tour's maps/ directory.
     """
-    if tour_type not in ("bike", "road"):
-        return JSONResponse({"error": "Invalid tour_type"}, status_code=400)
-    if not is_valid_slug(slug):
-        return JSONResponse({"error": "Invalid slug"}, status_code=400)
+    if err := validate_tour_params(tour_type, slug):
+        return err
     if not is_valid_map_filename(filename):
         return JSONResponse({"error": "Invalid filename"}, status_code=400)
 
