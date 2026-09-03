@@ -82,6 +82,9 @@ const messages = {
   downloadGpx: { de: "GPX herunterladen", en: "Download GPX" },
   showMap: { de: "Gesamtkarte anzeigen", en: "Show full map" },
   hideMap: { de: "Gesamtkarte ausblenden", en: "Hide full map" },
+  rename: { de: "Umbenennen", en: "Rename" },
+  save: { de: "Speichern", en: "Save" },
+  renameTourTitle: { de: "Tour umbenennen", en: "Rename tour" },
 } as const;
 
 type MessageKey = keyof typeof messages;

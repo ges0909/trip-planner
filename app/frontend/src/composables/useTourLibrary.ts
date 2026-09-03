@@ -4,6 +4,7 @@ import {
   deleteTour,
   fetchTours,
   fetchTrash,
+  renameTour,
   restoreFromTrash,
   type Tour,
   type TrashItem,
@@ -67,6 +68,21 @@ export function useTourLibrary() {
     }
   }
 
+  async function renameTourItem(
+    tourType: string,
+    slug: string,
+    newTitle: string,
+  ): Promise<Tour | null> {
+    try {
+      const updated = await renameTour(tourType, slug, newTitle);
+      await loadTours(false);
+      return updated;
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : "Failed to rename tour";
+      return null;
+    }
+  }
+
   async function restoreItem(tourType: string, trashName: string): Promise<Tour | null> {
     try {
       const restored = await restoreFromTrash(tourType, trashName);
@@ -103,6 +119,7 @@ export function useTourLibrary() {
     loadTours,
     loadTrash,
     removeTour,
+    renameTourItem,
     restoreItem,
     deleteTrashPermanently,
   };

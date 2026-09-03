@@ -52,4 +52,20 @@ describe("TourLibrary Component", () => {
     expect(wrapper.text()).toContain("Wannsee Radtour");
     expect(wrapper.text()).toContain("Schwarzwald Trip");
   });
+
+  it("renders rename and delete buttons in top-right for tours", async () => {
+    const wrapper = mount(TourLibrary, {
+      props: {
+        language: "de",
+      },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    await wrapper.vm.$nextTick();
+
+    const buttons = wrapper.findAll("button");
+    const buttonTitles = buttons.map((b) => b.attributes("title"));
+    expect(buttonTitles).toContain("Umbenennen");
+    expect(buttonTitles).toContain("Tour löschen?");
+  });
 });

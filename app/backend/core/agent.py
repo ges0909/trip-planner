@@ -46,7 +46,7 @@ from core.geo_events import (
     _process_tool_result,
 )
 from core.mcp_manager import MCPManager
-from core.model_gateway import get_model, get_model_id
+from core.model_gateway import get_model, get_model_chain
 from core.tool_metadata import get_status_categories
 
 logger = logging.getLogger(__name__)
@@ -268,9 +268,11 @@ async def run_agent(
     messages = _build_initial_messages(user_message, chat_history, system_prompt)
     tool_defs = [_gemini_decl_to_tool_def(d) for d in compacted_decls]
 
-    model = get_model()
+    model_chain = get_model_chain()
+    current_model_idx = 0
+    model_id = model_chain[current_model_idx]
+    model = get_model(model_id)
     model_settings = ModelSettings(max_tokens=MAX_RESPONSE_TOKENS, temperature=0.7)
-    model_id = get_model_id()
 
     # 2. Main Agent Turn Loop
     max_iterations = 25
@@ -279,7 +281,7 @@ async def run_agent(
 
     with logfire.span("Agent Plan: {message}", message=user_message[:60], lang=lang):
         for iteration in range(max_iterations):
-            logger.info("Iteration %d: calling model", iteration + 1)
+            logger.info("Iteration %d: calling model %s", iteration + 1, model_id)
             messages = _compact_messages(messages, model_id)
             yield {
                 "event": "model",
@@ -296,8 +298,42 @@ async def run_agent(
                 lang=lang,
             )
             if error_event:
-                yield error_event
-                return
+                # Check if we can fallback to the next model in the chain
+                if current_model_idx + 1 < len(model_chain):
+                    current_model_idx += 1
+                    previous_model_id = model_id
+                    model_id = model_chain[current_model_idx]
+                    logger.warning(
+                        "Model %s failed. Falling back to alternative model %s (%d/%d)",
+                        previous_model_id,
+                        model_id,
+                        current_model_idx + 1,
+                        len(model_chain),
+                    )
+                    try:
+                        model = get_model(model_id)
+                        # Retry the current iteration with the fallback model
+                        yield {
+                            "event": "model",
+                            "data": {"iteration": iteration + 1, "model_id": model_id},
+                        }
+                        response, error_event = await _execute_model_request(
+                            model=model,
+                            messages=messages,
+                            tool_defs=tool_defs,
+                            model_settings=model_settings,
+                            model_id=model_id,
+                            iteration=iteration,
+                            lang=lang,
+                        )
+                    except Exception as fallback_err:
+                        logger.error(
+                            "Failed to initialize fallback model %s: %s", model_id, fallback_err
+                        )
+
+                if error_event:
+                    yield error_event
+                    return
 
             response_parts = response.parts if hasattr(response, "parts") else []
             tool_calls = [p for p in response_parts if isinstance(p, ToolCallPart)]

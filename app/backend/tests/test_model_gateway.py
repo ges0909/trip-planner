@@ -137,3 +137,42 @@ class TestOpenRouterConstants:
         from core.model_gateway import OPENROUTER_BASE_URL
 
         assert OPENROUTER_BASE_URL == "https://openrouter.ai/api/v1"
+
+
+class TestFallbackChain:
+    """Tests for fallback model configuration and chains."""
+
+    def test_fallback_models_defaults(self):
+        """Should return default fallback model IDs."""
+        from core.model_gateway import get_fallback_model_ids
+
+        with patch.dict(os.environ, {}, clear=True):
+            os.environ.pop("LLM_FALLBACK_MODELS", None)
+            fallbacks = get_fallback_model_ids()
+
+        assert "mistralai/mistral-large-2411" in fallbacks
+        assert "google/gemini-2.5-flash" in fallbacks
+
+    def test_custom_fallback_models(self):
+        """Should parse custom comma-separated fallback models."""
+        from core.model_gateway import get_fallback_model_ids
+
+        with patch.dict(os.environ, {"LLM_FALLBACK_MODELS": "model-a, model-b , model-c"}):
+            fallbacks = get_fallback_model_ids()
+
+        assert fallbacks == ["model-a", "model-b", "model-c"]
+
+    def test_model_chain_order(self):
+        """Model chain should have primary first, then fallbacks."""
+        from core.model_gateway import get_model_chain
+
+        with patch.dict(
+            os.environ,
+            {
+                "LLM_MODEL": "primary-model",
+                "LLM_FALLBACK_MODELS": "fallback-1, fallback-2",
+            },
+        ):
+            chain = get_model_chain()
+
+        assert chain == ["primary-model", "fallback-1", "fallback-2"]

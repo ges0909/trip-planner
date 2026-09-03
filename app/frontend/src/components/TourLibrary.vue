@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Bike, Car, ChevronLeft, RefreshCw, Trash2 } from "@lucide/vue";
+import { Bike, Car, ChevronLeft, Pencil, RefreshCw, Trash2 } from "@lucide/vue";
 import { computed, onMounted, ref, watch } from "vue";
 import type { Tour, TrashItem } from "../api";
 import { useTourLibrary } from "../composables/useTourLibrary";
@@ -32,6 +32,7 @@ const {
   loadTours,
   loadTrash,
   removeTour,
+  renameTourItem,
   restoreItem,
   deleteTrashPermanently,
 } = useTourLibrary();
@@ -68,6 +69,12 @@ const confirmDialog = ref<{
   trashItem?: TrashItem;
 }>({ open: false, type: "deleteTour" });
 
+const renameDialog = ref<{
+  open: boolean;
+  tour?: Tour;
+}>({ open: false });
+const renameInput = ref("");
+
 const confirmDialogTitle = computed(() => {
   return confirmDialog.value.type === "deleteTour"
     ? t("deleteTourConfirmTitle", props.language)
@@ -85,6 +92,25 @@ const confirmDialogMessage = computed(() => {
   }
   return "";
 });
+
+function handleRename(tour: Tour, event: Event) {
+  event.stopPropagation();
+  renameInput.value = tour.title;
+  renameDialog.value = { open: true, tour };
+}
+
+async function handleConfirmRename() {
+  const tour = renameDialog.value.tour;
+  const newTitle = renameInput.value.trim();
+  renameDialog.value = { open: false };
+
+  if (tour && newTitle && newTitle !== tour.title) {
+    const updated = await renameTourItem(tour.tour_type, tour.slug, newTitle);
+    if (updated && props.selectedTourId === tour.id) {
+      emit("select", updated);
+    }
+  }
+}
 
 async function handleDelete(tour: Tour, event: Event) {
   event.stopPropagation();
@@ -420,7 +446,7 @@ onMounted(async () => {
           >
             <button
               type="button"
-              class="w-full text-left p-3 pr-9 cursor-pointer rounded-xl focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500"
+              class="w-full text-left p-3 pr-14 cursor-pointer rounded-xl focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500"
               @click="emit('select', tour)"
             >
               <div class="flex items-start gap-2.5">
@@ -455,15 +481,30 @@ onMounted(async () => {
                 </div>
               </div>
             </button>
-            <button
-              type="button"
-              :aria-label="(language === 'de' ? 'Tour löschen: ' : 'Delete tour: ') + tour.title"
-              :title="t('deleteTourConfirmTitle', language)"
-              class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 opacity-0 group-hover:opacity-100 focus:opacity-100 focus-visible:opacity-100 hover:bg-rose-50 dark:hover:bg-monokai-bg rounded-lg text-monokai-lightMuted hover:text-monokai-lightPink dark:hover:text-monokai-pink transition focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-red-500"
-              @click.stop="handleDelete(tour, $event)"
+            <div
+              class="absolute top-2 right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition"
             >
-              <Trash2 :size="15" aria-hidden="true" />
-            </button>
+              <button
+                type="button"
+                :aria-label="
+                  (language === 'de' ? 'Tour umbenennen: ' : 'Rename tour: ') + tour.title
+                "
+                :title="t('rename', language)"
+                class="p-1.5 hover:bg-monokai-lightBorder/60 dark:hover:bg-monokai-bg rounded-md text-monokai-lightMuted hover:text-blue-500 dark:hover:text-monokai-cyan transition focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500"
+                @click.stop="handleRename(tour, $event)"
+              >
+                <Pencil :size="13" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                :aria-label="(language === 'de' ? 'Tour löschen: ' : 'Delete tour: ') + tour.title"
+                :title="t('deleteTourConfirmTitle', language)"
+                class="p-1.5 hover:bg-rose-50 dark:hover:bg-monokai-bg rounded-md text-monokai-lightMuted hover:text-rose-500 dark:hover:text-monokai-pink transition focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-red-500"
+                @click.stop="handleDelete(tour, $event)"
+              >
+                <Trash2 :size="13" aria-hidden="true" />
+              </button>
+            </div>
           </div>
         </template>
       </div>
@@ -512,4 +553,23 @@ onMounted(async () => {
     :cancel-text="t('cancel', language)"
     @confirm="handleConfirmDialog"
   />
+
+  <!-- Rename Dialog -->
+  <ConfirmDialog
+    v-model:open="renameDialog.open"
+    :title="t('renameTourTitle', language)"
+    :confirm-text="t('save', language)"
+    :cancel-text="t('cancel', language)"
+    confirm-button-class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition shadow-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+    @confirm="handleConfirmRename"
+  >
+    <div class="mt-3">
+      <input
+        v-model="renameInput"
+        type="text"
+        class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-monokai-border bg-white dark:bg-monokai-card text-gray-900 dark:text-monokai-fg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        @keydown.enter="handleConfirmRename"
+      />
+    </div>
+  </ConfirmDialog>
 </template>

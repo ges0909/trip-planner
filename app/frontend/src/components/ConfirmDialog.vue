@@ -6,12 +6,13 @@ const props = withDefaults(
   defineProps<{
     open: boolean;
     title: string;
-    message: string;
+    message?: string;
     confirmText?: string;
     cancelText?: string;
     confirmButtonClass?: string;
   }>(),
   {
+    message: "",
     confirmText: "Bestätigen",
     cancelText: "Abbrechen",
     confirmButtonClass:
@@ -91,9 +92,10 @@ function handleKeydown(e: KeyboardEvent) {
             <h3 class="text-base font-semibold text-gray-900">
               {{ title }}
             </h3>
-            <p class="mt-1.5 text-sm text-gray-600 leading-relaxed break-words">
+            <p v-if="message" class="mt-1.5 text-sm text-gray-600 leading-relaxed break-words">
               {{ message }}
             </p>
+            <slot />
           </div>
         </div>
         <div class="mt-6 flex justify-end gap-2.5">

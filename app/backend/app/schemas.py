@@ -22,6 +22,12 @@ class CreateTourRequest(BaseModel):
     session_id: str | None = Field(default=None, min_length=1, max_length=200)
 
 
+class RenameTourRequest(BaseModel):
+    """Payload for renaming a tour."""
+
+    title: str = Field(min_length=1, max_length=200)
+
+
 class LastViewedTourRequest(BaseModel):
     """Payload for updating the last viewed tour reference."""
 

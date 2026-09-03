@@ -94,3 +94,23 @@ def test_slug_and_filename_validation():
 
     assert tour_storage.is_valid_map_filename("route.png") is True
     assert tour_storage.is_valid_map_filename("../secret.png") is False
+
+
+@pytest.mark.asyncio
+async def test_rename_tour_storage(temp_trips_dir):
+    """Test renaming a tour."""
+    # 1. Save original tour
+    tour = await tour_storage.save_tour(
+        markdown="# Originale Tour\n\nStart in Hamburg.",
+        tour_type="bike",
+    )
+    assert tour.title == "Originale Tour"
+
+    # 2. Rename tour
+    renamed = await tour_storage.rename_tour("bike", tour.slug, "Neuer Tourname")
+    assert renamed is not None
+    assert renamed.title == "Neuer Tourname"
+
+    # Verify updated index.md
+    md_content = tour_storage.get_tour_markdown("bike", tour.slug)
+    assert md_content.startswith("# Neuer Tourname")

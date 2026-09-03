@@ -196,6 +196,21 @@ export interface TrashItem {
 }
 
 /**
+ * Rename a tour title.
+ */
+export async function renameTour(tourType: string, slug: string, title: string): Promise<Tour> {
+  const response = await fetch(`/api/tours/${tourType}/${slug}/rename`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title }),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to rename tour: ${response.status}`);
+  }
+  return response.json();
+}
+
+/**
  * Fetch list of tours in trash.
  */
 export async function fetchTrash(): Promise<TrashItem[]> {

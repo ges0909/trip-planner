@@ -27,7 +27,14 @@ from core.config import PROJECT_ROOT as DEFAULT_PROJECT_ROOT
 from core.config import TRASH_DIR as DEFAULT_TRASH_DIR
 from core.config import TRIPS_DIR as DEFAULT_TRIPS_DIR
 
-from storage.db import Tour, create_tour, delete_tour_by_slug, generate_slug, get_tour_by_slug
+from storage.db import (
+    Tour,
+    create_tour,
+    delete_tour_by_slug,
+    generate_slug,
+    get_tour_by_slug,
+    update_tour,
+)
 from storage.gpx_parser import combine_gpx_files, order_gpx_by_markdown
 
 logger = logging.getLogger(__name__)
@@ -617,3 +624,47 @@ def get_tour_geojson(tour_type: str, slug: str) -> dict[str, Any] | None:
     except Exception as e:
         logger.error("Failed to convert GPX to GeoJSON: %s", e)
         return None
+
+
+async def rename_tour(tour_type: str, slug: str, new_title: str) -> Tour | None:
+    """Rename a tour title, updating index.md and SQLite index.
+
+    Args:
+        tour_type: "bike" or "road"
+        slug: Tour slug
+        new_title: The new title string
+
+    Returns:
+        Updated Tour object, or None if not found.
+    """
+    clean_title = new_title.strip()
+    if not clean_title or tour_type not in ("bike", "road") or not is_valid_slug(slug):
+        return None
+
+    tour = await get_tour_by_slug(slug)
+    if not tour or tour.tour_type != tour_type:
+        return None
+
+    tour_dir = get_tour_path(tour_type, slug)
+    index_md = tour_dir / "index.md"
+    if not index_md.exists():
+        return None
+
+    content = index_md.read_text(encoding="utf-8")
+    # Replace top heading with new title
+    if re.search(r"^#{1,3}\s+.+$", content, flags=re.MULTILINE):
+        updated_content = re.sub(
+            r"^#{1,3}\s+.+$",
+            f"# {clean_title}",
+            content,
+            count=1,
+            flags=re.MULTILINE,
+        )
+    else:
+        updated_content = f"# {clean_title}\n\n{content}"
+
+    index_md.write_text(updated_content, encoding="utf-8")
+    new_summary = _extract_summary_from_markdown(updated_content)
+
+    await update_tour(tour.id, title=clean_title, summary=new_summary)
+    return await get_tour_by_slug(slug)

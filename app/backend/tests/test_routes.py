@@ -213,3 +213,31 @@ def test_trash_endpoints(client):
     res = client.delete("/api/trash")
     assert res.status_code == 200
     assert res.json()["status"] == "emptied"
+
+
+def test_tour_rename_endpoint(client):
+    """Test POST /api/tours/{tour_type}/{slug}/rename endpoint."""
+    # 1. Create a tour
+    res = client.post(
+        "/api/tours",
+        json={
+            "tour_type": "bike",
+            "markdown": "# Spree Tour\n\nSchöne Radtour an der Spree.",
+        },
+    )
+    assert res.status_code == 200
+    slug = res.json()["slug"]
+
+    # 2. Rename tour
+    rename_res = client.post(
+        f"/api/tours/bike/{slug}/rename",
+        json={"title": "Spree Tour 2026"},
+    )
+    assert rename_res.status_code == 200
+    assert rename_res.json()["status"] == "renamed"
+    assert rename_res.json()["title"] == "Spree Tour 2026"
+
+    # Verify tour detail has updated title
+    detail_res = client.get(f"/api/tours/bike/{slug}")
+    assert detail_res.status_code == 200
+    assert detail_res.json()["title"] == "Spree Tour 2026"

@@ -13,10 +13,11 @@ from storage.tour_storage import (
     get_tour_path,
     is_valid_map_filename,
     is_valid_slug,
+    rename_tour,
     save_tour,
 )
 
-from app.schemas import CreateTourRequest
+from app.schemas import CreateTourRequest, RenameTourRequest
 
 logger = logging.getLogger(__name__)
 
@@ -166,3 +167,23 @@ async def create_tour_endpoint(request: CreateTourRequest):
     except Exception:
         logger.exception("Failed to save tour")
         return JSONResponse({"error": "Failed to save tour"}, status_code=500)
+
+
+@router.post("/{tour_type}/{slug}/rename")
+async def rename_tour_endpoint(tour_type: str, slug: str, request: RenameTourRequest):
+    """Rename a tour title."""
+    if err := validate_tour_params(tour_type, slug):
+        return err
+
+    tour = await rename_tour(tour_type, slug, request.title)
+    if not tour:
+        return JSONResponse({"error": "Tour not found or invalid title"}, status_code=404)
+
+    return {
+        "status": "renamed",
+        "id": tour.id,
+        "title": tour.title,
+        "tour_type": tour.tour_type,
+        "slug": tour.slug,
+        "summary": tour.summary,
+    }
