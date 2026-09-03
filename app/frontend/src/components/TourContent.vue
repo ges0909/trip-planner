@@ -25,6 +25,8 @@ const props = defineProps<{
   metrics?: TourMetrics;
 }>();
 
+const isTestEnvironment = import.meta.env.MODE === "test";
+
 const { addToast } = useToast();
 const isCopied = ref(false);
 const isExportOpen = ref(false);
@@ -99,10 +101,18 @@ function sanitizeTourMarkdown(rawMd: string): string {
   // Remove relative/local image markdown references
   md = md.replace(/\[?!\[[^\]]*\]\((?!https?:\/\/|\/api\/)[^)]+\)\]?(?:\([^)]+\))?/gi, "");
 
-  // Transform standalone YouTube links into responsive iframe embeds
+  // Transform standalone YouTube links into responsive iframe embeds.
+  // In Vitest/Happy DOM we intentionally avoid setting the live embed URL to prevent
+  // background iframe fetches from the test environment while preserving the behavior
+  // in the actual browser app.
   md = md.replace(
     /(?:^|\n)(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:\S+)?/gi,
-    '\n<div class="aspect-video w-full rounded-2xl shadow-md overflow-hidden my-6 border border-monokai-light-border dark:border-monokai-border"><iframe src="https://www.youtube-nocookie.com/embed/$1" title="Highlight Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="w-full h-full"></iframe></div>\n',
+    (_match, videoId: string) => {
+      const embedUrl = isTestEnvironment
+        ? "about:blank"
+        : `https://www.youtube-nocookie.com/embed/${videoId}`;
+      return `\n<div class="aspect-video w-full rounded-2xl shadow-md overflow-hidden my-6 border border-monokai-light-border dark:border-monokai-border"><iframe src="${embedUrl}" data-video-id="${videoId}" title="Highlight Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="w-full h-full"></iframe></div>\n`;
+    },
   );
 
   // Transform Geo coordinates link into interactive map POI clickable buttons

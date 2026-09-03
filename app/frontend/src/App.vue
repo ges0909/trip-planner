@@ -4,15 +4,12 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
-  Columns,
-  FileText,
-  Map,
   Save,
   Sparkles,
   WifiOff,
   X,
 } from "@lucide/vue";
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, ref } from "vue";
 import { type Tour } from "./api";
 import AppHeader from "./components/AppHeader.vue";
 import ChatInput from "./components/ChatInput.vue";
@@ -20,10 +17,14 @@ import CommandPalette from "./components/CommandPalette.vue";
 import TourContent from "./components/TourContent.vue";
 import TourLibrary from "./components/TourLibrary.vue";
 import TourMap from "./components/TourMap.vue";
+import { useAppLayout } from "./composables/useAppLayout";
+import { useAppLifecycle } from "./composables/useAppLifecycle";
+import { useAppPreferences } from "./composables/useAppPreferences";
 import { useChat } from "./composables/useChat";
 import { useSession } from "./composables/useSession";
 import { useToast } from "./composables/useToast";
-import { t, type Lang } from "./i18n";
+import { useTourSession } from "./composables/useTourSession";
+import { t } from "./i18n";
 
 // Chat state from composable
 const {
@@ -54,97 +55,35 @@ function handleFocusPoi(poi: { lat: number; lon: number; name: string }) {
   tourMapRef.value?.focusPoi(poi.lat, poi.lon, poi.name);
 }
 
-const isMapVisible = ref(true);
-const splitRatio = ref(50);
-const isDraggingSplitter = ref(false);
-const splitContainerRef = ref<HTMLElement | null>(null);
-
-function startDragging(e: MouseEvent | TouchEvent) {
-  isDraggingSplitter.value = true;
-  window.addEventListener("mousemove", onDragging);
-  window.addEventListener("mouseup", stopDragging);
-  window.addEventListener("touchmove", onDragging);
-  window.addEventListener("touchend", stopDragging);
-}
-
-function onDragging(e: MouseEvent | TouchEvent) {
-  if (!isDraggingSplitter.value || !splitContainerRef.value) return;
-  const rect = splitContainerRef.value.getBoundingClientRect();
-  const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
-  const offsetX = clientX - rect.left;
-  const percentage = (offsetX / rect.width) * 100;
-  splitRatio.value = Math.min(80, Math.max(20, percentage));
-}
-
-function stopDragging() {
-  isDraggingSplitter.value = false;
-  window.removeEventListener("mousemove", onDragging);
-  window.removeEventListener("mouseup", stopDragging);
-  window.removeEventListener("touchmove", onDragging);
-  window.removeEventListener("touchend", stopDragging);
-}
+const {
+  isMapVisible,
+  splitRatio,
+  isDraggingSplitter,
+  splitContainerRef,
+  startDragging,
+  stopDragging,
+  resetSplitRatio,
+} = useAppLayout();
 
 // ── UI state ────────────────────────────────────────────────────────────────
 
-// #11 Detect browser language on first visit (fall back to "de")
-function detectLanguage(): Lang {
-  const stored = localStorage.getItem("tourpilot_lang");
-  if (stored === "de" || stored === "en") return stored;
-  const browser = navigator.language.slice(0, 2).toLowerCase();
-  return browser === "en" ? "en" : "de";
-}
-
-const language = ref<Lang>(detectLanguage());
-
-// Persist language choice
-function setLanguage(lang: Lang) {
-  language.value = lang;
-  localStorage.setItem("tourpilot_lang", lang);
-}
+const { language, isDark, setLanguage, toggleTheme, updateDarkClass } = useAppPreferences();
 
 const chatInputRef = ref<InstanceType<typeof ChatInput> | null>(null);
 const showMap = ref(false);
-const activityFeedExpanded = ref(true);
-const selectedTourId = ref<string | null>(null);
-const libraryRefreshKey = ref(0);
-const isCommandPaletteOpen = ref(false);
-
-// #7 Mobile sidebar drawer
-const isMobileSidebarOpen = ref(false);
-
-// ── Theme ────────────────────────────────────────────────────────────────────
-
-// #1 prefers-color-scheme on first visit
-function detectDark(): boolean {
-  const stored = localStorage.getItem("tourpilot_theme");
-  if (stored === "dark") return true;
-  if (stored === "light") return false;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches;
-}
-
-const isDark = ref(detectDark());
-
-function toggleTheme() {
-  isDark.value = !isDark.value;
-  localStorage.setItem("tourpilot_theme", isDark.value ? "dark" : "light");
-  updateDarkClass();
-}
-
-function updateDarkClass() {
-  document.documentElement.classList.toggle("dark", isDark.value);
-}
-
-// ── Offline detection ────────────────────────────────────────────────────────
-
-// #10 Online / offline banner
-const isOnline = ref(navigator.onLine);
-
-function handleOnline() {
-  isOnline.value = true;
-}
-function handleOffline() {
-  isOnline.value = false;
-}
+const {
+  activityFeedExpanded,
+  selectedTourId,
+  libraryRefreshKey,
+  isCommandPaletteOpen,
+  isMobileSidebarOpen,
+  setSelectedTourId,
+  refreshLibrary,
+  setActivityFeedExpanded,
+  closeSidebar,
+  openCommandPalette,
+  closeCommandPalette,
+} = useTourSession();
 
 // ── Session / init ───────────────────────────────────────────────────────────
 
@@ -188,63 +127,47 @@ const promptSuggestions = computed(() => [
 
 async function initializeSession() {
   await restoreLastViewedTour(async (tour) => {
-    selectedTourId.value = tour.id;
+    setSelectedTourId(tour.id);
     await loadTour(tour);
   });
   sessionId.value = appSessionId.value;
 }
 
-function resetSplitRatio() {
-  splitRatio.value = 50;
-  localStorage.setItem("tourpilot_split_ratio", "50");
-}
-
-function handleGlobalKeydown(e: KeyboardEvent) {
-  const target = e.target as HTMLElement | null;
-  const isInput =
-    target &&
-    (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
-  if (isInput) return;
-
-  if (e.key === "m" || e.key === "M") {
-    if (!e.ctrlKey && !e.metaKey && !e.altKey) {
-      e.preventDefault();
-      isMapVisible.value = !isMapVisible.value;
+const { isOnline } = useAppLifecycle({
+  onToggleMap: () => {
+    isMapVisible.value = !isMapVisible.value;
+  },
+  onInitializeSession: async () => {
+    updateDarkClass();
+    await initializeSession();
+  },
+  onEscape: () => {
+    if (isMobileSidebarOpen.value) {
+      closeSidebar();
     }
-  }
-}
-
-onMounted(() => {
-  updateDarkClass();
-  initializeSession();
-  window.addEventListener("online", handleOnline);
-  window.addEventListener("offline", handleOffline);
-  window.addEventListener("keydown", handleGlobalKeydown);
-});
-
-onUnmounted(() => {
-  window.removeEventListener("online", handleOnline);
-  window.removeEventListener("offline", handleOffline);
-  window.removeEventListener("keydown", handleGlobalKeydown);
+    if (isCommandPaletteOpen.value) {
+      closeCommandPalette();
+    }
+  },
 });
 
 // ── Event handlers ───────────────────────────────────────────────────────────
 
 async function handleSend(message: string) {
-  activityFeedExpanded.value = true;
-  isMobileSidebarOpen.value = false;
+  setActivityFeedExpanded(true);
+  closeSidebar();
   await sendMessage(message, language.value);
   chatInputRef.value?.clear();
 }
 
 async function handleSelectTour(tour: Tour) {
-  selectedTourId.value = tour.id;
-  isMobileSidebarOpen.value = false;
+  setSelectedTourId(tour.id);
+  closeSidebar();
   await loadTour(tour);
 }
 
 async function handleSelectSession(targetSessionId: string) {
-  selectedTourId.value = null;
+  setSelectedTourId(null);
   await loadSession(targetSessionId);
 }
 
@@ -252,28 +175,48 @@ async function handleSaveTour() {
   try {
     const saved = await saveCurrentTour();
     if (saved) {
-      selectedTourId.value = saved.id;
-      libraryRefreshKey.value += 1;
+      setSelectedTourId(saved.id);
+      refreshLibrary();
     }
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : "Failed to save tour";
   }
 }
 
-function resetSessionState() {
-  sessionId.value = crypto.randomUUID();
+function clearCurrentTourView() {
   tourMarkdown.value = "";
   gpxContent.value = "";
-  activityEvents.value = [];
-  selectedTourId.value = null;
-  errorMessage.value = "";
   mapData.value = { waypoints: [], routes: [], pois: [], elevation: [] };
 }
 
+function resetSessionState() {
+  sessionId.value = crypto.randomUUID();
+  clearCurrentTourView();
+  activityEvents.value = [];
+  setSelectedTourId(null);
+  errorMessage.value = "";
+}
+
+function handleSplitKeyboard(event: KeyboardEvent) {
+  if (event.key === "ArrowLeft" || event.key === "ArrowDown") {
+    event.preventDefault();
+    splitRatio.value = Math.max(20, splitRatio.value - 5);
+  }
+
+  if (event.key === "ArrowRight" || event.key === "ArrowUp") {
+    event.preventDefault();
+    splitRatio.value = Math.min(80, splitRatio.value + 5);
+  }
+
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    resetSplitRatio();
+  }
+}
+
 function handleTourDeleted() {
-  selectedTourId.value = null;
-  tourMarkdown.value = "";
-  gpxContent.value = "";
+  setSelectedTourId(null);
+  clearCurrentTourView();
 }
 
 function handleSessionDeleted(deletedId: string) {
@@ -297,7 +240,7 @@ function handleSessionsCleared() {
         v-if="isMobileSidebarOpen"
         class="fixed inset-0 z-30 bg-black/50 sm:hidden"
         aria-hidden="true"
-        @click="isMobileSidebarOpen = false"
+        @click="closeSidebar()"
       />
     </Transition>
 
@@ -314,7 +257,7 @@ function handleSessionsCleared() {
         :refresh-key="libraryRefreshKey"
         @select="handleSelectTour"
         @deleted="handleTourDeleted"
-        @close="isMobileSidebarOpen = false"
+        @close="closeSidebar()"
       />
     </div>
 
@@ -346,7 +289,7 @@ function handleSessionsCleared() {
         :has-map-data="hasMapData"
         :is-map-visible="isMapVisible"
         @reset-session="resetSessionState"
-        @open-search="isCommandPaletteOpen = true"
+        @open-search="openCommandPalette()"
         @update:language="setLanguage"
         @toggle-theme="toggleTheme"
         @toggle-map="isMapVisible = !isMapVisible"
@@ -375,7 +318,7 @@ function handleSessionsCleared() {
             <button
               type="button"
               class="w-full px-3.5 py-2.5 flex items-center justify-between gap-3 text-left hover:bg-blue-100/50 dark:hover:bg-monokai-panel/50 transition cursor-pointer"
-              @click="activityFeedExpanded = !activityFeedExpanded"
+              @click="setActivityFeedExpanded(!activityFeedExpanded)"
             >
               <div class="flex items-center gap-2">
                 <span class="flex h-2 w-2 relative">
@@ -529,15 +472,19 @@ function handleSessionsCleared() {
                 <!-- Draggable Splitter Divider Bar (Desktop) -->
                 <div
                   v-if="isMapVisible && hasMapData && tourMarkdown"
-                  class="hidden lg:flex w-2 shrink-0 cursor-col-resize items-center justify-center rounded-full bg-monokai-light-border/60 dark:bg-monokai-border/60 hover:bg-blue-500 dark:hover:bg-monokai-yellow transition-colors group select-none py-12"
+                  role="separator"
+                  aria-orientation="vertical"
+                  tabindex="0"
+                  class="hidden lg:flex w-2 shrink-0 cursor-col-resize items-center justify-center rounded-full bg-monokai-light-border/60 dark:bg-monokai-border/60 hover:bg-blue-500 dark:hover:bg-monokai-yellow transition-colors group select-none py-12 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
                   :title="
                     language === 'de'
-                      ? 'Gedrückt halten zum Verschieben, Doppelklick für 50:50'
-                      : 'Hold to drag, double click for 50:50'
+                      ? 'Gedrückt halten zum Verschieben, Doppelklick für 50:50, Pfeile zum Anpassen'
+                      : 'Hold to drag, double click for 50:50, use arrow keys to adjust'
                   "
                   @mousedown="startDragging"
                   @touchstart.passive="startDragging"
                   @dblclick="resetSplitRatio"
+                  @keydown="handleSplitKeyboard"
                 >
                   <div
                     class="w-1 h-8 rounded-full bg-slate-400 dark:bg-monokai-muted group-hover:bg-white transition-colors"
@@ -629,7 +576,7 @@ function handleSessionsCleared() {
       :is-open="isCommandPaletteOpen"
       :language="language"
       :is-dark="isDark"
-      @close="isCommandPaletteOpen = false"
+      @close="closeCommandPalette()"
       @select-tour="handleSelectTour"
       @select-session="handleSelectSession"
       @toggle-theme="toggleTheme"

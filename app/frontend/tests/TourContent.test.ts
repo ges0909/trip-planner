@@ -103,7 +103,7 @@ describe("TourContent Component", () => {
     expect(html).toContain("https://images.unsplash.com/photo-12345");
   });
 
-  it("renders standalone YouTube links as responsive video embeds", () => {
+  it("renders standalone YouTube links as responsive video embeds without triggering live fetches in tests", () => {
     const markdown = "# Schwarzwald Video Highlight\n\nhttps://www.youtube.com/watch?v=dQw4w9WgXcQ";
     const wrapper = mount(TourContent, {
       props: {
@@ -114,7 +114,7 @@ describe("TourContent Component", () => {
 
     const html = wrapper.html();
     expect(html).toContain("<iframe");
-    expect(html).toContain("youtube-nocookie.com/embed/dQw4w9WgXcQ");
+    expect(html).toContain('data-video-id="dQw4w9WgXcQ"');
     expect(html).toContain("aspect-video");
   });
 });

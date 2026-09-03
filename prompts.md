@@ -10,4 +10,4 @@ Erstelle einen 5-tägigen Roadtrip an die Polnische Ostseeküste. Die An- und Ab
 
 ## Färöer-Inseln (6 Tage)
 
-Erstelle eine Reiseplanung für 6 Tage auf den Färöer-Inseln.
+Erstelle eine Reiseplanung für 6 Tage auf den Färöer Inseln.
